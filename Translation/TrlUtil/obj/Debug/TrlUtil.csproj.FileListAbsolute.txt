@@ -1,0 +1,9 @@
+D:\github\rasa\keepass\keepass2\Translation\TrlUtil\obj\Debug\TrlUtil.csprojAssemblyReference.cache
+D:\github\rasa\keepass\keepass2\Translation\TrlUtil\obj\Debug\TrlUtil.MainForm.resources
+D:\github\rasa\keepass\keepass2\Translation\TrlUtil\obj\Debug\TrlUtil.Properties.Resources.resources
+D:\github\rasa\keepass\keepass2\Translation\TrlUtil\obj\Debug\TrlUtil.csproj.GenerateResource.cache
+D:\github\rasa\keepass\keepass2\Translation\TrlUtil\obj\Debug\TrlUtil.csproj.CopyComplete
+D:\github\rasa\keepass\keepass2\Translation\TrlUtil\obj\Debug\TrlUtil.exe
+D:\github\rasa\keepass\keepass2\Translation\TrlUtil\obj\Debug\TrlUtil.pdb
+D:\github\rasa\keepass\keepass2\Translation\TrlUtil.exe
+D:\github\rasa\keepass\keepass2\Translation\TrlUtil.pdb
