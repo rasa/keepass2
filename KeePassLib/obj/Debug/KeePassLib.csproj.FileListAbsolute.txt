@@ -1,5 +1,0 @@
-D:\github\rasa\keepass\keepass2\Build\KeePassLib\Debug\KeePassLib.xml
-D:\github\rasa\keepass\keepass2\Build\KeePassLib\Debug\KeePassLib.dll
-D:\github\rasa\keepass\keepass2\Build\KeePassLib\Debug\KeePassLib.pdb
-D:\github\rasa\keepass\keepass2\KeePassLib\obj\Debug\KeePassLib.dll
-D:\github\rasa\keepass\keepass2\KeePassLib\obj\Debug\KeePassLib.pdb
