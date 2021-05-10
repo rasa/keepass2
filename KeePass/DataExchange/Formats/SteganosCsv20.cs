@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Text;
 
@@ -31,7 +32,7 @@ using KeePassLib.Utility;
 
 namespace KeePass.DataExchange.Formats
 {
-	// 20.0.7-22.3.1+
+	// 20.0.7+
 	internal sealed class SteganosCsv20 : FileFormatProvider
 	{
 		public override bool SupportsImport { get { return true; } }
@@ -40,6 +41,11 @@ namespace KeePass.DataExchange.Formats
 		public override string FormatName { get { return "Steganos Password Manager CSV"; } }
 		public override string DefaultExtension { get { return "csv"; } }
 		public override string ApplicationGroup { get { return KPRes.PasswordManagers; } }
+
+		public override Image SmallIcon
+		{
+			get { return KeePass.Properties.Resources.B16x16_Imp_Steganos20; }
+		}
 
 		public override void Import(PwDatabase pwStorage, Stream sInput,
 			IStatusLogger slLogger)
@@ -50,7 +56,7 @@ namespace KeePass.DataExchange.Formats
 
 			CsvOptions opt = new CsvOptions();
 			opt.BackslashIsEscape = false;
-			// opt.TextQualifier = char.MinValue; // For 20.0.7, not 22.3.1
+			opt.TextQualifier = char.MinValue;
 			opt.TrimFields = true;
 
 			CsvStreamReaderEx csv = new CsvStreamReaderEx(strData, opt);

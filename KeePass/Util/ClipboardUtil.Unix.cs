@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ using System.Windows.Forms;
 
 using KeePassLib;
 using KeePassLib.Native;
-using KeePassLib.Utility;
 
 namespace KeePass.Util
 {
@@ -56,71 +55,57 @@ namespace KeePass.Util
 
 		private static string GetStringU()
 		{
-			if(MonoWorkarounds.IsRequired(1613))
-			{
-				// string strGtk = GtkGetString();
-				// if(strGtk != null) return strGtk;
+			// string strGtk = GtkGetString();
+			// if(strGtk != null) return strGtk;
 
-				// string str = NativeLib.RunConsoleApp("xclip",
-				//	"-out -selection clipboard");
-				// if(str != null) return str;
+			// string str = NativeLib.RunConsoleApp("xclip",
+			//	"-out -selection clipboard");
+			// if(str != null) return str;
 
-				string str = NativeLib.RunConsoleApp("xsel",
-					"--output --clipboard", null, XSelFlags);
-				if(str != null) return str;
-			}
+			string str = NativeLib.RunConsoleApp("xsel",
+				"--output --clipboard", null, XSelFlags);
+			if(str != null) return str;
 
-			try
-			{
-				if(Clipboard.ContainsText())
-					return (Clipboard.GetText() ?? string.Empty);
-			}
-			catch(Exception) { Debug.Assert(false); }
+			if(Clipboard.ContainsText())
+				return (Clipboard.GetText() ?? string.Empty);
 
 			return string.Empty;
 		}
 
 		private static void SetStringU(string str)
 		{
-			if(MonoWorkarounds.IsRequired(1613))
+			// if(GtkSetString(str)) return;
+
+			// string r = NativeLib.RunConsoleApp("xclip",
+			//	"-in -selection clipboard", str);
+			// if(r != null) return;
+
+			if(string.IsNullOrEmpty(str))
 			{
-				// if(GtkSetString(str)) return;
-
-				// string r = NativeLib.RunConsoleApp("xclip",
-				//	"-in -selection clipboard", str);
-				// if(r != null) return;
-
-				if(string.IsNullOrEmpty(str))
+				// xsel with an empty input can hang, thus use --clear
+				if(NativeLib.RunConsoleApp("xsel", "--clear --primary",
+					null, XSelFlags) != null)
 				{
-					// xsel with an empty input can hang, thus use --clear
-					if(NativeLib.RunConsoleApp("xsel", "--clear --primary",
-						null, XSelFlags) != null)
-					{
-						NativeLib.RunConsoleApp("xsel", "--clear --clipboard",
-							null, XSelFlags);
-						return;
-					}
-
-					try { Clipboard.Clear(); }
-					catch(Exception) { Debug.Assert(false); }
+					NativeLib.RunConsoleApp("xsel", "--clear --clipboard",
+						null, XSelFlags);
 					return;
 				}
 
-				// xsel does not support --primary and --clipboard together
-				if(NativeLib.RunConsoleApp("xsel", "--input --primary",
-					str, XSelFlags) != null)
-				{
-					NativeLib.RunConsoleApp("xsel", "--input --clipboard",
-						str, XSelFlags);
-					return;
-				}
+				try { Clipboard.Clear(); }
+				catch(Exception) { Debug.Assert(false); }
+				return;
 			}
 
-			try
+			// xsel does not support --primary and --clipboard together
+			if(NativeLib.RunConsoleApp("xsel", "--input --primary",
+				str, XSelFlags) != null)
 			{
-				if(string.IsNullOrEmpty(str)) Clipboard.Clear();
-				else Clipboard.SetText(str);
+				NativeLib.RunConsoleApp("xsel", "--input --clipboard",
+					str, XSelFlags);
+				return;
 			}
+
+			try { Clipboard.SetText(str); }
 			catch(Exception) { Debug.Assert(false); }
 		}
 

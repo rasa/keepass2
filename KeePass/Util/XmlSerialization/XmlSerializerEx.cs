@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -123,17 +123,18 @@ namespace KeePass.Util.XmlSerialization
 		internal static string GetXmlName(MemberInfo mi)
 		{
 			object[] vAttribs = mi.GetCustomAttributes(true);
+			string strXmlName = mi.Name;
 
-			XmlTypeAttribute xt = GetAttribute<XmlTypeAttribute>(vAttribs);
-			if(xt != null) return xt.TypeName;
-			XmlRootAttribute xr = GetAttribute<XmlRootAttribute>(vAttribs);
-			if(xr != null) return xr.ElementName;
-			XmlArrayAttribute xa = GetAttribute<XmlArrayAttribute>(vAttribs);
-			if(xa != null) return xa.ElementName;
-			XmlElementAttribute xe = GetAttribute<XmlElementAttribute>(vAttribs);
-			if(xe != null) return xe.ElementName;
+			XmlTypeAttribute xmlType = GetAttribute<XmlTypeAttribute>(vAttribs);
+			if(xmlType != null) strXmlName = xmlType.TypeName;
+			XmlRootAttribute xmlRoot = GetAttribute<XmlRootAttribute>(vAttribs);
+			if(xmlRoot != null) strXmlName = xmlRoot.ElementName;
+			XmlArrayAttribute xmlArray = GetAttribute<XmlArrayAttribute>(vAttribs);
+			if(xmlArray != null) strXmlName = xmlArray.ElementName;
+			XmlElementAttribute xmlElement = GetAttribute<XmlElementAttribute>(vAttribs);
+			if(xmlElement != null) strXmlName = xmlElement.ElementName;
 
-			return mi.Name;
+			return strXmlName;
 		}
 
 		private sealed class XmlsTypeInfo
@@ -183,7 +184,7 @@ namespace KeePass.Util.XmlSerialization
 			AppendLine(sb, "{", ref t, 0, 1);
 			AppendLine(sb, "public sealed partial class XmlSerializerEx : IXmlSerializerEx", ref t);
 			AppendLine(sb, "{", ref t, 0, 1);
-			AppendLine(sb, "private static readonly char[] g_vEnumSeps = new char[] {", ref t, 0, 1);
+			AppendLine(sb, "private static char[] m_vEnumSeps = new char[] {", ref t, 0, 1);
 			AppendLine(sb, "' ', '\\t', '\\r', '\\n', '|', ',', ';', ':'", ref t);
 			AppendLine(sb, "};", ref t, -1, 0);
 
@@ -387,7 +388,7 @@ namespace KeePass.Util.XmlSerialization
 				if(GetAttribute<FlagsAttribute>(vAttribs) != null)
 				{
 					AppendLine(sbr, strTypeFull + " eResult = (" + strTypeFull + ")0;", ref ir);
-					AppendLine(sbr, "string[] vValues = strValue.Split(g_vEnumSeps, StringSplitOptions.RemoveEmptyEntries);", ref ir);
+					AppendLine(sbr, "string[] vValues = strValue.Split(m_vEnumSeps, StringSplitOptions.RemoveEmptyEntries);", ref ir);
 					AppendLine(sbr, "foreach(string strPart in vValues)", ref ir);
 					AppendLine(sbr, "{", ref ir, 0, 1);
 					AppendLine(sbr, strTypeFull + " ePart;", ref ir);

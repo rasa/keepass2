@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ using KeePassLib.Utility;
 namespace KeePass.App.Configuration
 {
 	[XmlType(AppConfigEx.StrXmlTypeName)]
-	public sealed partial class AppConfigEx
+	public sealed class AppConfigEx
 	{
 		internal const string StrXmlTypeName = "Configuration";
 
@@ -266,7 +266,6 @@ namespace KeePass.App.Configuration
 			AceSearch aceSearch = this.Search; // m_aceSearch might be null
 			AceDefaults aceDef = this.Defaults; // m_def might be null
 
-			aceMeta.Version = StrUtil.VersionToString(PwDefs.FileVersion64);
 			aceMeta.OmitItemsWithDefaultValues = true;
 			aceMeta.DpiFactorX = DpiUtil.FactorX; // For new (not loaded) cfgs.
 			aceMeta.DpiFactorY = DpiUtil.FactorY;
@@ -276,9 +275,10 @@ namespace KeePass.App.Configuration
 			foreach(IOConnectionInfo iocMru in aceApp.MostRecentlyUsed.Items)
 				iocMru.ClearCredentials(true);
 
-			if(!aceDef.RememberKeySources) aceDef.KeySources.Clear();
+			if(aceDef.RememberKeySources == false)
+				aceDef.KeySources.Clear();
 
-			// aceApp.TriggerSystem = Program.TriggerSystem;
+			aceApp.TriggerSystem = Program.TriggerSystem;
 
 			SearchUtil.PrepareForSerialize(aceSearch.LastUsedProfile);
 			foreach(SearchParameters sp in aceSearch.UserProfiles)
@@ -291,11 +291,9 @@ namespace KeePass.App.Configuration
 
 		internal void OnLoad()
 		{
-			ulong uVersion = this.Meta.GetVersion();
-			AceMainWindow aceMW = this.MainWindow;
-			AceSearch aceSearch = this.Search;
-			AceDefaults aceDef = this.Defaults;
-			AceIntegration aceInt = this.Integration;
+			AceMainWindow aceMW = this.MainWindow; // m_uiMainWindow might be null
+			AceSearch aceSearch = this.Search; // m_aceSearch might be null
+			AceDefaults aceDef = this.Defaults; // m_def might be null
 
 			// aceInt.UrlSchemeOverrides.SetDefaultsIfEmpty();
 
@@ -304,11 +302,13 @@ namespace KeePass.App.Configuration
 
 			// Remove invalid columns
 			List<AceColumn> lColumns = aceMW.EntryListColumns;
-			for(int i = lColumns.Count - 1; i >= 0; --i)
+			int i = 0;
+			while(i < lColumns.Count)
 			{
-				int t = (int)lColumns[i].Type;
-				if((t < 0) || (t >= (int)AceColumnType.Count))
+				if(((int)lColumns[i].Type < 0) || ((int)lColumns[i].Type >=
+					(int)AceColumnType.Count))
 					lColumns.RemoveAt(i);
+				else ++i;
 			}
 
 			SearchUtil.FinishDeserialize(aceSearch.LastUsedProfile);
@@ -323,20 +323,11 @@ namespace KeePass.App.Configuration
 				aceMW.EscAction = AceEscAction.MinimizeToTray;
 			}
 
-			// As of KeePass 2.54, all built-in URL scheme overrides are disabled
-			// by default; silently disable defaults of older versions
-			Debug.Assert((new AceUrlSchemeOverrides()).BuiltInOverridesEnabled == 0UL);
-			if(uVersion < 0x0002003600000000UL) // < 2.54
-			{
-				ulong u = aceInt.UrlSchemeOverrides.BuiltInOverridesEnabled;
-				if((u == 0x1UL) || (u == 0x1000000UL))
-					aceInt.UrlSchemeOverrides.BuiltInOverridesEnabled = 0;
-			}
-
 			if(NativeLib.IsUnix())
 			{
 				this.Security.MasterKeyOnSecureDesktop = false;
 
+				AceIntegration aceInt = this.Integration;
 				aceInt.HotKeyGlobalAutoType = (long)Keys.None;
 				aceInt.HotKeyGlobalAutoTypePassword = (long)Keys.None;
 				aceInt.HotKeySelectedAutoType = (long)Keys.None;
@@ -555,7 +546,7 @@ namespace KeePass.App.Configuration
 			fFont(ui.DataEditorFont);
 		}
 
-		private static readonly Dictionary<object, string> g_dictXmlPathCache =
+		private static Dictionary<object, string> m_dictXmlPathCache =
 			new Dictionary<object, string>();
 		public static bool IsOptionEnforced(object pContainer, PropertyInfo pi)
 		{
@@ -566,12 +557,12 @@ namespace KeePass.App.Configuration
 			if(xdEnforced == null) return false;
 
 			string strObjPath;
-			if(!g_dictXmlPathCache.TryGetValue(pContainer, out strObjPath))
+			if(!m_dictXmlPathCache.TryGetValue(pContainer, out strObjPath))
 			{
 				strObjPath = XmlUtil.GetObjectXmlPath(Program.Config, pContainer);
 				if(string.IsNullOrEmpty(strObjPath)) { Debug.Assert(false); return false; }
 
-				g_dictXmlPathCache[pContainer] = strObjPath;
+				m_dictXmlPathCache[pContainer] = strObjPath;
 			}
 
 			string strProp = XmlSerializerEx.GetXmlName(pi);
@@ -605,7 +596,7 @@ namespace KeePass.App.Configuration
 
 		public static void ClearXmlPathCache()
 		{
-			g_dictXmlPathCache.Clear();
+			m_dictXmlPathCache.Clear();
 		}
 
 		public void Apply(AceApplyFlags f)
@@ -639,17 +630,13 @@ namespace KeePass.App.Configuration
 				case "/Configuration/Application/PluginCompatibility":
 				case "/Configuration/Meta/DpiFactorX":
 				case "/Configuration/Meta/DpiFactorY":
-				case "/Configuration/Meta/Version":
 					o.NodeMode = XmNodeMode.None;
 					break;
 
-				case "/Configuration/Application/TriggerSystem":
 				case "/Configuration/Application/TriggerSystem/Triggers/Trigger":
 				case "/Configuration/Defaults/KeySources/Association":
-				case "/Configuration/Integration/UrlSchemeOverrides":
 				case "/Configuration/PasswordGenerator/AutoGeneratedPasswordsProfile":
-				// case "/Configuration/PasswordGenerator/LastUsedProfile":
-				case "/Configuration/PasswordGenerator/UserProfiles":
+				case "/Configuration/PasswordGenerator/LastUsedProfile":
 				case "/Configuration/PasswordGenerator/UserProfiles/Profile":
 				case "/Configuration/Search/LastUsedProfile":
 				case "/Configuration/Search/UserProfiles/Profile":
@@ -740,18 +727,12 @@ namespace KeePass.App.Configuration
 			return strA;
 		}
 
-		internal static string GetEmptyXml()
+		internal static string GetEmptyConfigXml()
 		{
 			return ("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" +
-				"<" + StrXmlTypeName + " xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
-				"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />");
-		}
-
-		internal static XmlDocument CreateEmptyXmlDocument()
-		{
-			XmlDocument xd = XmlUtilEx.CreateXmlDocument();
-			xd.LoadXml(GetEmptyXml());
-			return xd;
+				"<" + StrXmlTypeName + " xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n" +
+				"\t<Meta />\r\n" +
+				"</" + StrXmlTypeName + ">");
 		}
 	}
 
@@ -770,18 +751,6 @@ namespace KeePass.App.Configuration
 	{
 		public AceMeta()
 		{
-		}
-
-		private string m_strVersion = string.Empty;
-		[DefaultValue("")]
-		public string Version
-		{
-			get { return m_strVersion; }
-			set
-			{
-				if(value == null) throw new ArgumentNullException("value");
-				m_strVersion = value;
-			}
 		}
 
 		private bool m_bPrefLocalCfg = false;
@@ -824,12 +793,6 @@ namespace KeePass.App.Configuration
 		{
 			get { return m_dDpiFactorY; }
 			set { m_dDpiFactorY = value; }
-		}
-
-		internal ulong GetVersion()
-		{
-			if(string.IsNullOrEmpty(m_strVersion)) return 0;
-			return StrUtil.ParseVersion(m_strVersion);
 		}
 	}
 }

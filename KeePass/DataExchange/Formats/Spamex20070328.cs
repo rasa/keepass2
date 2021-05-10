@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,13 +19,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Text;
 using System.IO;
+using System.Windows.Forms;
+using System.Drawing;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Windows.Forms;
 
 using KeePass.Forms;
 using KeePass.Resources;
@@ -88,7 +88,6 @@ namespace KeePass.DataExchange.Formats
 			dlgPassword.InitEx("Spamex.com", KPRes.WebSiteLogin + " - " + KPRes.Password,
 				KPRes.PasswordPrompt, KeePass.Properties.Resources.B48x48_WWW,
 				string.Empty, null);
-			dlgPassword.FlagsEx |= SlfFlags.Sensitive;
 			if(UIUtil.ShowDialogNotValue(dlgPassword, DialogResult.OK)) return;
 			string strPassword = dlgPassword.ResultString;
 			UIUtil.DestroyForm(dlgPassword);

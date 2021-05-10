@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -472,7 +472,7 @@ namespace KeePassLib.Serialization
 					"Software\\Microsoft\\OneDrive\\Accounts", false))
 				{
 					string[] vAccs = (((kAccs != null) ? kAccs.GetSubKeyNames() :
-						null) ?? MemUtil.EmptyArray<string>());
+						null) ?? new string[0]);
 
 					foreach(string strAcc in vAccs)
 					{
@@ -482,7 +482,7 @@ namespace KeePassLib.Serialization
 							strAcc + "\\Tenants", false))
 						{
 							string[] vTenants = (((kTenants != null) ?
-								kTenants.GetSubKeyNames() : null) ?? MemUtil.EmptyArray<string>());
+								kTenants.GetSubKeyNames() : null) ?? new string[0]);
 
 							foreach(string strT in vTenants)
 							{
@@ -491,7 +491,7 @@ namespace KeePassLib.Serialization
 								using(RegistryKey kT = kTenants.OpenSubKey(strT, false))
 								{
 									string[] vPaths = (((kT != null) ?
-										kT.GetValueNames() : null) ?? MemUtil.EmptyArray<string>());
+										kT.GetValueNames() : null) ?? new string[0]);
 
 									foreach(string strPath in vPaths)
 									{

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ namespace KeePass.Forms
 			InitializeComponent();
 
 			SecureTextBoxEx.InitEx(ref m_tbSelected);
-			GlobalWindowManager.InitializeForm(this);
+			Program.Translation.ApplyTo(this);
 		}
 
 		/// <summary>
@@ -177,15 +177,7 @@ namespace KeePass.Forms
 
 		private void OnFormClosed(object sender, FormClosedEventArgs e)
 		{
-			string strRect = UIUtil.GetWindowScreenRect(this);
-			if(strRect != m_strInitialFormRect) // Don't overwrite ""
-				Program.Config.UI.CharPickerRect = strRect;
-
-			m_tbSelected.TextChanged -= this.OnSelectedTextChangedEx;
-
-			RemoveAllCharButtons();
-			m_fontChars.Dispose();
-
+			CleanUpEx();
 			GlobalWindowManager.RemoveWindow(this);
 		}
 
@@ -196,6 +188,18 @@ namespace KeePass.Forms
 
 		private void OnBtnCancel(object sender, EventArgs e)
 		{
+		}
+
+		private void CleanUpEx()
+		{
+			string strRect = UIUtil.GetWindowScreenRect(this);
+			if(strRect != m_strInitialFormRect) // Don't overwrite ""
+				Program.Config.UI.CharPickerRect = strRect;
+
+			m_tbSelected.TextChanged -= this.OnSelectedTextChangedEx;
+
+			RemoveAllCharButtons();
+			m_fontChars.Dispose();
 		}
 
 		private void RemoveAllCharButtons()
@@ -237,7 +241,7 @@ namespace KeePass.Forms
 
 			bool bRtl = (this.RightToLeft == RightToLeft.Yes);
 
-			char[] vWord = ((m_psWord != null) ? m_psWord.ReadChars() : MemUtil.EmptyArray<char>());
+			char[] vWord = ((m_psWord != null) ? m_psWord.ReadChars() : new char[0]);
 			if(vWord.Length >= 1)
 			{
 				int x = 0;
@@ -286,7 +290,7 @@ namespace KeePass.Forms
 
 			m_tbSelected.EnableProtection(bHide);
 
-			string strHiddenChar = SecureTextBoxEx.GetPasswordCharString(1);
+			string strHiddenChar = new string(SecureTextBoxEx.PasswordCharEx, 1);
 
 			bool bHideBtns = bHide;
 			bHideBtns |= !Program.Config.UI.Hiding.UnhideButtonAlsoUnhidesSource;

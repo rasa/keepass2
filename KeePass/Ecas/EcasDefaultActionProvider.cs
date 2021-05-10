@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -369,24 +369,35 @@ namespace KeePass.Ecas
 			IOConnectionInfo ioc = IOFromParameters(strPath, strIOUserName, strIOPassword);
 			if(ioc == null) return;
 
-			CompositeKey ck = KeyFromParams(a, 3, 4, 5, ioc);
+			CompositeKey cmpKey = KeyFromParams(a, 3, 4, 5);
 
-			Program.MainForm.OpenDatabase(ioc, ck, ioc.IsLocalFile());
+			Program.MainForm.OpenDatabase(ioc, cmpKey, ioc.IsLocalFile());
 		}
 
 		private static CompositeKey KeyFromParams(EcasAction a, int iPassword,
-			int iKeyFile, int iUserAccount, IOConnectionInfo ioc)
+			int iKeyFile, int iUserAccount)
 		{
 			string strPassword = EcasUtil.GetParamString(a.Parameters, iPassword, true);
 			string strKeyFile = EcasUtil.GetParamString(a.Parameters, iKeyFile, true);
 			bool bUserAccount = EcasUtil.GetParamBool(a.Parameters, iUserAccount);
 
-			byte[] pbPasswordUtf8 = null;
-			if(!string.IsNullOrEmpty(strPassword))
-				pbPasswordUtf8 = StrUtil.Utf8.GetBytes(strPassword);
+			CompositeKey cmpKey = null;
+			if(!string.IsNullOrEmpty(strPassword) || !string.IsNullOrEmpty(strKeyFile) ||
+				bUserAccount)
+			{
+				List<string> vArgs = new List<string>();
+				if(!string.IsNullOrEmpty(strPassword))
+					vArgs.Add("-" + AppDefs.CommandLineOptions.Password + ":" + strPassword);
+				if(!string.IsNullOrEmpty(strKeyFile))
+					vArgs.Add("-" + AppDefs.CommandLineOptions.KeyFile + ":" + strKeyFile);
+				if(bUserAccount)
+					vArgs.Add("-" + AppDefs.CommandLineOptions.UserAccount);
 
-			return KeyUtil.CreateKey(pbPasswordUtf8, strKeyFile, bUserAccount,
-				ioc, false, false);
+				CommandLineArgs cmdArgs = new CommandLineArgs(vArgs.ToArray());
+				cmpKey = KeyUtil.KeyFromCommandLine(cmdArgs);
+			}
+
+			return cmpKey;
 		}
 
 		private static void SaveDatabaseFile(EcasAction a, EcasContext ctx)
@@ -405,12 +416,13 @@ namespace KeePass.Ecas
 			IOConnectionInfo ioc = IOFromParameters(strPath, strIOUserName, strIOPassword);
 			if(ioc == null) return;
 
-			MainForm mf = Program.MainForm;
-			PwDatabase pd = mf.ActiveDatabase;
+			PwDatabase pd = Program.MainForm.ActiveDatabase;
 			if((pd == null) || !pd.IsOpen) return;
 
-			bool? ob = ImportUtil.Synchronize(pd, mf, ioc, false, mf);
-			mf.UpdateUISyncPost(ob);
+			bool? b = ImportUtil.Synchronize(pd, Program.MainForm, ioc, false,
+				Program.MainForm);
+			Program.MainForm.UpdateUI(false, null, true, null, true, null, false);
+			if(b.HasValue) Program.MainForm.SetStatusEx(b.Value ? KPRes.SyncSuccess : KPRes.SyncFailed);
 		}
 
 		private static IOConnectionInfo IOFromParameters(string strPath,
@@ -459,22 +471,24 @@ namespace KeePass.Ecas
 			else { Debug.Assert(false); }
 			if(mm == PwMergeMethod.None) mm = PwMergeMethod.CreateNewUuids;
 
-			CompositeKey ck = KeyFromParams(a, 3, 4, 5, ioc);
-			if((ck == null) && ff.RequiresKey)
+			CompositeKey cmpKey = KeyFromParams(a, 3, 4, 5);
+			if((cmpKey == null) && ff.RequiresKey)
 			{
-				KeyPromptFormResult r;
-				DialogResult dr = KeyPromptForm.ShowDialog(ioc, false, null, out r);
-				if((dr != DialogResult.OK) || (r == null)) return;
+				KeyPromptForm kpf = new KeyPromptForm();
+				kpf.InitEx(ioc, false, true);
 
-				ck = r.CompositeKey;
+				if(UIUtil.ShowDialogNotValue(kpf, DialogResult.OK)) return;
+
+				cmpKey = kpf.CompositeKey;
+				UIUtil.DestroyForm(kpf);
 			}
 
-			bool? ob = false; // Exception => UI update
-			try { ob = ImportUtil.Import(pd, ff, ioc, mm, ck); }
+			bool? b = true;
+			try { b = ImportUtil.Import(pd, ff, ioc, mm, cmpKey); }
 			finally
 			{
-				if(ob.HasValue)
-					Program.MainForm.UpdateUI(false, null, true, null, true, null, false);
+				if(b.GetValueOrDefault(false))
+					Program.MainForm.UpdateUI(false, null, true, null, true, null, true);
 			}
 		}
 

@@ -31,7 +31,6 @@ namespace KeePassLib.Resources
 			m_strCharSetTooFewChars = TryGetEx(dictNew, "CharSetTooFewChars", m_strCharSetTooFewChars);
 			m_strCryptoStreamFailed = TryGetEx(dictNew, "CryptoStreamFailed", m_strCryptoStreamFailed);
 			m_strEncDataTooLarge = TryGetEx(dictNew, "EncDataTooLarge", m_strEncDataTooLarge);
-			m_strEntryLower = TryGetEx(dictNew, "EntryLower", m_strEntryLower);
 			m_strErrorInClipboard = TryGetEx(dictNew, "ErrorInClipboard", m_strErrorInClipboard);
 			m_strExpect100Continue = TryGetEx(dictNew, "Expect100Continue", m_strExpect100Continue);
 			m_strFatalError = TryGetEx(dictNew, "FatalError", m_strFatalError);
@@ -53,7 +52,6 @@ namespace KeePassLib.Resources
 			m_strFinalKeyCreationFailed = TryGetEx(dictNew, "FinalKeyCreationFailed", m_strFinalKeyCreationFailed);
 			m_strFrameworkNotImplExcp = TryGetEx(dictNew, "FrameworkNotImplExcp", m_strFrameworkNotImplExcp);
 			m_strGeneral = TryGetEx(dictNew, "General", m_strGeneral);
-			m_strGroupLower = TryGetEx(dictNew, "GroupLower", m_strGroupLower);
 			m_strInvalidCompositeKey = TryGetEx(dictNew, "InvalidCompositeKey", m_strInvalidCompositeKey);
 			m_strInvalidCompositeKeyHint = TryGetEx(dictNew, "InvalidCompositeKeyHint", m_strInvalidCompositeKeyHint);
 			m_strInvalidDataWhileDecoding = TryGetEx(dictNew, "InvalidDataWhileDecoding", m_strInvalidDataWhileDecoding);
@@ -84,7 +82,6 @@ namespace KeePassLib.Resources
 			"CharSetTooFewChars",
 			"CryptoStreamFailed",
 			"EncDataTooLarge",
-			"EntryLower",
 			"ErrorInClipboard",
 			"Expect100Continue",
 			"FatalError",
@@ -106,7 +103,6 @@ namespace KeePassLib.Resources
 			"FinalKeyCreationFailed",
 			"FrameworkNotImplExcp",
 			"General",
-			"GroupLower",
 			"InvalidCompositeKey",
 			"InvalidCompositeKeyHint",
 			"InvalidDataWhileDecoding",
@@ -189,17 +185,6 @@ namespace KeePassLib.Resources
 		public static string EncDataTooLarge
 		{
 			get { return m_strEncDataTooLarge; }
-		}
-
-		private static string m_strEntryLower =
-			@"entry";
-		/// <summary>
-		/// Look up a localized string similar to
-		/// 'entry'.
-		/// </summary>
-		public static string EntryLower
-		{
-			get { return m_strEntryLower; }
 		}
 
 		private static string m_strErrorInClipboard =
@@ -390,10 +375,10 @@ namespace KeePassLib.Resources
 		}
 
 		private static string m_strFileVersionUnsupported =
-			@"The file format version is unsupported.";
+			@"The file version is unsupported.";
 		/// <summary>
 		/// Look up a localized string similar to
-		/// 'The file format version is unsupported.'.
+		/// 'The file version is unsupported.'.
 		/// </summary>
 		public static string FileVersionUnsupported
 		{
@@ -431,17 +416,6 @@ namespace KeePassLib.Resources
 		public static string General
 		{
 			get { return m_strGeneral; }
-		}
-
-		private static string m_strGroupLower =
-			@"group";
-		/// <summary>
-		/// Look up a localized string similar to
-		/// 'group'.
-		/// </summary>
-		public static string GroupLower
-		{
-			get { return m_strGroupLower; }
 		}
 
 		private static string m_strInvalidCompositeKey =
@@ -643,10 +617,10 @@ namespace KeePassLib.Resources
 		}
 
 		private static string m_strUnknownHeaderId =
-			@"Unknown header ID";
+			@"Unknown header ID!";
 		/// <summary>
 		/// Look up a localized string similar to
-		/// 'Unknown header ID'.
+		/// 'Unknown header ID!'.
 		/// </summary>
 		public static string UnknownHeaderId
 		{

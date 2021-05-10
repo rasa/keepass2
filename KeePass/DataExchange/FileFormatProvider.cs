@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
+using System.Drawing;
 
 using KeePass.Resources;
 
@@ -63,14 +63,9 @@ namespace KeePass.DataExchange
 			get { return KPRes.General; }
 		}
 
-		/// <summary>
-		/// This property indicates whether entries are only appended
-		/// to the end of the root group. This is true for example if
-		/// the file format does not support groups (i.e. no hierarchy).
-		/// </summary>
-		public virtual bool ImportAppendsToRootGroupOnly
+		public virtual Image SmallIcon
 		{
-			get { return false; }
+			get { return KeePass.Properties.Resources.B16x16_Folder_Inbox; }
 		}
 
 		public virtual bool RequiresFile
@@ -78,19 +73,24 @@ namespace KeePass.DataExchange
 			get { return true; }
 		}
 
-		public virtual bool RequiresKey
-		{
-			get { return false; }
-		}
-
 		public virtual bool SupportsUuids
 		{
 			get { return false; }
 		}
 
-		public virtual Image SmallIcon
+		public virtual bool RequiresKey
 		{
-			get { return null; }
+			get { return false; }
+		}
+
+		/// <summary>
+		/// This property specifies if entries are only appended to the
+		/// end of the root group. This is true for example if the
+		/// file format doesn't support groups (i.e. no hierarchy).
+		/// </summary>
+		public virtual bool ImportAppendsToRootGroupOnly
+		{
+			get { return false; }
 		}
 
 		/// <summary>

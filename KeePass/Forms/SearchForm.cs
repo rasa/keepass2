@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ namespace KeePass.Forms
 	{
 		private readonly string ProfileCustom = "(" + KPRes.Custom + ")";
 
-		// private PwDatabase m_pdContext = null;
+		private PwDatabase m_pdContext = null;
 		private PwGroup m_pgRoot = null;
 
 		private uint m_uBlockProfileAuto = 0;
@@ -72,7 +72,7 @@ namespace KeePass.Forms
 		public SearchForm()
 		{
 			InitializeComponent();
-			GlobalWindowManager.InitializeForm(this);
+			Program.Translation.ApplyTo(this);
 		}
 
 		/// <summary>
@@ -80,7 +80,7 @@ namespace KeePass.Forms
 		/// </summary>
 		public void InitEx(PwDatabase pdContext, PwGroup pgRoot)
 		{
-			// m_pdContext = pdContext;
+			m_pdContext = pdContext;
 			m_pgRoot = pgRoot;
 		}
 
@@ -110,12 +110,11 @@ namespace KeePass.Forms
 
 			UIUtil.SetText(m_cbDerefData, m_cbDerefData.Text + " (" + KPRes.Slow + ")");
 
-			UIUtil.ConfigureToolTip(m_ttMain);
-			UIUtil.SetToolTip(m_ttMain, m_btnProfileAdd, KPRes.ProfileSaveDesc, false);
-			UIUtil.SetToolTip(m_ttMain, m_btnProfileDelete, KPRes.ProfileDeleteDesc, false);
+			CustomizeForScreenReader();
 
-			AccessibilityEx.SetName(m_btnProfileAdd, KPRes.ProfileSave);
-			AccessibilityEx.SetName(m_btnProfileDelete, KPRes.ProfileDelete);
+			UIUtil.ConfigureToolTip(m_ttMain);
+			m_ttMain.SetToolTip(m_btnProfileAdd, KPRes.ProfileSaveDesc);
+			m_ttMain.SetToolTip(m_btnProfileDelete, KPRes.ProfileDeleteDesc);
 
 			SearchParameters sp = (!string.IsNullOrEmpty(m_strInitProfile) ?
 				Program.Config.Search.FindProfile(m_strInitProfile) : null);
@@ -139,6 +138,15 @@ namespace KeePass.Forms
 
 			UpdateUIState();
 			m_tbSearch.SelectAll();
+			UIUtil.SetFocus(m_tbSearch, this);
+		}
+
+		private void CustomizeForScreenReader()
+		{
+			if(!Program.Config.UI.OptimizeForScreenReader) return;
+
+			m_btnProfileAdd.Text = KPRes.ProfileSave;
+			m_btnProfileDelete.Text = KPRes.ProfileDelete;
 		}
 
 		private void OnFormClosed(object sender, FormClosedEventArgs e)

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,9 +20,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 
-using KeePass.App.Configuration;
 using KeePass.Util;
 using KeePass.Util.Spr;
 
@@ -114,16 +112,14 @@ namespace KeePass.App
 		/// system will be used, independent of the <c>bPreferLocal</c> flag.</param>
 		public static void ShowHelp(string strTopic, string strSection, bool bPreferLocal)
 		{
-			if(ShowHelpOverride(strTopic, strSection)) return;
-
 			if(AppHelp.LocalHelpAvailable)
 			{
 				if(bPreferLocal || (AppHelp.PreferredHelpSource == AppHelpSource.Local))
-					ShowHelpLocal(strTopic, strSection);
+					AppHelp.ShowHelpLocal(strTopic, strSection);
 				else
-					ShowHelpOnline(strTopic, strSection);
+					AppHelp.ShowHelpOnline(strTopic, strSection);
 			}
-			else ShowHelpOnline(strTopic, strSection);
+			else AppHelp.ShowHelpOnline(strTopic, strSection);
 		}
 
 		private static void ShowHelpLocal(string strTopic, string strSection)
@@ -204,57 +200,19 @@ namespace KeePass.App
 			WinUtil.OpenUrl(strUrl, null);
 		}
 
-		private static bool ShowHelpOverride(string strTopic, string strSection)
-		{
-			AceApplication aceApp = Program.Config.Application;
-			string strUrl = aceApp.HelpUrl;
-			if(string.IsNullOrEmpty(strUrl)) return false;
-			if(!AppConfigEx.IsOptionEnforced(aceApp, "HelpUrl")) return false;
-
-			string strRel = GetRelativeUrl(strTopic, strSection);
-
-			WinUtil.OpenUrl(strUrl, null, true, strRel);
-			return true;
-		}
-
-		private static string GetRelativeUrl(string strTopic, string strSection)
-		{
-			StringBuilder sb = new StringBuilder();
-
-			const string strDefault = AppDefs.HelpTopics.Default;
-			sb.Append(string.IsNullOrEmpty(strTopic) ? strDefault : strTopic);
-			sb.Append(".html");
-
-			if(!string.IsNullOrEmpty(strSection))
-			{
-				sb.Append('#');
-				sb.Append(strSection);
-			}
-
-			return sb.ToString();
-		}
-
 		internal static string GetOnlineUrl(string strTopic, string strSection)
 		{
-			return (PwDefs.HelpUrl + GetRelativeUrl(strTopic, strSection));
-		}
+			string str = PwDefs.HelpUrl;
 
-		// internal static void SetHelp(Form f, string strTopic, string strSection)
-		// {
-		//	if(f == null) { Debug.Assert(false); return; }
-		//	Debug.Assert(!f.HelpButton);
-		//	f.HelpButton = true;
-		//	SetHelp((Control)f, strTopic, strSection);
-		// }
-		// internal static void SetHelp(Control c, string strTopic, string strSection)
-		// {
-		//	if(c == null) { Debug.Assert(false); return; }
-		//	c.HelpRequested += delegate(object sender, HelpEventArgs e)
-		//	{
-		//		if(e == null) { Debug.Assert(false); return; }
-		//		e.Handled = true;
-		//		AppHelp.ShowHelp(strTopic, strSection);
-		//	};
-		// }
+			if(!string.IsNullOrEmpty(strTopic))
+			{
+				str += strTopic + ".html";
+
+				if(!string.IsNullOrEmpty(strSection))
+					str += "#" + strSection;
+			}
+
+			return str;
+		}
 	}
 }

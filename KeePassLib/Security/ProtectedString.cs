@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -314,23 +314,6 @@ namespace KeePassLib.Security
 				return new ProtectedString(false, ReadString().Insert(
 					iStart, strInsert));
 
-			return Insert(iStart, strInsert.ToCharArray(), 0, strInsert.Length);
-		}
-
-		internal ProtectedString Insert(int iStart, char[] vInsert,
-			int iInsert, int cchInsert)
-		{
-			if(iStart < 0) throw new ArgumentOutOfRangeException("iStart");
-			if(vInsert == null) throw new ArgumentNullException("vInsert");
-			if(iInsert < 0) throw new ArgumentOutOfRangeException("iInsert");
-			if(cchInsert == 0) return this;
-			if((cchInsert < 0) || (cchInsert > (vInsert.Length - iInsert)))
-				throw new ArgumentOutOfRangeException("cchInsert");
-
-			if(!m_bIsProtected)
-				return new ProtectedString(false, ReadString().Insert(
-					iStart, new string(vInsert, iInsert, cchInsert)));
-
 			UTF8Encoding utf8 = StrUtil.Utf8;
 			char[] v = ReadChars(), vNew = null;
 			byte[] pbNew = null;
@@ -341,16 +324,19 @@ namespace KeePassLib.Security
 				if(iStart > v.Length)
 					throw new ArgumentOutOfRangeException("iStart");
 
-				vNew = new char[v.Length + cchInsert];
+				char[] vIns = strInsert.ToCharArray();
+
+				vNew = new char[v.Length + vIns.Length];
 				Array.Copy(v, 0, vNew, 0, iStart);
-				Array.Copy(vInsert, iInsert, vNew, iStart, cchInsert);
-				Array.Copy(v, iStart, vNew, iStart + cchInsert, v.Length - iStart);
+				Array.Copy(vIns, 0, vNew, iStart, vIns.Length);
+				Array.Copy(v, iStart, vNew, iStart + vIns.Length,
+					v.Length - iStart);
 
 				pbNew = utf8.GetBytes(vNew);
 				ps = new ProtectedString(true, pbNew);
 
 				Debug.Assert(utf8.GetString(pbNew, 0, pbNew.Length) ==
-					ReadString().Insert(iStart, new string(vInsert, iInsert, cchInsert)));
+					ReadString().Insert(iStart, strInsert));
 			}
 			finally
 			{

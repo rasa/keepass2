@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml;
 
 using KeePass.App;
 using KeePass.DataExchange.Formats;
@@ -36,7 +36,6 @@ using KeePass.UI;
 using KeePass.Util;
 
 using KeePassLib;
-using KeePassLib.Collections;
 using KeePassLib.Interfaces;
 using KeePassLib.Keys;
 using KeePassLib.Resources;
@@ -54,32 +53,32 @@ namespace KeePass.DataExchange
 			bAppendedToRootOnly = false;
 
 			if(pwStorage == null) throw new ArgumentNullException("pwStorage");
-			if(!pwStorage.IsOpen) { Debug.Assert(false); return null; }
+			if(!pwStorage.IsOpen) return null;
 			if(!AppPolicy.Try(AppPolicyId.Import)) return null;
 
-			ExchangeDataForm dlg = new ExchangeDataForm();
-			dlg.InitEx(false, pwStorage, pwStorage.RootGroup);
+			ExchangeDataForm dlgFmt = new ExchangeDataForm();
+			dlgFmt.InitEx(false, pwStorage, pwStorage.RootGroup);
 
-			if(UIUtil.ShowDialogNotValue(dlg, DialogResult.OK)) return null;
+			if(UIUtil.ShowDialogNotValue(dlgFmt, DialogResult.OK)) return null;
 
-			FileFormatProvider ffp = dlg.ResultFormat;
-			if(ffp == null)
+			Debug.Assert(dlgFmt.ResultFormat != null);
+			if(dlgFmt.ResultFormat == null)
 			{
-				Debug.Assert(false);
 				MessageService.ShowWarning(KPRes.ImportFailed);
-				UIUtil.DestroyForm(dlg);
-				return null;
+				UIUtil.DestroyForm(dlgFmt);
+				return false;
 			}
 
-			bAppendedToRootOnly = ffp.ImportAppendsToRootGroupOnly;
+			bAppendedToRootOnly = dlgFmt.ResultFormat.ImportAppendsToRootGroupOnly;
+			FileFormatProvider ffp = dlgFmt.ResultFormat;
 
 			List<IOConnectionInfo> lConnections = new List<IOConnectionInfo>();
-			foreach(string strFile in dlg.ResultFiles)
-				lConnections.Add(IOConnectionInfo.FromPath(strFile));
+			foreach(string strSelFile in dlgFmt.ResultFiles)
+				lConnections.Add(IOConnectionInfo.FromPath(strSelFile));
 
-			UIUtil.DestroyForm(dlg);
-			return Import(pwStorage, ffp, lConnections.ToArray(), false, null,
-				false, fParent);
+			UIUtil.DestroyForm(dlgFmt);
+			return Import(pwStorage, ffp, lConnections.ToArray(),
+				false, null, false, fParent);
 		}
 
 		public static bool? Import(PwDatabase pwDatabase, FileFormatProvider fmtImp,
@@ -87,16 +86,18 @@ namespace KeePass.DataExchange
 			bool bForceSave, Form fParent)
 		{
 			if(pwDatabase == null) throw new ArgumentNullException("pwDatabase");
-			if(!pwDatabase.IsOpen) { Debug.Assert(false); return null; }
+			if(!pwDatabase.IsOpen) return null;
 			if(fmtImp == null) throw new ArgumentNullException("fmtImp");
 			if(vConnections == null) throw new ArgumentNullException("vConnections");
 
-			if(!AppPolicy.Try(AppPolicyId.Import)) return null;
-			if(!fmtImp.TryBeginImport()) return null;
+			if(!AppPolicy.Try(AppPolicyId.Import)) return false;
+			if(!fmtImp.TryBeginImport()) return false;
 
-			MainForm mf = Program.MainForm; // Null for KPScript
 			bool bUseTempDb = (fmtImp.SupportsUuids || fmtImp.RequiresKey);
 			bool bAllSuccess = true;
+			MainForm mf = Program.MainForm; // Null for KPScript
+
+			// if(bSynchronize) { Debug.Assert(vFiles.Length == 1); }
 
 			IStatusLogger dlgStatus;
 			if(Program.Config.UI.ShowImportStatusDialog ||
@@ -111,28 +112,28 @@ namespace KeePass.DataExchange
 
 			if(vConnections.Length == 0)
 			{
-				try
+				try { fmtImp.Import(pwDatabase, null, dlgStatus); }
+				catch(Exception exSingular)
 				{
-					pwDatabase.Modified = true;
-					fmtImp.Import(pwDatabase, null, dlgStatus);
-				}
-				catch(Exception ex)
-				{
-					MessageService.ShowWarning(ex);
-					bAllSuccess = false;
+					if(!string.IsNullOrEmpty(exSingular.Message))
+					{
+						// slf.SetText(exSingular.Message, LogStatusType.Warning);
+						MessageService.ShowWarning(exSingular);
+					}
 				}
 
 				dlgStatus.EndLogging();
-				return bAllSuccess;
+				return true;
 			}
 
 			foreach(IOConnectionInfo iocIn in vConnections)
 			{
 				Stream s = null;
+
 				try { s = IOConnection.OpenRead(iocIn); }
-				catch(Exception ex)
+				catch(Exception exFile)
 				{
-					MessageService.ShowWarning(iocIn.GetDisplayName(), ex);
+					MessageService.ShowWarning(iocIn.GetDisplayName(), exFile);
 					bAllSuccess = false;
 					continue;
 				}
@@ -149,16 +150,13 @@ namespace KeePass.DataExchange
 
 				if(fmtImp.RequiresKey && !bSynchronize)
 				{
-					KeyPromptFormResult r;
-					DialogResult dr = KeyPromptForm.ShowDialog(iocIn, false, null, out r);
-					if((dr != DialogResult.OK) || (r == null))
-					{
-						s.Close();
-						bAllSuccess = false;
-						continue;
-					}
+					KeyPromptForm kpf = new KeyPromptForm();
+					kpf.InitEx(iocIn, false, true);
 
-					pwImp.MasterKey = r.CompositeKey;
+					if(UIUtil.ShowDialogNotValue(kpf, DialogResult.OK)) { s.Close(); continue; }
+
+					pwImp.MasterKey = kpf.CompositeKey;
+					UIUtil.DestroyForm(kpf);
 				}
 				else if(bSynchronize) pwImp.MasterKey = pwDatabase.MasterKey;
 
@@ -166,19 +164,16 @@ namespace KeePass.DataExchange
 					KPRes.ImportingStatusMsg) + " (" + iocIn.GetDisplayName() +
 					")", LogStatusType.Info);
 
-				try
+				try { fmtImp.Import(pwImp, s, dlgStatus); }
+				catch(Exception excpFmt)
 				{
-					pwImp.Modified = true;
-					fmtImp.Import(pwImp, s, dlgStatus);
-				}
-				catch(Exception ex)
-				{
-					string strMsg = ex.Message;
-					if(bSynchronize && (ex is InvalidCompositeKeyException))
-						strMsg = KLRes.InvalidCompositeKey + MessageService.NewParagraph +
+					string strMsgEx = excpFmt.Message;
+					if(bSynchronize && (excpFmt is InvalidCompositeKeyException))
+						strMsgEx = KLRes.InvalidCompositeKey + MessageService.NewParagraph +
 							KPRes.SynchronizingHint;
+
 					MessageService.ShowWarning(iocIn.GetDisplayName(),
-						KPRes.FileImportFailed, strMsg);
+						KPRes.FileImportFailed, strMsgEx);
 
 					bAllSuccess = false;
 					continue;
@@ -193,24 +188,17 @@ namespace KeePass.DataExchange
 					else
 					{
 						ImportMethodForm imf = new ImportMethodForm();
-						if(UIUtil.ShowDialogNotValue(imf, DialogResult.OK))
-						{
-							bAllSuccess = false;
-							continue;
-						}
+						if(UIUtil.ShowDialogNotValue(imf, DialogResult.OK)) continue;
 						mm = imf.MergeMethod;
 						UIUtil.DestroyForm(imf);
 					}
 
-					try
-					{
-						pwDatabase.Modified = true;
-						pwDatabase.MergeIn(pwImp, mm, dlgStatus);
-					}
-					catch(Exception ex)
+					try { pwDatabase.MergeIn(pwImp, mm, dlgStatus); }
+					catch(Exception exMerge)
 					{
 						MessageService.ShowWarning(iocIn.GetDisplayName(),
-							KPRes.ImportFailed, ex);
+							KPRes.ImportFailed, exMerge);
+
 						bAllSuccess = false;
 						continue;
 					}
@@ -219,7 +207,8 @@ namespace KeePass.DataExchange
 
 			if(bSynchronize && bAllSuccess)
 			{
-				if(uiOps == null) { Debug.Assert(false); throw new ArgumentNullException("uiOps"); }
+				Debug.Assert(uiOps != null);
+				if(uiOps == null) throw new ArgumentNullException("uiOps");
 
 				dlgStatus.SetText(KPRes.Synchronizing + " (" +
 					KPRes.SavingDatabase + ")", LogStatusType.Info);
@@ -267,12 +256,12 @@ namespace KeePass.DataExchange
 								mf.FileMruList.AddItem(ioc.GetDisplayName(),
 									ioc.CloneDeep());
 						}
-						catch(Exception ex)
+						catch(Exception exSync)
 						{
-							MessageService.ShowWarning(
+							MessageService.ShowWarning(KPRes.SyncFailed,
 								pwDatabase.IOConnectionInfo.GetDisplayName() +
-								MessageService.NewLine + ioc.GetDisplayName(),
-								KPRes.SyncFailed, ex);
+								MessageService.NewLine + ioc.GetDisplayName(), exSync);
+
 							bAllSuccess = false;
 							continue;
 						}
@@ -280,8 +269,9 @@ namespace KeePass.DataExchange
 				}
 				else
 				{
-					MessageService.ShowWarning(
-						pwDatabase.IOConnectionInfo.GetDisplayName(), KPRes.SyncFailed);
+					MessageService.ShowWarning(KPRes.SyncFailed,
+						pwDatabase.IOConnectionInfo.GetDisplayName());
+
 					bAllSuccess = false;
 				}
 			}
@@ -293,13 +283,13 @@ namespace KeePass.DataExchange
 		public static bool? Import(PwDatabase pd, FileFormatProvider fmtImp,
 			IOConnectionInfo iocImp, PwMergeMethod mm, CompositeKey cmpKey)
 		{
-			if(pd == null) throw new ArgumentNullException("pd");
-			if(fmtImp == null) throw new ArgumentNullException("fmtImp");
-			if(iocImp == null) throw new ArgumentNullException("iocImp");
+			if(pd == null) { Debug.Assert(false); return false; }
+			if(fmtImp == null) { Debug.Assert(false); return false; }
+			if(iocImp == null) { Debug.Assert(false); return false; }
 			if(cmpKey == null) cmpKey = new CompositeKey();
 
-			if(!AppPolicy.Try(AppPolicyId.Import)) return null;
-			if(!fmtImp.TryBeginImport()) return null;
+			if(!AppPolicy.Try(AppPolicyId.Import)) return false;
+			if(!fmtImp.TryBeginImport()) return false;
 
 			PwDatabase pdImp = new PwDatabase();
 			pdImp.New(new IOConnectionInfo(), cmpKey);
@@ -308,12 +298,11 @@ namespace KeePass.DataExchange
 			Stream s = IOConnection.OpenRead(iocImp);
 			if(s == null)
 				throw new FileNotFoundException(iocImp.GetDisplayName() +
-					MessageService.NewParagraph + KPRes.FileNotFoundError);
+					MessageService.NewLine + KPRes.FileNotFoundError);
 
 			try { fmtImp.Import(pdImp, s, null); }
 			finally { s.Close(); }
 
-			pd.Modified = true;
 			pd.MergeIn(pdImp, mm);
 			return true;
 		}
@@ -322,11 +311,11 @@ namespace KeePass.DataExchange
 			bool bOpenFromUrl, Form fParent)
 		{
 			if(pwStorage == null) throw new ArgumentNullException("pwStorage");
-			if(!pwStorage.IsOpen) { Debug.Assert(false); return null; }
+			if(!pwStorage.IsOpen) return null;
 			if(!AppPolicy.Try(AppPolicyId.Import)) return null;
 
-			List<IOConnectionInfo> lConnections = new List<IOConnectionInfo>();
-			if(!bOpenFromUrl)
+			List<IOConnectionInfo> vConnections = new List<IOConnectionInfo>();
+			if(bOpenFromUrl == false)
 			{
 				OpenFileDialogEx ofd = UIUtil.CreateOpenFileDialog(KPRes.Synchronize,
 					UIUtil.CreateFileTypeFilter(AppDefs.FileExtension.FileExt,
@@ -336,7 +325,7 @@ namespace KeePass.DataExchange
 				if(ofd.ShowDialog() != DialogResult.OK) return null;
 
 				foreach(string strSelFile in ofd.FileNames)
-					lConnections.Add(IOConnectionInfo.FromPath(strSelFile));
+					vConnections.Add(IOConnectionInfo.FromPath(strSelFile));
 			}
 			else // Open URL
 			{
@@ -345,11 +334,11 @@ namespace KeePass.DataExchange
 
 				if(UIUtil.ShowDialogNotValue(iocf, DialogResult.OK)) return null;
 
-				lConnections.Add(iocf.IOConnectionInfo);
+				vConnections.Add(iocf.IOConnectionInfo);
 				UIUtil.DestroyForm(iocf);
 			}
 
-			return Import(pwStorage, new KeePassKdb2x(), lConnections.ToArray(),
+			return Import(pwStorage, new KeePassKdb2x(), vConnections.ToArray(),
 				true, uiOps, false, fParent);
 		}
 
@@ -357,16 +346,17 @@ namespace KeePass.DataExchange
 			IOConnectionInfo iocSyncWith, bool bForceSave, Form fParent)
 		{
 			if(pwStorage == null) throw new ArgumentNullException("pwStorage");
-			if(!pwStorage.IsOpen) { Debug.Assert(false); return null; }
+			if(!pwStorage.IsOpen) return null; // No assert or throw
 			if(iocSyncWith == null) throw new ArgumentNullException("iocSyncWith");
 			if(!AppPolicy.Try(AppPolicyId.Import)) return null;
 
 			Program.TriggerSystem.RaiseEvent(EcasEventIDs.SynchronizingDatabaseFile,
 				EcasProperty.Database, pwStorage);
 
-			IOConnectionInfo[] vConnections = new IOConnectionInfo[1] { iocSyncWith };
+			List<IOConnectionInfo> vConnections = new List<IOConnectionInfo>();
+			vConnections.Add(iocSyncWith);
 
-			bool? ob = Import(pwStorage, new KeePassKdb2x(), vConnections,
+			bool? ob = Import(pwStorage, new KeePassKdb2x(), vConnections.ToArray(),
 				true, uiOps, bForceSave, fParent);
 
 			// Always raise the post event, such that the event pair can
@@ -599,47 +589,6 @@ namespace KeePass.DataExchange
 
 				if(bAppend)
 					pe.Strings.Set(strName, psPrev + (strSeparator + strValue));
-			}
-		}
-
-		internal static void CreateFieldWithIndex(ProtectedStringDictionary d,
-			string strName, string strValue, PwDatabase pdContext, bool bAllowEmptyValue)
-		{
-			if(string.IsNullOrEmpty(strName)) { Debug.Assert(false); return; }
-
-			MemoryProtectionConfig mpc = ((pdContext != null) ?
-				pdContext.MemoryProtection : new MemoryProtectionConfig());
-			bool bProtect = mpc.GetProtection(strName);
-
-			CreateFieldWithIndex(d, strName, strValue, bProtect, bAllowEmptyValue);
-		}
-
-		internal static void CreateFieldWithIndex(ProtectedStringDictionary d,
-			string strName, string strValue, bool bProtect, bool bAllowEmptyValue)
-		{
-			if(d == null) { Debug.Assert(false); return; }
-			if(string.IsNullOrEmpty(strName)) { Debug.Assert(false); return; }
-			if(strValue == null) { Debug.Assert(false); return; }
-			if((strValue.Length == 0) && !bAllowEmptyValue) return;
-
-			ProtectedString psValue = new ProtectedString(bProtect, strValue);
-
-			ProtectedString psEx = d.Get(strName);
-			if((psEx == null) || (PwDefs.IsStandardField(strName) && psEx.IsEmpty))
-			{
-				d.Set(strName, psValue);
-				return;
-			}
-
-			NumberFormatInfo nfi = NumberFormatInfo.InvariantInfo;
-			for(int i = 2; i < int.MaxValue; ++i)
-			{
-				string strNameI = strName + " (" + i.ToString(nfi) + ")";
-				if(!d.Exists(strNameI))
-				{
-					d.Set(strNameI, psValue);
-					break;
-				}
 			}
 		}
 

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ using System.Text;
 using System.Windows.Forms;
 
 using KeePass.App;
-using KeePass.App.Configuration;
 using KeePass.Resources;
 using KeePass.UI;
 
@@ -39,7 +38,7 @@ namespace KeePass.Forms
 		public HelpSourceForm()
 		{
 			InitializeComponent();
-			GlobalWindowManager.InitializeForm(this);
+			Program.Translation.ApplyTo(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -58,30 +57,16 @@ namespace KeePass.Forms
 			Debug.Assert(!m_lblLocal.AutoSize); // For RTL support
 			if(!AppHelp.LocalHelpAvailable)
 			{
-				UIUtil.SetEnabledFast(false, m_radioLocal, m_lblLocal);
+				m_radioLocal.Enabled = false;
 				m_lblLocal.Text = KPRes.HelpSourceNoLocalOption;
 
 				AppHelp.PreferredHelpSource = AppHelpSource.Online;
 			}
 
-			bool bOverride = !string.IsNullOrEmpty(Program.Config.Application.HelpUrl);
-			bool bEnforced = AppConfigEx.IsOptionEnforced(Program.Config.Application,
-				"HelpUseLocal");
-
-			if(!bOverride)
-			{
-				if(AppHelp.PreferredHelpSource == AppHelpSource.Local)
-					m_radioLocal.Checked = true;
-				else
-					m_radioOnline.Checked = true;
-			}
-
-			if(bOverride || bEnforced)
-			{
-				UIUtil.SetEnabledFast(false, m_radioLocal, m_lblLocal,
-					m_radioOnline, m_lblOnline, m_btnOK);
-				UIUtil.SetFocus(m_btnCancel, this);
-			}
+			if(AppHelp.PreferredHelpSource == AppHelpSource.Local)
+				m_radioLocal.Checked = true;
+			else
+				m_radioOnline.Checked = true;
 		}
 
 		private void OnBtnOK(object sender, EventArgs e)

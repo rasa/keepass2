@@ -18,7 +18,7 @@
 	<meta name="DC.type" content="Text" />
 	<meta name="DC.format" content="text/html" />
 	<meta name="DC.language" content="en" />
-	<meta name="DC.rights" content="Copyright (C) 2003-2023 Dominik Reichl" />
+	<meta name="DC.rights" content="Copyright (C) 2003-2021 Dominik Reichl" />
 
 	<meta name="robots" content="index, follow" />
 	<meta name="flattr:id" content="42rykv" />
@@ -35,7 +35,7 @@
 
 
 <table class="sectionheader"><tr>
-<td><img src="../images/b64x64_chardevice.png" alt="" /></td>
+<td><img src="../images/b64x64_chardevice.png" alt="Placeholder" /></td>
 <td><h1>Placeholders</h1>
 <p>KeePass supports various placeholders.</p></td>
 </tr></table>
@@ -78,7 +78,7 @@ cannot be used in the URL field (but it can be used in the
 <br />
 
 <a name="entryfields"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_chardevice.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_chardevice.png" alt="Placeholder" />
 Entry Field Placeholders</h2>
 
 <br />
@@ -127,7 +127,7 @@ An example for the <code>{URL:...}</code> placeholders can be found <a href="#ur
 <br /><br />
 
 <a name="fieldrefs"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_chardevice.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_chardevice.png" alt="Placeholder" />
 Entry Field References</h2>
 
 <p>Fields of <i>other</i> entries can be inserted using
@@ -136,7 +136,7 @@ Entry Field References</h2>
 <br />
 
 <a name="envctx"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_chardevice.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_chardevice.png" alt="Placeholder" />
 Paths and Date/Time Placeholders</h2>
 
 <br />
@@ -144,16 +144,15 @@ Paths and Date/Time Placeholders</h2>
 <table class="tablebox75">
 <colgroup><col style="width: 50%;" /><col style="width: 50%;" /></colgroup>
 <tr><th>Placeholder</th><th>Is Replaced By</th></tr>
-<tr><td><code>{EDGE}</code></td><td>Path to Microsoft Edge, if installed.</td></tr>
-<tr><td><code>{FIREFOX}</code></td><td>Path to Mozilla Firefox, if installed.</td></tr>
-<tr><td><code>{GOOGLECHROME}</code></td><td>Path to Google Chrome (or Chromium
+<tr><td><code>{INTERNETEXPLORER}</code></td><td>Path of Internet Explorer, if installed.</td></tr>
+<tr><td><code>{FIREFOX}</code></td><td>Path of Mozilla Firefox, if installed.</td></tr>
+<tr><td><code>{OPERA}</code></td><td>Path of Opera, if installed.</td></tr>
+<tr><td><code>{GOOGLECHROME}</code></td><td>Path of Google Chrome (or Chromium
 on Unix-like systems), if installed.</td></tr>
-<tr><td><code>{INTERNETEXPLORER}</code></td><td>Path to Internet Explorer, if installed.</td></tr>
-<tr><td><code>{OPERA}</code></td><td>Path to Opera, if installed.</td></tr>
-<tr><td><code>{SAFARI}</code></td><td>Path to Safari, if installed.</td></tr>
+<tr><td><code>{SAFARI}</code></td><td>Path of Safari, if installed.</td></tr>
 </table>
 
-<!-- <p><b>Microsoft Edge.</b>
+<p><b>Microsoft Edge.</b>
 There exists no placeholder for Edge, because Edge is an app
 that cannot be started like a regular Windows application.
 In order to open a URL using Edge, prefix the URL with '<code>microsoft-edge:</code>'.
@@ -161,7 +160,7 @@ For example, in order to open the URL
 <a href="https://keepass.info/" target="_blank">https://keepass.info/</a>
 using Edge, use the URL
 <a href="microsoft-edge:https://keepass.info/" target="_blank"
-rel="nofollow">microsoft-edge:https://keepass.info/</a>.</p> -->
+rel="nofollow">microsoft-edge:https://keepass.info/</a>.</p>
 
 <br />
 
@@ -219,7 +218,7 @@ sortable string. For example, for 2012-07-25 17:05:34 the value is 2012072517053
 <br /><br />
 
 <a name="envvars"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_konsole.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_konsole.png" alt="Terminal" />
 Environment Variables</h2>
 
 <p>System environment variables are supported.
@@ -229,7 +228,7 @@ For example <code>%TEMP%</code> is replaced by the user's temporary path.</p>
 <br />
 
 <a name="texttrf"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_ascii.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_ascii.png" alt="Text" />
 Text Transformations</h2>
 
 <br />
@@ -256,8 +255,7 @@ See <a href="#conv">below</a>.</td></tr>
 Using Regular Expression:</b><br />
 This placeholder searches the
 <!-- https://msdn.microsoft.com/en-us/library/az24scfc.aspx -->
-<!-- https://docs.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference -->
-<a href="https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference"
+<a href="https://docs.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference"
 target="_blank">regular expression</a> <em>Search</em> in <em>Text</em>
 and replaces all matches by <em>Replace</em>.<br />
 <br />
@@ -325,7 +323,7 @@ which results in the text '<code>A</code>').</li>
 <br /><br />
 
 <a name="plh"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_chardevice.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_chardevice.png" alt="Placeholder" />
 Other Placeholders</h2>
 
 <br />
@@ -543,22 +541,9 @@ encrypted passwords generated by <code>{PASSWORD_ENC}</code>.
 <a name="hmacotp"></a>
 <a name="otp"></a>
 
-<b>One-Time Passwords (OTPs):</b><br />
-KeePass provides menu commands in the main window for generating one-time
-passwords ('Copy HMAC-Based OTP', 'Show HMAC-Based OTP', 'Copy Time-Based OTP',
-'Show Time-Based OTP').
-Furthermore, one-time passwords can be generated during
-<a href="autotype.html">auto-type</a> using the <code>{HMACOTP}</code> and
-<code>{TIMEOTP}</code> placeholders.
-
-<p>The parameters for the OTP generation are stored as entry strings and
-can be edited conveniently using the 'OTP Generator Settings' dialog
-(which checks the entered values, shows a preview, etc.).
-Alternatively, you can edit the entry strings directly, as documented below.</p>
-
-<p><b><code>{HMACOTP}</code> &#8211; Generating HMAC-Based One-Time Passwords:</b><br />
+<b><code>{HMACOTP}</code> &#8211; Generating HMAC-Based One-Time Passwords:</b><br />
 The <code>{HMACOTP}</code> placeholder generates an HMAC-based one-time
-password (HOTP) according to RFC 4226.</p>
+password (OTP) according to RFC 4226.
 
 <p>The shared secret and other parameters can be specified using the
 following entry string fields (which can be added/edited in the entry
@@ -582,7 +567,7 @@ a one-time password), KeePass updates the counter value automatically.</li>
 
 <p><b><code>{TIMEOTP}</code> &#8211; Generating Time-Based One-Time Passwords:</b><br />
 The <code>{TIMEOTP}</code> placeholder generates a time-based one-time
-password (TOTP) according to RFC 6238.</p>
+password (OTP) according to RFC 6238.</p>
 
 <p>The shared secret and other parameters can be specified using the
 following entry string fields (which can be added/edited in the entry
@@ -621,17 +606,16 @@ The default value is HMAC-SHA-1.</li>
 the service/server may reject the generated OTP.</p>
 
 <p><em>Usage example.</em>
-Create a new entry and change its default auto-type sequence to
-<code>{USERNAME}{TAB}{PASSWORD}{ENTER}{DELAY 3000}{HMACOTP}{ENTER}</code>.
-Open the 'OTP Generator Settings' dialog, set the shared secret
-for HMAC-based OTPs to '12345678901234567890' and select the UTF-8 encoding.
-When performing auto-type, KeePass sends the user name, presses
-<kbd><kbd>Tab</kbd></kbd>, sends the password, presses <kbd><kbd>Enter</kbd></kbd>,
-waits 3 seconds, generates and sends a HMAC-based OTP and finally presses
-<kbd><kbd>Enter</kbd></kbd> again.
-The counter value for the OTP generation is updated automatically.
-With the shared secret above and initial counter value 0, the following
-OTPs are generated: 755224, 287082, 359152, 969429, 338314, ...
+Create a new entry, set its password to the <code>{HMACOTP}</code>
+placeholder, switch to the 'Advanced' tab, add a string named
+'HmacOtp-Secret' with value '12345678901234567890',
+and close the dialog with [OK].
+When you now double-click onto the password cell of the entry in the
+entry list of the main window, an OTP is copied to the
+clipboard. When auto-typing, an OTP is sent as password.
+Every time you perform such an action, KeePass updates the counter value.
+With the secret above and counter value 0, the following OTPs are generated:
+755224, 287082, 359152, 969429, 338314, ...
 (more generated OTPs can be found in the example in RFC 4226).</p>
 
 <em>Plugins.</em>

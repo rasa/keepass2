@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ using System.IO;
 using System.Media;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
@@ -76,10 +77,10 @@ namespace KeePass.UI
 		private const int FwsNormal = 0;
 		private const int FwsMaximized = 2; // Compatible with FormWindowState
 
-		private static bool g_bVistaStyleLists = false;
+		private static bool m_bVistaStyleLists = false;
 		public static bool VistaStyleListsSupported
 		{
-			get { return g_bVistaStyleLists; }
+			get { return m_bVistaStyleLists; }
 		}
 
 		public static bool IsDarkTheme
@@ -105,23 +106,19 @@ namespace KeePass.UI
 			// bReinitialize is currently not used, but not removed
 			// for plugin backward compatibility
 
-			if(Program.DesignMode) return;
-
 			string strUuid = Program.Config.UI.ToolStripRenderer;
 			ToolStripRenderer tsr = TsrPool.GetBestRenderer(strUuid);
 			if(tsr == null) { Debug.Assert(false); tsr = new ToolStripProfessionalRenderer(); }
 			ToolStripManager.Renderer = tsr;
 
-			g_bVistaStyleLists = (WinUtil.IsAtLeastWindowsVista &&
+			m_bVistaStyleLists = (WinUtil.IsAtLeastWindowsVista &&
 				(Environment.Version.Major >= 2));
-
-			AccessibilityEx.OnSystemSettingChange();
 		}
 
 		internal static NativeMethods.CHARFORMAT2 RtfGetCharFormat(RichTextBox rtb)
 		{
 			NativeMethods.CHARFORMAT2 cf = new NativeMethods.CHARFORMAT2();
-			cf.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.CHARFORMAT2));
+			cf.cbSize = (uint)Marshal.SizeOf(cf);
 
 			if(NativeLib.IsUnix()) return cf;
 
@@ -144,45 +141,39 @@ namespace KeePass.UI
 			return cf;
 		}
 
-		internal static void RtfSetCharFormat(RichTextBox rtb, ref NativeMethods.CHARFORMAT2 cf)
+		internal static void RtfSetCharFormat(RichTextBox rtb, NativeMethods.CHARFORMAT2 cf)
 		{
 			if(NativeLib.IsUnix()) return;
 
-			uint cb = (uint)Marshal.SizeOf(typeof(NativeMethods.CHARFORMAT2));
-			if(cf.cbSize != cb) { Debug.Assert(false); cf.cbSize = cb; }
+			if(cf.cbSize != (uint)Marshal.SizeOf(cf))
+			{
+				Debug.Assert(false);
+				cf.cbSize = (uint)Marshal.SizeOf(cf);
+			}
 
 			IntPtr pCF = IntPtr.Zero;
 			try
 			{
-				pCF = Marshal.AllocCoTaskMem((int)cb);
+				pCF = Marshal.AllocCoTaskMem(Marshal.SizeOf(cf));
 				Marshal.StructureToPtr(cf, pCF, false);
 
 				IntPtr wParam = (IntPtr)NativeMethods.SCF_SELECTION;
 				NativeMethods.SendMessage(rtb.Handle,
 					NativeMethods.EM_SETCHARFORMAT, wParam, pCF);
 			}
-			catch(Exception) { Debug.Assert(false); }
+			catch(Exception) { Debug.Assert(NativeLib.IsUnix()); }
 			finally { if(pCF != IntPtr.Zero) Marshal.FreeCoTaskMem(pCF); }
 		}
 
 		public static void RtfSetSelectionLink(RichTextBox rtb)
 		{
-			if(rtb == null) { Debug.Assert(false); return; }
-
-			// Rich Edit 4.1 and higher do not support automatic URL
-			// detection and manual CFE_LINK assignments at once
-			// (Rich Edit 3.0 supported this); see EM_AUTOURLDETECT
-			Debug.Assert(!rtb.DetectUrls);
-
-			Debug.Assert(rtb.HideSelection); // Flicker opt.
-
 			NativeMethods.CHARFORMAT2 cf = new NativeMethods.CHARFORMAT2();
-			cf.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.CHARFORMAT2));
+			cf.cbSize = (uint)Marshal.SizeOf(cf);
 
 			cf.dwMask = NativeMethods.CFM_LINK;
 			cf.dwEffects = NativeMethods.CFE_LINK;
 
-			RtfSetCharFormat(rtb, ref cf);
+			RtfSetCharFormat(rtb, cf);
 		}
 
 		public static bool RtfIsFirstCharLink(RichTextBox rtb)
@@ -191,13 +182,42 @@ namespace KeePass.UI
 			return ((cf.dwEffects & NativeMethods.CFE_LINK) != 0);
 		}
 
+		public static void RtfLinkifyExtUrls(RichTextBox rtb, bool bResetSelection)
+		{
+			if(rtb == null) { Debug.Assert(false); return; }
+
+			const string strProto = "cmd://";
+
+			try
+			{
+				string strText = (rtb.Text ?? string.Empty);
+				int iOffset = 0;
+
+				while(iOffset < strText.Length)
+				{
+					int i = strText.IndexOf(strProto, iOffset, StrUtil.CaseIgnoreCmp);
+					if(i < iOffset) break;
+
+					int n = UrlUtil.GetUrlLength(strText, i);
+					if(n <= 0) { Debug.Assert(false); break; }
+
+					rtb.Select(i, n);
+					RtfSetSelectionLink(rtb);
+
+					iOffset = i + n;
+				}
+
+				if(bResetSelection) rtb.Select(0, 0);
+			}
+			catch(Exception) { Debug.Assert(false); }
+		}
+
 		public static void RtfLinkifyText(RichTextBox rtb, string strLinkText,
 			bool bResetSelection)
 		{
 			RtfLinkifyText(rtb, strLinkText, bResetSelection, false);
 		}
 
-		// Cf. RtfLinkifyTexts
 		public static void RtfLinkifyText(RichTextBox rtb, string strLinkText,
 			bool bResetSelection, bool bAll)
 		{
@@ -232,41 +252,6 @@ namespace KeePass.UI
 			}
 		}
 
-		// Cf. RtfLinkifyText
-		internal static void RtfLinkifyTexts(RichTextBox rtb,
-			List<KeyValuePair<string, bool>> lTexts, bool bSequentially)
-		{
-			if(rtb == null) { Debug.Assert(false); return; }
-			if(lTexts == null) { Debug.Assert(false); return; }
-
-			try
-			{
-				string strText = (rtb.Text ?? string.Empty);
-				int iOffset = 0;
-
-				foreach(KeyValuePair<string, bool> kvp in lTexts)
-				{
-					if(iOffset >= strText.Length) break;
-
-					string strFind = StrUtil.RtfFilterText(kvp.Key);
-					if(string.IsNullOrEmpty(strFind)) continue;
-					if(strFind.Trim().Length == 0) continue;
-
-					int i = strText.IndexOf(strFind, iOffset);
-					if(i < iOffset) { Debug.Assert(!bSequentially); continue; }
-
-					if(kvp.Value)
-					{
-						rtb.Select(i, strFind.Length);
-						RtfSetSelectionLink(rtb);
-					}
-
-					if(bSequentially) iOffset = i + strFind.Length;
-				}
-			}
-			catch(Exception) { Debug.Assert(false); }
-		}
-
 		public static void RtfLinkifyReferences(RichTextBox rtb, bool bResetSelection)
 		{
 			if(rtb == null) { Debug.Assert(false); return; }
@@ -281,17 +266,16 @@ namespace KeePass.UI
 					int iStart = str.IndexOf(SprEngine.StrRefStart, iOffset,
 						StrUtil.CaseIgnoreCmp);
 					if(iStart < iOffset) break;
-
 					int iEnd = str.IndexOf(SprEngine.StrRefEnd, iStart + 1,
 						StrUtil.CaseIgnoreCmp);
 					if(iEnd <= iStart) break;
 
-					int cc = iEnd - iStart + SprEngine.StrRefEnd.Length;
-
-					rtb.Select(iStart, cc);
+					string strRef = str.Substring(iStart, iEnd - iStart +
+						SprEngine.StrRefEnd.Length);
+					rtb.Select(iStart, strRef.Length);
 					RtfSetSelectionLink(rtb);
 
-					iOffset = iStart + cc;
+					iOffset = iStart + strRef.Length;
 				}
 
 				if(bResetSelection) rtb.Select(0, 0);
@@ -299,56 +283,15 @@ namespace KeePass.UI
 			catch(Exception) { Debug.Assert(false); }
 		}
 
-		internal static void RtfLinkifyUrls(RichTextBox rtb)
-		{
-			if(rtb == null) { Debug.Assert(false); return; }
-
-			try
-			{
-				string str = (rtb.Text ?? string.Empty);
-				int iOffset = 0;
-
-				while(iOffset < str.Length)
-				{
-					int iSep = str.IndexOf(':', iOffset);
-					if(iSep < iOffset) break;
-
-					int iStart = iSep;
-					while(iStart >= 1)
-					{
-						if(!UrlUtil.IsUriSchemeChar(str[iStart - 1])) break;
-						--iStart;
-					}
-
-					string strScheme = str.Substring(iStart, iSep - iStart);
-					if(!UrlUtil.IsKnownScheme(strScheme))
-					{
-						iOffset = iSep + 1;
-						continue;
-					}
-
-					int ccUrl = UrlUtil.GetUrlLength(str, iStart, true);
-
-					rtb.Select(iStart, ccUrl);
-					RtfSetSelectionLink(rtb);
-
-					int iOffsetNew = iStart + ccUrl;
-					if(iOffsetNew > iOffset) iOffset = iOffsetNew;
-					else { Debug.Assert(false); iOffset = iSep + 1; }
-				}
-			}
-			catch(Exception) { Debug.Assert(false); }
-		}
-
 		internal static void RtfSetFontSize(RichTextBox rtb, float fSizeInPt)
 		{
 			NativeMethods.CHARFORMAT2 cf = new NativeMethods.CHARFORMAT2();
-			cf.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.CHARFORMAT2));
+			cf.cbSize = (uint)Marshal.SizeOf(cf);
 
 			cf.dwMask = NativeMethods.CFM_SIZE;
 			cf.yHeight = (int)(fSizeInPt * 20.0f);
 
-			RtfSetCharFormat(rtb, ref cf);
+			RtfSetCharFormat(rtb, cf);
 		}
 
 		internal static void RtfToggleSelectionFormat(RichTextBox rtb, FontStyle fs)
@@ -386,7 +329,7 @@ namespace KeePass.UI
 						cf.dwEffects ^= NativeMethods.CFE_STRIKEOUT;
 					}
 
-					RtfSetCharFormat(rtb, ref cf);
+					RtfSetCharFormat(rtb, cf);
 				}
 			}
 			catch(Exception) { Debug.Assert(false); }
@@ -492,7 +435,7 @@ namespace KeePass.UI
 						g.DrawImageUnscaled(img, 0, 0);
 					else
 					{
-						GfxUtil.SetHighQuality(g);
+						g.InterpolationMode = InterpolationMode.High;
 						g.DrawImage(img, 0, 0, nWidth, nHeight);
 					}
 				}
@@ -573,7 +516,7 @@ namespace KeePass.UI
 			try
 			{
 				NativeMethods.COMBOBOXINFO cbi = new NativeMethods.COMBOBOXINFO();
-				cbi.cbSize = Marshal.SizeOf(typeof(NativeMethods.COMBOBOXINFO));
+				cbi.cbSize = Marshal.SizeOf(cbi);
 
 				NativeMethods.GetComboBoxInfo(tb.ComboBox.Handle, ref cbi);
 
@@ -699,7 +642,7 @@ namespace KeePass.UI
 
 				if(pe.ParentGroup != null)
 				{
-					string strGroup = pe.ParentGroup.GetFullPath(true, false);
+					string strGroup = pe.ParentGroup.GetFullPath(" - ", false);
 					if(strGroup != lvg.Header)
 					{
 						lvg = new ListViewGroup(strGroup, HorizontalAlignment.Left);
@@ -798,6 +741,7 @@ namespace KeePass.UI
 
 			ListViewGroup lvg = new ListViewGroup(Guid.NewGuid().ToString());
 			DateTime dtNow = DateTime.UtcNow;
+			Regex rxSeqCmt = null;
 			bool bFirstEntry = true;
 
 			foreach(AutoTypeCtx ctx in lCtxs)
@@ -810,7 +754,7 @@ namespace KeePass.UI
 
 				if(pe.ParentGroup != null)
 				{
-					string strGroup = pe.ParentGroup.GetFullPath(true, true);
+					string strGroup = pe.ParentGroup.GetFullPath(" - ", true);
 					if(strGroup != lvg.Header)
 					{
 						lvg = new ListViewGroup(strGroup, HorizontalAlignment.Left);
@@ -854,22 +798,35 @@ namespace KeePass.UI
 						pe.Strings.ReadSafe(PwDefs.NotesField), sprCtx)));
 				if((f & AceAutoTypeCtxFlags.ColSequenceComments) != AceAutoTypeCtxFlags.None)
 				{
-					List<string> lCmt = new List<string>();
-					SprEngine.RemoveComments(ctx.Sequence, lCmt, sprCtx);
+					if(rxSeqCmt == null)
+						rxSeqCmt = new Regex("\\{[Cc]:[^\\}]*\\}");
 
-					string str = string.Empty;
-					if(lCmt.Count != 0)
+					string strSeqCmt = string.Empty, strImpSeqCmt = string.Empty;
+					foreach(Match m in rxSeqCmt.Matches(ctx.Sequence))
 					{
-						List<string> lCmtImp = lCmt.FindAll(strCmt =>
-							strCmt.StartsWith("!")); // Important comment
-						for(int i = 0; i < lCmtImp.Count; ++i)
-							lCmtImp[i] = lCmtImp[i].Substring(1);
+						string strPart = m.Value;
+						if(strPart == null) { Debug.Assert(false); continue; }
+						if(strPart.Length < 4) { Debug.Assert(false); continue; }
 
-						str = string.Join(" - ", ((lCmtImp.Count != 0) ?
-							lCmtImp : lCmt).ToArray());
+						strPart = strPart.Substring(3, strPart.Length - 4).Trim();
+						bool bImp = strPart.StartsWith("!"); // Important comment
+						if(bImp) strPart = strPart.Substring(1);
+						if(strPart.Length == 0) continue;
+
+						if(bImp)
+						{
+							if(strImpSeqCmt.Length > 0) strImpSeqCmt += " - ";
+							strImpSeqCmt += strPart;
+						}
+						else
+						{
+							if(strSeqCmt.Length > 0) strSeqCmt += " - ";
+							strSeqCmt += strPart;
+						}
 					}
 
-					lvi.SubItems.Add(str);
+					lvi.SubItems.Add((strImpSeqCmt.Length > 0) ? strImpSeqCmt :
+						strSeqCmt);
 				}
 				if((f & AceAutoTypeCtxFlags.ColSequence) != AceAutoTypeCtxFlags.None)
 					lvi.SubItems.Add(ctx.Sequence);
@@ -899,20 +856,12 @@ namespace KeePass.UI
 			UIUtil.ResizeColumns(lv, true);
 		}
 
-		public static int GetHScrollBarHeight()
-		{
-			try { return SystemInformation.HorizontalScrollBarHeight; }
-			catch(Exception) { Debug.Assert(false); }
-
-			return DpiUtil.ScaleIntY(18); // Default theme on Windows Vista
-		}
-
 		public static int GetVScrollBarWidth()
 		{
 			try { return SystemInformation.VerticalScrollBarWidth; }
 			catch(Exception) { Debug.Assert(false); }
 
-			return DpiUtil.ScaleIntX(18); // Default theme on Windows Vista
+			return 18; // Default theme on Windows Vista
 		}
 
 		/// <summary>
@@ -957,7 +906,7 @@ namespace KeePass.UI
 
 			if(bIncludeAllFiles)
 			{
-				if(sb.Length > 0) sb.Append('|');
+				if(sb.Length > 0) sb.Append(@"|");
 				sb.Append(KPRes.AllFiles);
 				sb.Append(@" (*.*)|*.*");
 			}
@@ -1047,9 +996,12 @@ namespace KeePass.UI
 			if(!string.IsNullOrEmpty(strTitle))
 				sfd.Title = strTitle;
 
-			if((strContext == AppDefs.FileDialogContext.Database) &&
-				(Program.Config.Defaults.FileSaveAsDirectory.Length != 0))
-				sfd.InitialDirectory = Program.Config.Defaults.FileSaveAsDirectory;
+			if(strContext != null)
+			{
+				if((strContext == AppDefs.FileDialogContext.Database) &&
+					(Program.Config.Defaults.FileSaveAsDirectory.Length > 0))
+					sfd.InitialDirectory = Program.Config.Defaults.FileSaveAsDirectory;
+			}
 
 			return sfd;
 		}
@@ -1131,8 +1083,6 @@ namespace KeePass.UI
 
 			dlg.FontMustExist = true;
 			dlg.ShowEffects = bEffects;
-
-			Debug.Assert(!dlg.ShowColor);
 
 			return dlg;
 		}
@@ -1266,7 +1216,7 @@ namespace KeePass.UI
 			if(lv == null) throw new ArgumentNullException("lv");
 
 			ListView.SelectedListViewItemCollection lvsc = lv.SelectedItems;
-			if(lvsc == null) { Debug.Assert(false); return MemUtil.EmptyArray<object>(); }
+			if(lvsc == null) { Debug.Assert(false); return new object[0]; }
 			int n = lvsc.Count; // Getting Count sends a message
 
 			object[] p = new object[n];
@@ -1361,15 +1311,6 @@ namespace KeePass.UI
 
 			try
 			{
-				if(NativeLib.IsUnix())
-				{
-					btn.FlatStyle = FlatStyle.Standard;
-					btn.TextImageRelation = TextImageRelation.ImageBeforeText;
-					btn.Image = (bSetShield ? GetShieldBitmap(
-						DpiUtil.ScaleIntX(15), DpiUtil.ScaleIntY(15)) : null);
-					return;
-				}
-
 				if(btn.FlatStyle != FlatStyle.System)
 				{
 					Debug.Assert(false);
@@ -1387,8 +1328,8 @@ namespace KeePass.UI
 
 		public static void Configure(ToolStrip ts)
 		{
-			if(Program.DesignMode) return;
 			if(ts == null) { Debug.Assert(false); return; }
+			if(Program.DesignMode) return;
 
 			// if(Program.Translation.Properties.RightToLeft)
 			//	ts.RightToLeft = RightToLeft.Yes;
@@ -1407,9 +1348,9 @@ namespace KeePass.UI
 		// }
 
 		public static void ConfigureTbButton(ToolStripItem tb, string strText,
-			string strToolTip)
+			string strTooltip)
 		{
-			ConfigureTbButton(tb, strText, strToolTip, null);
+			ConfigureTbButton(tb, strText, strTooltip, null);
 		}
 
 		public static void ConfigureTbButton(ToolStripItem tb, string strText,
@@ -1420,8 +1361,8 @@ namespace KeePass.UI
 			string strT = (strText ?? string.Empty);
 			string strTT = (strToolTip ?? strT);
 
-			strT = StrUtil.CommandToText(strT);
-			strTT = StrUtil.CommandToText(strTT);
+			strT = StrUtil.TrimDots(StrUtil.RemoveAccelerator(strT), true);
+			strTT = StrUtil.TrimDots(StrUtil.RemoveAccelerator(strTT), true);
 
 			Debug.Assert((strT.Length >= 1) || (tb.Text.Length == 0));
 			tb.Text = strT;
@@ -1435,13 +1376,6 @@ namespace KeePass.UI
 
 			Debug.Assert((strTT.Length >= 1) || (tb.ToolTipText.Length == 0));
 			tb.ToolTipText = strTT;
-
-			if(strT.Length == 0)
-			{
-				ToolStripControlHost tsch = (tb as ToolStripControlHost);
-				if(tsch != null) AccessibilityEx.SetName(tsch.Control, strTT);
-				else { Debug.Assert(false); }
-			}
 		}
 
 		public static void ConfigureToolTip(ToolTip tt)
@@ -1450,114 +1384,13 @@ namespace KeePass.UI
 
 			try
 			{
-				tt.AutoPopDelay = 32000; // Cf. method below
+				tt.AutoPopDelay = 32000;
 				tt.InitialDelay = 250;
 				tt.ReshowDelay = 50;
 
 				Debug.Assert(tt.AutoPopDelay == 32000);
 			}
 			catch(Exception) { Debug.Assert(false); }
-		}
-
-		private static void ConfigureToolTip(IntPtr hToolTip)
-		{
-			if(hToolTip == IntPtr.Zero) { Debug.Assert(false); return; }
-			if(NativeLib.IsUnix()) return;
-
-			try
-			{
-				// Apparently the maximum value is 2^15 - 1 = 32767
-				// (signed short maximum); any larger value results
-				// in a truncated value or is ignored
-				NativeMethods.SendMessage(hToolTip, NativeMethods.TTM_SETDELAYTIME,
-					(IntPtr)NativeMethods.TTDT_AUTOPOP, (IntPtr)32000); // Cf. method above
-				NativeMethods.SendMessage(hToolTip, NativeMethods.TTM_SETDELAYTIME,
-					(IntPtr)NativeMethods.TTDT_INITIAL, (IntPtr)250);
-				NativeMethods.SendMessage(hToolTip, NativeMethods.TTM_SETDELAYTIME,
-					(IntPtr)NativeMethods.TTDT_RESHOW, (IntPtr)50);
-
-				Debug.Assert(NativeMethods.SendMessage(hToolTip, NativeMethods.TTM_GETDELAYTIME,
-					(IntPtr)NativeMethods.TTDT_AUTOPOP, IntPtr.Zero) == (IntPtr)32000);
-			}
-			catch(Exception) { Debug.Assert(false); }
-		}
-
-		private static void ConfigureToolTip(Control c, int msgGetToolTip)
-		{
-			if(c == null) { Debug.Assert(false); return; }
-			if(NativeLib.IsUnix()) return;
-
-			try
-			{
-				IntPtr hControl = c.Handle;
-				if(hControl == IntPtr.Zero) { Debug.Assert(false); return; }
-
-				IntPtr hToolTip = NativeMethods.SendMessage(hControl,
-					msgGetToolTip, IntPtr.Zero, IntPtr.Zero);
-				if(hToolTip != IntPtr.Zero) ConfigureToolTip(hToolTip);
-			}
-			catch(Exception) { Debug.Assert(false); }
-		}
-
-		internal static void ConfigureToolTip(TreeView tv)
-		{
-			ConfigureToolTip(tv, NativeMethods.TVM_GETTOOLTIPS);
-		}
-
-		internal static void ConfigureToolTip(ListView lv)
-		{
-			ConfigureToolTip(lv, NativeMethods.LVM_GETTOOLTIPS);
-		}
-
-		internal static void SetToolTip(ToolTip tt, Control c, string strText,
-			bool bAcc)
-		{
-			if(c == null) { Debug.Assert(false); return; }
-
-			try
-			{
-				if(tt != null) tt.SetToolTip(c, strText);
-				else { Debug.Assert(false); }
-			}
-			catch(Exception) { Debug.Assert(false); }
-
-			if(bAcc) AccessibilityEx.SetName(c, strText);
-		}
-
-		internal static void SetToolTip(ToolStripControlHost tsch, string strText,
-			bool bAcc)
-		{
-			if(tsch == null) { Debug.Assert(false); return; }
-
-			try { tsch.ToolTipText = strText; }
-			catch(Exception) { Debug.Assert(false); }
-
-			if(bAcc) AccessibilityEx.SetName(tsch.Control, strText);
-		}
-
-		internal static void SetToolTipByText(ToolTip tt, Control c)
-		{
-			if(tt == null) { Debug.Assert(false); return; }
-			if(c == null) { Debug.Assert(false); return; }
-
-			string str = null;
-			try
-			{
-				str = c.Text;
-				if(!string.IsNullOrEmpty(str))
-				{
-					int wSmall = GetSmallIconSize().Width;
-
-					int wClient = c.Width - (wSmall / 2);
-					if(c is ComboBox) wClient -= wSmall; // Drop-down arrow
-
-					int wText = TextRenderer.MeasureText(str, c.Font).Width;
-					if(wText <= wClient) str = null;
-				}
-			}
-			catch(Exception) { Debug.Assert(false); }
-
-			UIUtil.SetToolTip(tt, c, str, false);
 		}
 
 		public static void CreateGroupList(PwGroup pgContainer, ComboBox cmb,
@@ -1890,7 +1723,7 @@ namespace KeePass.UI
 			if(ColorsEqual(clrBase, Color.White)) return Color.FromArgb(238, 238, 255);
 
 			float b = clrBase.GetBrightness();
-			if(b >= 0.5f) return UIUtil.DarkenColor(clrBase, 0.1);
+			if(b >= 0.5) return UIUtil.DarkenColor(clrBase, 0.1);
 			return UIUtil.LightenColor(clrBase, 0.25);
 		}
 
@@ -2009,32 +1842,6 @@ namespace KeePass.UI
 			catch(Exception) { Debug.Assert(false); return false; }
 
 			return true;
-		}
-
-		internal static int[] GetDisplayIndices(ListView lv)
-		{
-			if(lv == null) { Debug.Assert(false); return MemUtil.EmptyArray<int>(); }
-
-			int c = lv.Columns.Count;
-			int[] v = new int[c];
-			bool[] vDI = new bool[c];
-
-			for(int i = 0; i < c; ++i)
-			{
-				int di = lv.Columns[i].DisplayIndex;
-				if((di < 0) || (di >= c)) { Debug.Assert(false); break; }
-
-				v[i] = di;
-				vDI[di] = true;
-			}
-
-			if(Array.IndexOf<bool>(vDI, false) >= 0)
-			{
-				Debug.Assert(false); // Invalid display indices
-				for(int i = 0; i < c; ++i) v[i] = i;
-			}
-
-			return v;
 		}
 
 		public static void SetDisplayIndices(ListView lv, int[] v)
@@ -2512,7 +2319,7 @@ namespace KeePass.UI
 				if(ws == FwsMaximized)
 				{
 					if(bSizable && f.MaximizeBox)
-						SetWindowState(f, FormWindowState.Maximized);
+						f.WindowState = FormWindowState.Maximized;
 					else { Debug.Assert(false); }
 
 					return; // Ignore the saved size; restore to default
@@ -2723,10 +2530,11 @@ namespace KeePass.UI
 			if(c == null) { Debug.Assert(false); return; }
 			// fParent may be null
 
-			Debug.Assert(c.Enabled);
-			Debug.Assert(c.Visible || (fParent == null) || !fParent.Visible);
-
-			try { if(fParent != null) fParent.ActiveControl = c; }
+			try
+			{
+				Debug.Assert(c.Visible && c.Enabled);
+				if(fParent != null) fParent.ActiveControl = c;
+			}
 			catch(Exception) { Debug.Assert(false); }
 
 			try
@@ -2907,53 +2715,21 @@ namespace KeePass.UI
 			if(w < 0) w = ico.Width;
 			if(h < 0) h = ico.Height;
 
-			Bitmap bmpR = null;
-			Icon icoToDispose = null;
-			try
+			Bitmap bmp = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+			using(Icon icoBest = new Icon(ico, w, h))
 			{
-				Icon icoBest = ico;
-				if((ico.Width != w) || (ico.Height != h))
-				{
-					icoBest = new Icon(ico, w, h);
-					icoToDispose = icoBest;
-				}
-
-				Bitmap bmp = icoBest.ToBitmap();
-				if((bmp.Width == w) && (bmp.Height == h))
-					bmpR = bmp;
-				else
-				{
-					Image imgSc = GfxUtil.ScaleImage(bmp, w, h, ScaleTransformFlags.UIIcon);
-					if(imgSc != null)
-					{
-						bmpR = (imgSc as Bitmap);
-						if(bmpR == null)
-						{
-							Debug.Assert(false); // Should be a Bitmap for performance
-							bmpR = new Bitmap(imgSc);
-							imgSc.Dispose();
-						}
-					}
-					else { Debug.Assert(false); }
-
-					bmp.Dispose();
-				}
-			}
-			catch(Exception) { Debug.Assert(false); }
-			finally { if(icoToDispose != null) icoToDispose.Dispose(); }
-
-			if(bmpR == null)
-			{
-				bmpR = new Bitmap(w, h, PixelFormat.Format32bppArgb);
-				using(Graphics g = Graphics.FromImage(bmpR))
+				using(Graphics g = Graphics.FromImage(bmp))
 				{
 					g.Clear(Color.Transparent);
-					GfxUtil.SetHighQuality(g);
-					g.DrawIcon(ico, new Rectangle(0, 0, w, h));
+
+					g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+					g.SmoothingMode = SmoothingMode.HighQuality;
+
+					g.DrawIcon(icoBest, new Rectangle(0, 0, w, h));
 				}
 			}
 
-			return bmpR;
+			return bmp;
 		}
 
 		public static Icon BitmapToIcon(Bitmap bmp)
@@ -2982,6 +2758,104 @@ namespace KeePass.UI
 
 			return ico;
 		}
+
+		/* public static Icon CreateColorizedIcon(Icon icoBase, Color clr, int qSize)
+		{
+			if(icoBase == null) { Debug.Assert(false); return null; }
+
+			if(qSize <= 0) qSize = 48; // Large shell icon size
+
+			Bitmap bmp = null;
+			try
+			{
+				bmp = new Bitmap(qSize, qSize, PixelFormat.Format32bppArgb);
+				using(Graphics g = Graphics.FromImage(bmp))
+				{
+					g.Clear(Color.Transparent);
+
+					g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+					g.SmoothingMode = SmoothingMode.HighQuality;
+
+					bool bDrawDefault = true;
+					if((qSize != 16) && (qSize != 32))
+					{
+						Image imgIco = ExtractVistaIcon(icoBase);
+						if(imgIco != null)
+						{
+							// g.DrawImage(imgIco, 0, 0, bmp.Width, bmp.Height);
+							using(Image imgSc = GfxUtil.ScaleImage(imgIco,
+								bmp.Width, bmp.Height, ScaleTransformFlags.UIIcon))
+							{
+								g.DrawImageUnscaled(imgSc, 0, 0);
+							}
+
+							imgIco.Dispose();
+							bDrawDefault = false;
+						}
+					}
+
+					if(bDrawDefault)
+					{
+						Icon icoSc = null;
+						try
+						{
+							icoSc = new Icon(icoBase, bmp.Width, bmp.Height);
+							g.DrawIcon(icoSc, new Rectangle(0, 0, bmp.Width,
+								bmp.Height));
+						}
+						catch(Exception)
+						{
+							Debug.Assert(false);
+							g.DrawIcon(icoBase, new Rectangle(0, 0, bmp.Width,
+								bmp.Height));
+						}
+						finally { if(icoSc != null) icoSc.Dispose(); }
+					}
+
+					// IntPtr hdc = g.GetHdc();
+					// NativeMethods.DrawIconEx(hdc, 0, 0, icoBase.Handle, bmp.Width,
+					//	bmp.Height, 0, IntPtr.Zero, NativeMethods.DI_NORMAL);
+					// g.ReleaseHdc(hdc);
+				}
+
+				BitmapData bd = bmp.LockBits(new Rectangle(0, 0, bmp.Width,
+					bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+				int nBytes = Math.Abs(bd.Stride * bmp.Height);
+				byte[] pbArgb = new byte[nBytes];
+				Marshal.Copy(bd.Scan0, pbArgb, 0, nBytes);
+
+				float fHue, fSaturation, fValue;
+				ColorToHsv(clr, out fHue, out fSaturation, out fValue);
+
+				for(int i = 0; i < nBytes; i += 4)
+				{
+					if(pbArgb[i + 3] == 0) continue; // Transparent
+					if((pbArgb[i] == pbArgb[i + 1]) && (pbArgb[i] == pbArgb[i + 2]))
+						continue; // Gray
+
+					Color clrPixel = Color.FromArgb((int)pbArgb[i + 2],
+						(int)pbArgb[i + 1], (int)pbArgb[i]); // BGRA
+
+					float h, s, v;
+					ColorToHsv(clrPixel, out h, out s, out v);
+
+					Color clrNew = ColorFromHsv(fHue, s, v);
+
+					pbArgb[i] = clrNew.B;
+					pbArgb[i + 1] = clrNew.G;
+					pbArgb[i + 2] = clrNew.R;
+				}
+
+				Marshal.Copy(pbArgb, 0, bd.Scan0, nBytes);
+				bmp.UnlockBits(bd);
+
+				return BitmapToIcon(bmp);
+			}
+			catch(Exception) { Debug.Assert(false); }
+			finally { if(bmp != null) bmp.Dispose(); }
+
+			return (Icon)icoBase.Clone();
+		} */
 
 		private static Bitmap CloneWithColorMatrix(Image img, ColorMatrix cm)
 		{
@@ -3079,8 +2953,6 @@ namespace KeePass.UI
 
 		public static bool PlayUacSound()
 		{
-			if(NativeLib.IsUnix()) return false;
-
 			try
 			{
 				string strRoot = "HKEY_CURRENT_USER\\AppEvents\\Schemes\\Apps\\.Default\\WindowsUAC\\";
@@ -3091,22 +2963,19 @@ namespace KeePass.UI
 					strWav = (Registry.GetValue(strRoot + ".Default",
 						string.Empty, string.Empty) as string);
 				if(string.IsNullOrEmpty(strWav))
-					strWav = "%SystemRoot%\\Media\\Windows User Account Control.wav";
+					strWav = @"%SystemRoot%\Media\Windows User Account Control.wav";
 
-				strWav = Environment.ExpandEnvironmentVariables(strWav);
+				strWav = SprEngine.Compile(strWav, null);
 
-				if(File.Exists(strWav))
-				{
-					bool b = NativeMethods.PlaySound(strWav, IntPtr.Zero,
-						NativeMethods.SND_FILENAME | NativeMethods.SND_ASYNC |
-						NativeMethods.SND_NODEFAULT);
-					Debug.Assert(b);
-					return b;
-				}
+				if(!File.Exists(strWav)) throw new FileNotFoundException();
+
+				NativeMethods.PlaySound(strWav, IntPtr.Zero, NativeMethods.SND_FILENAME |
+					NativeMethods.SND_ASYNC | NativeMethods.SND_NODEFAULT);
+				return true;
 			}
-			catch(Exception) { Debug.Assert(false); }
+			catch(Exception) { }
 
-			Debug.Assert(!WinUtil.IsAtLeastWindowsVista);
+			Debug.Assert(NativeLib.IsUnix() || !WinUtil.IsAtLeastWindowsVista);
 			// Do not play a standard sound here
 			return false;
 		}
@@ -3272,36 +3141,18 @@ namespace KeePass.UI
 
 			if(!bTextOnly)
 			{
-#if DEBUG
-				bool bCheckGlobal = false;
-
-				ToolStrip ts1 = GetTopLevelOwner(tsmi);
-				if(ts1 != null) bCheckGlobal = !(ts1 is ContextMenuStrip);
-				else { Debug.Assert(false); }
-
-				if(tsmiSecondary != null)
-				{
-					ToolStrip ts2 = GetTopLevelOwner(tsmiSecondary);
-					if(ts2 != null) bCheckGlobal |= !(ts2 is ContextMenuStrip);
-					else { Debug.Assert(false); }
-				}
-
-				if(bCheckGlobal)
-				{
-					// Control-dependent shortcuts shouldn't be registered as global ones
-					Debug.Assert(((k & Keys.Modifiers) != Keys.None) || (k == Keys.F1));
-					Debug.Assert((k & Keys.KeyCode) != Keys.C);
-					Debug.Assert((k & Keys.KeyCode) != Keys.V);
-					Debug.Assert((k & Keys.KeyCode) != Keys.X);
-					Debug.Assert((k & Keys.KeyCode) != Keys.Y);
-					Debug.Assert((k & Keys.KeyCode) != Keys.Z);
-					Debug.Assert((k & Keys.KeyCode) != Keys.Escape);
-					Debug.Assert((k & Keys.KeyCode) != Keys.Return);
-					Debug.Assert((k & Keys.KeyCode) != Keys.Insert);
-					Debug.Assert((k & Keys.KeyCode) != Keys.Delete);
-					Debug.Assert((k & Keys.KeyCode) != Keys.F10);
-				}
-#endif
+				// Control-dependent shortcuts shouldn't be registered as global ones
+				Debug.Assert(((k & Keys.Modifiers) != Keys.None) || (k == Keys.F1));
+				Debug.Assert((k & Keys.KeyCode) != Keys.C);
+				Debug.Assert((k & Keys.KeyCode) != Keys.V);
+				Debug.Assert((k & Keys.KeyCode) != Keys.X);
+				Debug.Assert((k & Keys.KeyCode) != Keys.Y);
+				Debug.Assert((k & Keys.KeyCode) != Keys.Z);
+				Debug.Assert((k & Keys.KeyCode) != Keys.Escape);
+				Debug.Assert((k & Keys.KeyCode) != Keys.Return);
+				Debug.Assert((k & Keys.KeyCode) != Keys.Insert);
+				Debug.Assert((k & Keys.KeyCode) != Keys.Delete);
+				Debug.Assert((k & Keys.KeyCode) != Keys.F10);
 
 				tsmi.ShortcutKeys = k;
 			}
@@ -3311,26 +3162,6 @@ namespace KeePass.UI
 
 			if(tsmiSecondary != null)
 				tsmiSecondary.ShortcutKeyDisplayString = str;
-		}
-
-		internal static ToolStrip GetTopLevelOwner(ToolStripItem tsi)
-		{
-			if(tsi == null) { Debug.Assert(false); return null; }
-
-			// Items have intermediate Owners of type ToolStripDropDownMenu
-
-			while(true)
-			{
-				ToolStripItem tsiOwner = tsi.OwnerItem;
-				if(tsiOwner == null) break;
-				if(tsiOwner == tsi) { Debug.Assert(false); break; }
-				tsi = tsiOwner;
-			}
-
-			ToolStrip ts = tsi.Owner;
-			Debug.Assert((ts is CustomMenuStripEx) || (ts is CustomToolStripEx) ||
-				(ts is CustomContextMenuStripEx));
-			return ts;
 		}
 
 		internal static ToolStripItem GetSelectedItem(ToolStripItemCollection tsic)
@@ -3438,18 +3269,9 @@ namespace KeePass.UI
 		{
 			if(img == null) { Debug.Assert(false); return null; }
 
-			Image imgSc = GfxUtil.ScaleImage(img, w, h);
-			if(imgSc == null) { Debug.Assert(false); return null; }
-
-			Bitmap bmpSc = (imgSc as Bitmap);
-			if(bmpSc == null)
-			{
-				Debug.Assert(false); // Should be a Bitmap for performance
-				bmpSc = new Bitmap(imgSc);
-				imgSc.Dispose();
-			}
-
-			return bmpSc;
+			Bitmap bmp = (GfxUtil.ScaleImage(img, w, h) as Bitmap);
+			Debug.Assert(bmp != null);
+			return bmp;
 		}
 
 		/* public static T DgvGetComboBoxValue<T>(DataGridViewComboBoxCell c,
@@ -3590,7 +3412,7 @@ namespace KeePass.UI
 			}
 #endif
 
-			// Throws under Mono 4.2.1 on MacOS;
+			// Throws under Mono 4.2.1 on Mac OS X;
 			// https://sourceforge.net/p/keepass/discussion/329221/thread/7c096cfc/
 			try { return SystemInformation.SmallIconSize; }
 			catch(Exception) { Debug.Assert(NativeLib.IsUnix()); }
@@ -3609,7 +3431,6 @@ namespace KeePass.UI
 			return true;
 		} */
 
-		[Obsolete]
 		public static void RemoveBannerIfNecessary(Form f)
 		{
 			if(f == null) { Debug.Assert(false); return; }
@@ -3619,9 +3440,8 @@ namespace KeePass.UI
 				Screen s = Screen.FromControl(f);
 				if(s == null) { Debug.Assert(false); return; }
 
-				Rectangle rW = s.WorkingArea;
-				Rectangle rF = f.Bounds;
-				if(rF.Height <= rW.Height) return;
+				int hForm = f.Height;
+				if(s.WorkingArea.Height >= hForm) return;
 
 				PictureBox pbBanner = null;
 				foreach(Control c in f.Controls)
@@ -3653,8 +3473,8 @@ namespace KeePass.UI
 				if(pbBanner == null) return; // No assert
 				Debug.Assert(pbBanner.Name == "m_bannerImage");
 
-				int hB = pbBanner.Height;
-				if((hB <= 0) || (hB >= rF.Height)) { Debug.Assert(false); return; }
+				int dy = pbBanner.Height;
+				if((dy <= 0) || (dy >= hForm)) { Debug.Assert(false); return; }
 
 				f.SuspendLayout();
 				try
@@ -3664,21 +3484,14 @@ namespace KeePass.UI
 					foreach(Control c in f.Controls)
 					{
 						if(c == null) { Debug.Assert(false); }
-						else if(c.Dock != DockStyle.None) { }
 						else if(c != pbBanner)
 						{
 							Point pt = c.Location;
-							c.Location = new Point(pt.X, pt.Y - hB);
+							c.Location = new Point(pt.X, pt.Y - dy);
 						}
 					}
 
-					rF.Height -= hB;
-
-					if(rF.Height < rW.Height)
-						rF.Y = rW.Y + ((rW.Height - rF.Height) / 2);
-					else rF.Y = rW.Y;
-
-					f.Bounds = rF;
+					f.Height = hForm - dy;
 				}
 				catch(Exception) { Debug.Assert(false); }
 				finally { f.ResumeLayout(); }
@@ -3759,19 +3572,18 @@ namespace KeePass.UI
 		internal static int GetEntryIconIndex(PwDatabase pd, PwEntry pe,
 			DateTime dtNow)
 		{
-			Debug.Assert(pd != null);
 			if(pe == null) { Debug.Assert(false); return (int)PwIcon.Key; }
 
 			if(pe.Expires && (pe.ExpiryTime <= dtNow))
 				return (int)PwIcon.Expired;
 
-			if(pe.CustomIconUuid.Equals(PwUuid.Zero))
+			if(pe.CustomIconUuid == PwUuid.Zero)
 				return (int)pe.IconId;
 
 			int i = -1;
 			if(pd != null) i = pd.GetCustomIconIndex(pe.CustomIconUuid);
+			else { Debug.Assert(false); }
 			if(i >= 0) return ((int)PwIcon.Count + i);
-
 			Debug.Assert(false);
 			return (int)pe.IconId;
 		}
@@ -3834,148 +3646,6 @@ namespace KeePass.UI
 				g_tLastDoEvents = t;
 				Application.DoEvents();
 			}
-		}
-
-		private static string GetColorName(Color clr)
-		{
-			int iClr = clr.ToArgb();
-
-			foreach(KnownColor kc in Enum.GetValues(typeof(KnownColor)))
-			{
-				if(((kc >= KnownColor.ActiveBorder) && (kc <= KnownColor.WindowText)) ||
-					((kc >= KnownColor.ButtonFace) && (kc <= KnownColor.MenuHighlight)))
-					continue; // Ignore dynamic colors
-
-				Color clrKnown = Color.FromKnownColor(kc);
-				if(clrKnown.ToArgb() == iClr) return clrKnown.Name;
-			}
-
-			return null;
-		}
-
-		internal static string ColorToString(Color clr)
-		{
-			if(ColorsEqual(clr, Color.Empty)) return KPRes.None;
-
-			StringBuilder sb = new StringBuilder();
-			sb.Append(StrUtil.ColorToUnnamedHtml(clr, false));
-
-			if(clr.A != 255)
-			{
-				sb.Append(", A = #");
-				sb.Append(clr.A.ToString("X2"));
-			}
-
-			string strName = GetColorName(clr);
-			if(!string.IsNullOrEmpty(strName))
-			{
-				sb.Append(" (");
-				sb.Append(strName);
-				sb.Append(')');
-			}
-
-			return sb.ToString();
-		}
-
-		internal static void AdjustDropDownWidth(ComboBox cmb)
-		{
-			if(cmb == null) { Debug.Assert(false); return; }
-
-			try
-			{
-				Font f = cmb.Font;
-				int w = 0;
-
-				foreach(object o in cmb.Items)
-				{
-					if(o == null) { Debug.Assert(false); continue; }
-
-					string str = o.ToString();
-					if(string.IsNullOrEmpty(str)) continue;
-
-					w = Math.Max(w, TextRenderer.MeasureText(str, f).Width);
-				}
-				w += UIUtil.GetVScrollBarWidth();
-
-				w = Math.Max(w, cmb.Width);
-
-				Screen s = (Screen.FromControl(cmb) ?? Screen.PrimaryScreen);
-				if(s != null) w = Math.Min(w, s.WorkingArea.Width);
-				else { Debug.Assert(false); }
-
-				if(cmb.DropDownWidth != w) cmb.DropDownWidth = w;
-			}
-			catch(Exception) { Debug.Assert(false); }
-		}
-
-		private static Dictionary<ulong, Bitmap> g_dShields = null;
-		private static Bitmap GetShieldBitmap(int w, int h)
-		{
-			if(w <= 0) { Debug.Assert(w == 0); w = GetSmallIconSize().Width; }
-			if(h <= 0) { Debug.Assert(h == 0); h = GetSmallIconSize().Height; }
-
-			if(g_dShields == null) g_dShields = new Dictionary<ulong, Bitmap>();
-
-			ulong k = ((ulong)(uint)w << 32) | (uint)h;
-			Bitmap bmp;
-			if(g_dShields.TryGetValue(k, out bmp)) return bmp;
-
-			try
-			{
-				if(!NativeLib.IsUnix())
-				{
-					IntPtr hIcon = IntPtr.Zero;
-					if(NativeMethods.LoadIconWithScaleDown(IntPtr.Zero,
-						NativeMethods.MakeIntResource(NativeMethods.IDI_SHIELD),
-						w, h, ref hIcon) >= 0)
-					{
-						if(hIcon != IntPtr.Zero)
-						{
-							using(Icon ico = Icon.FromHandle(hIcon))
-							{
-								bmp = IconToBitmap(ico, w, h);
-							}
-
-							if(!NativeMethods.DestroyIcon(hIcon)) { Debug.Assert(false); }
-						}
-						else { Debug.Assert(false); }
-					}
-					else { Debug.Assert(false); }
-				}
-			}
-			catch(Exception) { Debug.Assert(false); }
-
-			if(bmp == null) bmp = IconToBitmap(SystemIcons.Shield, w, h);
-
-			g_dShields[k] = bmp;
-			return bmp;
-		}
-
-		internal static Bitmap AddShieldOverlay(Image imgBase)
-		{
-			if(imgBase == null) { Debug.Assert(false); return null; }
-
-			int w = imgBase.Width, h = imgBase.Height;
-
-			Bitmap bmp = new Bitmap(w, h, PixelFormat.Format32bppArgb);
-			using(Graphics g = Graphics.FromImage(bmp))
-			{
-				g.Clear(Color.Transparent);
-				g.DrawImage(imgBase, 0, 0, w, h);
-
-				if((w >= 2) && (h >= 2))
-				{
-					int wHalf = w >> 1, hHalf = h >> 1;
-
-					Bitmap bmpShield = GetShieldBitmap(wHalf, hHalf);
-					if(bmpShield != null)
-						g.DrawImage(bmpShield, wHalf, hHalf, wHalf, hHalf);
-					else { Debug.Assert(false); }
-				}
-				else { Debug.Assert(false); }
-			}
-
-			return bmp;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ using KeePass.App;
 using KeePass.Forms;
 using KeePass.Native;
 using KeePass.Resources;
-using KeePass.UI;
 using KeePass.Util.Spr;
 
 using KeePassLib;
@@ -213,10 +212,8 @@ namespace KeePass.Util
 				OpenUrl(pe.OverrideUrl, pe, true, strUrl);
 			else
 			{
-				string strOverride = (Program.Config.Integration.UrlOverrideEnabled ?
-					Program.Config.Integration.UrlOverride : null);
-
-				if(!string.IsNullOrEmpty(strOverride))
+				string strOverride = Program.Config.Integration.UrlOverride;
+				if(strOverride.Length > 0)
 					OpenUrl(strOverride, pe, true, strUrl);
 				else
 					OpenUrl(strUrl, pe, true);
@@ -314,8 +311,6 @@ namespace KeePass.Util
 			// Restore previous working directory
 			WinUtil.SetWorkingDirectory(strPrevWorkDir);
 
-			if(peDataSource != null) peDataSource.Touch(false);
-
 			// SprEngine.Compile might have modified the database
 			MainForm mf = Program.MainForm;
 			if(mf != null)
@@ -391,31 +386,8 @@ namespace KeePass.Util
 
 		public static void Restart()
 		{
-			try { using(Process p = StartSelfEx(null)) { Debug.Assert(p != null); } }
+			try { NativeLib.StartProcess(WinUtil.GetExecutable()); }
 			catch(Exception ex) { MessageService.ShowWarning(ex); }
-		}
-
-		internal static Process StartSelfEx(string strArgs)
-		{
-			string strExe = WinUtil.GetExecutable();
-
-			ProcessStartInfo psi = new ProcessStartInfo();
-
-			// Mono detects CLR binaries and runs them with the same Mono
-			// binary (see mono/metadata/w32process-unix.c)
-			// if(NativeLib.IsUnix())
-			// {
-			//	psi.FileName = "mono";
-			//	string strArgsEx = "\"" + NativeLib.EncodeDataToArgs(strExe) + "\"";
-			//	if(!string.IsNullOrEmpty(strArgs)) strArgsEx += " " + strArgs;
-			//	psi.Arguments = strArgsEx;
-			// }
-			// else
-
-			psi.FileName = strExe;
-			if(!string.IsNullOrEmpty(strArgs)) psi.Arguments = strArgs;
-
-			return NativeLib.StartProcessEx(psi);
 		}
 
 		public static string GetExecutable()
@@ -520,10 +492,10 @@ namespace KeePass.Util
 
 				uint dwDummy;
 				if(NativeMethods.DeviceIoControl(hDevice, NativeMethods.FSCTL_LOCK_VOLUME,
-					IntPtr.Zero, 0, IntPtr.Zero, 0, out dwDummy, IntPtr.Zero))
+					IntPtr.Zero, 0, IntPtr.Zero, 0, out dwDummy, IntPtr.Zero) != false)
 				{
-					if(!NativeMethods.DeviceIoControl(hDevice, NativeMethods.FSCTL_UNLOCK_VOLUME,
-						IntPtr.Zero, 0, IntPtr.Zero, 0, out dwDummy, IntPtr.Zero))
+					if(NativeMethods.DeviceIoControl(hDevice, NativeMethods.FSCTL_UNLOCK_VOLUME,
+						IntPtr.Zero, 0, IntPtr.Zero, 0, out dwDummy, IntPtr.Zero) == false)
 					{
 						Debug.Assert(false);
 					}
@@ -595,23 +567,28 @@ namespace KeePass.Util
 
 		public static byte[] HashFile(IOConnectionInfo iocFile)
 		{
-			if(iocFile == null) { Debug.Assert(false); return null; }
+			if(iocFile == null) { Debug.Assert(false); return null; } // Assert only
 
+			Stream sIn;
 			try
 			{
-				using(Stream s = IOConnection.OpenRead(iocFile))
-				{
-					if(s == null) { Debug.Assert(false); return null; }
+				sIn = IOConnection.OpenRead(iocFile);
+				if(sIn == null) throw new FileNotFoundException();
+			}
+			catch(Exception) { return null; }
 
-					using(SHA256Managed h = new SHA256Managed())
-					{
-						return h.ComputeHash(s);
-					}
+			byte[] pbHash;
+			try
+			{
+				using(SHA256Managed sha256 = new SHA256Managed())
+				{
+					pbHash = sha256.ComputeHash(sIn);
 				}
 			}
-			catch(Exception) { Debug.Assert(false); }
+			catch(Exception) { Debug.Assert(false); sIn.Close(); return null; }
 
-			return null;
+			sIn.Close();
+			return pbHash;
 		}
 
 		// See GetCommandLineFromUrl when editing this method
@@ -643,57 +620,19 @@ namespace KeePass.Util
 		public static bool RunElevated(string strExe, string strArgs,
 			bool bShowMessageIfFailed)
 		{
-			return RunElevated(strExe, strArgs, bShowMessageIfFailed, 0);
-		}
+			if(strExe == null) throw new ArgumentNullException("strExe");
 
-		internal static bool RunElevated(string strExe, string strArgs,
-			bool bShowMessageIfFailed, int iWaitForExitMS)
-		{
 			try
 			{
-				if(strExe == null) throw new ArgumentNullException("strExe");
-
 				ProcessStartInfo psi = new ProcessStartInfo();
 				psi.FileName = strExe;
 				if(!string.IsNullOrEmpty(strArgs)) psi.Arguments = strArgs;
 				psi.UseShellExecute = true;
 
-				string strStdIn = null;
-
 				// Elevate on Windows Vista and higher
-				if(WinUtil.IsAtLeastWindowsVista) psi.Verb = "RunAs";
-				else if(NativeLib.IsUnix())
-				{
-					string strArgsEx = "\"" + NativeLib.EncodeDataToArgs(strExe) + "\"";
-					if(strExe == GetExecutable()) strArgsEx = "mono " + strArgsEx;
-					if(!string.IsNullOrEmpty(strArgs)) strArgsEx += " " + strArgs;
+				if(WinUtil.IsAtLeastWindowsVista) psi.Verb = "runas";
 
-					psi.FileName = "sudo";
-					psi.Arguments = "-k -S " + strArgsEx;
-					psi.UseShellExecute = false;
-					psi.RedirectStandardInput = true;
-
-					SingleLineEditForm dlg = new SingleLineEditForm();
-					dlg.InitEx(KPRes.AdminPassword, psi.FileName + " " + psi.Arguments,
-						KPRes.AdminPassword + " (" + psi.FileName + "):",
-						Properties.Resources.B48x48_KGPG_Key2, string.Empty, null);
-					dlg.FlagsEx |= SlfFlags.Sensitive;
-					if(UIUtil.ShowDialogAndDestroy(dlg) != DialogResult.OK)
-						return false;
-
-					strStdIn = dlg.ResultString + Environment.NewLine;
-				}
-
-				using(Process p = NativeLib.StartProcessEx(psi))
-				{
-					if(!string.IsNullOrEmpty(strStdIn))
-						p.StandardInput.Write(strStdIn);
-
-					if(iWaitForExitMS == 0) { }
-					else if(iWaitForExitMS < 0) p.WaitForExit();
-					else if(!p.WaitForExit(iWaitForExitMS))
-						throw new TimeoutException();
-				}
+				NativeLib.StartProcess(psi);
 			}
 			catch(Exception ex)
 			{
@@ -706,40 +645,24 @@ namespace KeePass.Util
 
 		public static ulong GetMaxNetFrameworkVersion()
 		{
-			ulong u = m_uFrameworkVersion;
-			if(u != 0) return u;
+			if(m_uFrameworkVersion != 0) return m_uFrameworkVersion;
 
-			// https://www.mono-project.com/docs/about-mono/releases/
-			ulong m = NativeLib.MonoVersion;
-			if(m >= 0x0006000600000000UL) u = 0x0004000800000000UL;
-			else if(m >= 0x0005001200000000UL) u = 0x0004000700020000UL;
-			else if(m >= 0x0005000A00000000UL) u = 0x0004000700010000UL;
-			else if(m >= 0x0005000400000000UL) u = 0x0004000700000000UL;
-			else if(m >= 0x0004000600000000UL) u = 0x0004000600020000UL;
-			else if(m >= 0x0004000400000000UL) u = 0x0004000600010000UL;
-			else if(m >= 0x0003000800000000UL) u = 0x0004000500010000UL;
-			else if(m >= 0x0003000000000000UL) u = 0x0004000500000000UL;
+			try { m_uFrameworkVersion = GetMaxNetVersionPriv(); }
+			catch(Exception) { Debug.Assert(false); }
 
-			if(u == 0)
-			{
-				try { u = GetMaxNetVersionPriv(); }
-				catch(Exception) { Debug.Assert(false); }
-			}
-
-			if(u == 0)
+			if(m_uFrameworkVersion == 0)
 			{
 				Version v = Environment.Version;
-				if(v.Major > 0) u |= (uint)v.Major;
-				u <<= 16;
-				if(v.Minor > 0) u |= (uint)v.Minor;
-				u <<= 16;
-				if(v.Build > 0) u |= (uint)v.Build;
-				u <<= 16;
-				if(v.Revision > 0) u |= (uint)v.Revision;
+				if(v.Major > 0) m_uFrameworkVersion |= (uint)v.Major;
+				m_uFrameworkVersion <<= 16;
+				if(v.Minor > 0) m_uFrameworkVersion |= (uint)v.Minor;
+				m_uFrameworkVersion <<= 16;
+				if(v.Build > 0) m_uFrameworkVersion |= (uint)v.Build;
+				m_uFrameworkVersion <<= 16;
+				if(v.Revision > 0) m_uFrameworkVersion |= (uint)v.Revision;
 			}
 
-			m_uFrameworkVersion = u;
-			return u;
+			return m_uFrameworkVersion;
 		}
 
 		private static ulong GetMaxNetVersionPriv()

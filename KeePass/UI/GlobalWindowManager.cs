@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -282,29 +282,24 @@ namespace KeePass.UI
 			return false;
 		}
 
-		private static void CustomizeForm(Form f)
+		public static void CustomizeForm(Form f)
 		{
 			CustomizeControl(f);
 
 			try
 			{
-				// AccessibilityEx.CustomizeForm adds scroll bars
-				// const string strForms = "KeePass.Forms.";
-				// Debug.Assert(typeof(PwEntryForm).FullName.StartsWith(strForms));
-				// if((f.FormBorderStyle == FormBorderStyle.FixedDialog) &&
-				//	(f.WindowState == FormWindowState.Normal) &&
-				//	f.GetType().FullName.StartsWith(strForms))
-				//	UIUtil.RemoveBannerIfNecessary(f);
+				const string strForms = "KeePass.Forms.";
+				Debug.Assert(typeof(PwEntryForm).FullName.StartsWith(strForms));
 
-				AccessibilityEx.CustomizeForm(f);
+				if(f.GetType().FullName.StartsWith(strForms) &&
+					(f.FormBorderStyle == FormBorderStyle.FixedDialog))
+					UIUtil.RemoveBannerIfNecessary(f);
 			}
 			catch(Exception) { Debug.Assert(false); }
 		}
 
 		public static void CustomizeControl(Control c)
 		{
-			if(Program.DesignMode) return;
-
 			if(UISystemFonts.OverrideUIFont)
 			{
 				Font font = UISystemFonts.DefaultFont;
@@ -411,19 +406,5 @@ namespace KeePass.UI
 				DebugClose(cc);
 		}
 #endif
-
-		internal static void InitializeForm(Form f)
-		{
-			if(Program.DesignMode) return;
-			if(f == null) { Debug.Assert(false); return; }
-
-			try
-			{
-				Program.Translation.ApplyTo(f);
-
-				AccessibilityEx.InitializeForm(f);
-			}
-			catch(Exception) { Debug.Assert(false); }
-		}
 	}
 }

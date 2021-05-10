@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2023 Dominik Reichl.
+	Copyright (C) 2003-2021 Dominik Reichl.
 */
 
 body, kbd kbd {
@@ -10,13 +10,9 @@ body, kbd kbd {
 body {
 	color: #000000;
 	background-color: #FFFFFF;
-}
-@media not all and (forced-colors: active) {
-	body {
-		background-image: url("images/back.gif");
-		background-repeat: repeat;
-		background-attachment: fixed;
-	}
+	background-image: url("images/back.gif");
+	background-repeat: repeat;
+	background-attachment: fixed;
 }
 
 p {
@@ -456,69 +452,71 @@ div.tipdiv {
 	width: 100%;
 	height: 100%;
 	z-index: 254;
-	overflow: auto;
 	background-color: rgba(0, 0, 0, 0.85);
 	transition: background 1.5s; /* Cf. JavaScript timeout */
 }
 
 #consent_dlg {
-	border: 1px solid #808080;
 	position: relative;
 	width: 33%;
 	margin: 96px auto 0px auto;
 	padding: 16px 16px 16px 16px;
 	background-color: #EEEEEE;
 }
-@media (max-height: 600px) {
+@media (max-height: 430px) {
 	#consent_dlg {
 		margin-top: 4px;
 	}
 }
 
-#consent_dlg button {
-	display: block;
-	width: 50%;
-	margin: 8px auto 8px auto;
-	padding: 8px 2px 8px 2px;
-	cursor: pointer;
-	color: #000000;
-	background-color: #E0E0E0;
-	background-image: -webkit-linear-gradient(top, #F0F0F0, #D0D0D0);
-	background-image: -moz-linear-gradient(top, #F0F0F0, #D0D0D0);
-	background-image: -ms-linear-gradient(top, #F0F0F0, #D0D0D0);
-	background-image: linear-gradient(to bottom, #F0F0F0, #D0D0D0);
-	border: 1px solid #A0A0A0;
+.consent_btn {
+	margin: 4px 4px 4px 4px;
+	padding: 8px 8px 8px 8px;
 	border-radius: 5px;
+	cursor: pointer;
 }
 
-#consent_dlg button:first-of-type {
-	margin-top: 1em;
-}
-#consent_dlg button:last-of-type {
-	margin-bottom: 1em;
-}
-
-#consent_dlg button:hover {
-	background-color: #E0F0FF;
-	background-image: -webkit-linear-gradient(top, #E8F8FF, #D8E8F8);
-	background-image: -moz-linear-gradient(top, #E8F8FF, #D8E8F8);
-	background-image: -ms-linear-gradient(top, #E8F8FF, #D8E8F8);
-	background-image: linear-gradient(to bottom, #E8F8FF, #D8E8F8);
-	border-color: #0080FF;
-}
-
-#consent_dlg button:active {
-	background-color: #C8E0F0;
-	background-image: -webkit-linear-gradient(top, #D0E8F8, #C0D8E8);
-	background-image: -moz-linear-gradient(top, #D0E8F8, #C0D8E8);
-	background-image: -ms-linear-gradient(top, #D0E8F8, #C0D8E8);
-	background-image: linear-gradient(to bottom, #D0E8F8, #C0D8E8);
-	border-color: #004080;
-}
-
-#consent_dlg button:focus {
+.consent_btn:focus {
 	outline: none;
 }
-#consent_dlg button[data-focusvisible="true"]:focus { /* Focus with keyboard, see JS */
+.consent_btn[data-focusvisible="true"]:focus { /* Focus with keyboard, see JS */
 	outline: 2px dotted #000080;
 }
+
+#consent_btn_accept {
+	padding-left: 32px;
+	padding-right: 32px;
+	border: 1px solid #008000;
+	color: #FFFFFF;
+	background-color: #00B400;
+	background-image: -webkit-linear-gradient(top, #00CC00, #009600);
+	background-image: -moz-linear-gradient(top, #00CC00, #009600);
+	background-image: -ms-linear-gradient(top, #00CC00, #009600);
+	background-image: linear-gradient(to bottom, #00CC00, #009600);
+}
+
+#consent_btn_accept:hover {
+	background-color: #80FF80;
+	background-image: -webkit-linear-gradient(top, #80FF80, #009600);
+	background-image: -moz-linear-gradient(top, #80FF80, #009600);
+	background-image: -ms-linear-gradient(top, #80FF80, #009600);
+	background-image: linear-gradient(to bottom, #80FF80, #009600);
+}
+
+#consent_btn_accept:active {
+	background-color: #80FF80;
+	background-image: -webkit-linear-gradient(top, #009600, #80FF80);
+	background-image: -moz-linear-gradient(top, #009600, #80FF80);
+	background-image: -ms-linear-gradient(top, #009600, #80FF80);
+	background-image: linear-gradient(to bottom, #009600, #80FF80);
+}
+
+#consent_btn_decline {
+	border: 1px solid #CCCCCC; /* #800000 */
+	color: #808080;
+	background-color: #EEEEEE;
+}
+
+/* #consent_btn_decline:hover, #consent_btn_decline:active {
+	background-color: #FFFFFF;
+} */

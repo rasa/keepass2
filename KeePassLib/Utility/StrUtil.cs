@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -350,7 +350,12 @@ namespace KeePassLib.Utility
 		/// <returns>String, HTML-encoded.</returns>
 		public static string StringToHtml(string str)
 		{
-			if(str == null) { Debug.Assert(false); return string.Empty; }
+			return StringToHtml(str, false);
+		}
+
+		internal static string StringToHtml(string str, bool bNbsp)
+		{
+			Debug.Assert(str != null); if(str == null) throw new ArgumentNullException("str");
 
 			str = str.Replace(@"&", @"&amp;"); // Must be first
 			str = str.Replace(@"<", @"&lt;");
@@ -358,7 +363,7 @@ namespace KeePassLib.Utility
 			str = str.Replace("\"", @"&quot;");
 			str = str.Replace("\'", @"&#39;");
 
-			// if(bNbsp) str = str.Replace(" ", @"&nbsp;"); // Before <br />
+			if(bNbsp) str = str.Replace(" ", @"&nbsp;"); // Before <br />
 
 			str = NormalizeNewLines(str, false);
 			str = str.Replace("\n", @"<br />" + MessageService.NewLine);
@@ -368,13 +373,13 @@ namespace KeePassLib.Utility
 
 		public static string XmlToString(string str)
 		{
-			if(str == null) { Debug.Assert(false); return string.Empty; }
+			Debug.Assert(str != null); if(str == null) throw new ArgumentNullException("str");
 
+			str = str.Replace(@"&amp;", @"&");
 			str = str.Replace(@"&lt;", @"<");
 			str = str.Replace(@"&gt;", @">");
 			str = str.Replace(@"&quot;", "\"");
 			str = str.Replace(@"&#39;", "\'");
-			str = str.Replace(@"&amp;", @"&"); // Must be last
 
 			return str;
 		}
@@ -382,9 +387,9 @@ namespace KeePassLib.Utility
 		public static string ReplaceCaseInsensitive(string strString, string strFind,
 			string strNew)
 		{
-			if(strString == null) { Debug.Assert(false); return string.Empty; }
-			if(strFind == null) { Debug.Assert(false); return strString; }
-			if(strNew == null) { Debug.Assert(false); return strString; }
+			Debug.Assert(strString != null); if(strString == null) return strString;
+			Debug.Assert(strFind != null); if(strFind == null) return strString;
+			Debug.Assert(strNew != null); if(strNew == null) return strString;
 
 			string str = strString;
 
@@ -964,33 +969,22 @@ namespace KeePassLib.Utility
 			if(strMenuText == null) throw new ArgumentNullException("strMenuText");
 
 			string str = strMenuText;
-			int iOffset = 0;
-			bool bHasAmp = false;
 
-			// Remove keys of the form "(&X)"
-			while(iOffset < str.Length)
+			for(char ch = 'A'; ch <= 'Z'; ++ch)
 			{
-				int i = str.IndexOf('&', iOffset);
-				if(i < iOffset) break;
-
-				if((i >= 1) && (str[i - 1] == '(') && ((i + 2) < str.Length) &&
-					(str[i + 2] == ')'))
+				string strEnhAcc = @"(&" + ch.ToString() + ")";
+				if(str.IndexOf(strEnhAcc) >= 0)
 				{
-					if((i >= 2) && char.IsWhiteSpace(str[i - 2]))
-						str = str.Remove(i - 2, 5);
-					else str = str.Remove(i - 1, 4);
-
-					continue;
+					str = str.Replace(" " + strEnhAcc, string.Empty);
+					str = str.Replace(strEnhAcc, string.Empty);
 				}
-
-				iOffset = i + 1;
-				bHasAmp = true;
 			}
 
-			return (bHasAmp ? str.Replace(@"&", string.Empty) : str);
+			str = str.Replace(@"&", string.Empty);
+
+			return str;
 		}
 
-		[Obsolete] // Use AccessKeyManagerEx, if possible
 		public static string AddAccelerator(string strMenuText,
 			List<char> lAvailKeys)
 		{
@@ -1151,7 +1145,7 @@ namespace KeePassLib.Utility
 		/// Normalize new line characters in a string. Input strings may
 		/// contain mixed new line character sequences from all commonly
 		/// used operating systems (i.e. \r\n from Windows, \n from Unix
-		/// and \r from MacOS.
+		/// and \r from Mac OS.
 		/// </summary>
 		/// <param name="str">String with mixed new line characters.</param>
 		/// <param name="bWindows">If <c>true</c>, new line characters
@@ -1423,7 +1417,7 @@ namespace KeePassLib.Utility
 		public static int[] DeserializeIntArray(string strSerialized)
 		{
 			if(strSerialized == null) throw new ArgumentNullException("strSerialized");
-			if(strSerialized.Length == 0) return MemUtil.EmptyArray<int>();
+			if(strSerialized.Length == 0) return new int[0];
 
 			string[] vParts = strSerialized.Split(' ');
 			int[] v = new int[vParts.Length];
@@ -1996,107 +1990,6 @@ namespace KeePassLib.Utility
 			}
 
 			return sb.ToString();
-		}
-
-		// Escape a string value (not an identifier) for CSS.
-		// https://www.w3.org/TR/CSS22/syndata.html#characters
-		// https://www.w3.org/TR/CSS22/syndata.html#strings
-		internal static string CssEscapeString(string str)
-		{
-			if(str == null) { Debug.Assert(false); return string.Empty; }
-
-			int cc = str.Length;
-			if(cc == 0) return string.Empty;
-
-			StringBuilder sb = new StringBuilder();
-
-			for(int i = 0; i < cc; ++i)
-			{
-				char ch = str[i];
-				switch(ch)
-				{
-					case '\"': sb.Append("\\\""); break;
-					case '\'': sb.Append("\\\'"); break;
-					case '\\': sb.Append("\\\\"); break;
-					case '\n': sb.Append("\\A "); break; // Space terminates hex value
-					case '\r': sb.Append("\\D "); break;
-					default: sb.Append(ch); break;
-				}
-			}
-
-			return sb.ToString();
-		}
-
-		internal static List<KeyValuePair<int, UnicodeCategory>> GetCategoryGroups(
-			string str)
-		{
-			List<KeyValuePair<int, UnicodeCategory>> l =
-				new List<KeyValuePair<int, UnicodeCategory>>();
-			if(str == null) { Debug.Assert(false); return l; }
-			if(str.Length == 0) return l;
-
-			int iStart = 0;
-			UnicodeCategory ucStart = UnicodeCategory.UppercaseLetter;
-
-			for(int i = 0; i < str.Length; ++i)
-			{
-				UnicodeCategory uc = char.GetUnicodeCategory(str[i]);
-
-				if((uc != ucStart) && (i != 0))
-				{
-					l.Add(new KeyValuePair<int, UnicodeCategory>(iStart, ucStart));
-					iStart = i;
-				}
-
-				ucStart = uc;
-			}
-
-			l.Add(new KeyValuePair<int, UnicodeCategory>(iStart, ucStart));
-
-			return l;
-		}
-
-		internal static string CommandToText(string strCommand)
-		{
-			if(strCommand == null) { Debug.Assert(false); return string.Empty; }
-			if(strCommand.Length == 0) return string.Empty;
-
-			return TrimDots(RemoveAccelerator(strCommand), true);
-		}
-
-		internal static bool Equals(char[] vA, char[] vB, bool bIgnoreNewLineEnc)
-		{
-			if(!bIgnoreNewLineEnc) return MemUtil.ArrayHelperExOfChar.Equals(vA, vB);
-			if(object.ReferenceEquals(vA, vB)) return true;
-			if((vA == null) || (vB == null)) return false;
-
-			int cA = vA.Length, cB = vB.Length;
-			int iA = 0, iB = 0;
-
-			while(iA < cA)
-			{
-				if(iB >= cB) return false;
-
-				char chA = vA[iA], chB = vB[iB];
-
-				if(chA == '\r')
-				{
-					if(((iA + 1) < cA) && (vA[iA + 1] == '\n')) ++iA;
-					chA = '\n';
-				}
-				if(chB == '\r')
-				{
-					if(((iB + 1) < cB) && (vB[iB + 1] == '\n')) ++iB;
-					chB = '\n';
-				}
-
-				if(chA != chB) return false;
-
-				++iA;
-				++iB;
-			}
-
-			return (iB == cB);
 		}
 	}
 }

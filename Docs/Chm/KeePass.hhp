@@ -6,11 +6,10 @@ Default topic=help\base\index.html
 Display compile progress=No
 Full-text search=Yes
 Language=0x409 Englisch (USA)
-Title=KeePass Help
+Title=KeePass Password Safe Help
 
 
 [FILES]
-help\index.html
 help\base\autotype.html
 help\base\autourl.html
 help\base\cmdline.html
@@ -33,6 +32,7 @@ help\base\search.html
 help\base\secedits.html
 help\base\security.html
 help\base\tans.html
+help\base\terms.html
 help\base\usingpws.html
 help\v2\autotype_obfuscation.html
 help\v2\dbsettings.html

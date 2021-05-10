@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ namespace KeePass.UI
 {
 	public sealed class ColorMenuItem : MenuItem
 	{
-		private readonly Color m_clr;
-		private readonly int m_qSize;
+		private Color m_clr;
+		private int m_qSize;
 
 		public Color Color
 		{
@@ -44,9 +44,6 @@ namespace KeePass.UI
 			Debug.Assert(this.CanRaiseEvents);
 			this.ShowShortcut = false;
 			this.OwnerDraw = true;
-
-			if(AccessibilityEx.Enabled)
-				this.Text = UIUtil.ColorToString(clr);
 		}
 
 		protected override void OnDrawItem(DrawItemEventArgs e)

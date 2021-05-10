@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -122,7 +122,7 @@ namespace KeePass.Util.Spr
 			}
 
 			if((ctx.Flags & SprCompileFlags.Comments) != SprCompileFlags.None)
-				str = RemoveComments(str, null, null);
+				str = RemoveComments(str);
 
 			// The following realizes {T-CONV:/Text/Raw/}, which should be
 			// one of the first transformations (except comments)
@@ -276,7 +276,7 @@ namespace KeePass.Util.Spr
 					string strValue = (de.Value as string);
 					if(strValue == null) { Debug.Assert(false); strValue = string.Empty; }
 
-					str = Fill(str, "%" + strKey + "%", strValue, ctx, uRecursionLevel);
+					str = Fill(str, @"%" + strKey + @"%", strValue, ctx, uRecursionLevel);
 				}
 			}
 
@@ -502,46 +502,20 @@ namespace KeePass.Util.Spr
 			return str;
 		}
 
-		internal static string RemoveComments(string strSeq, List<string> lComments,
-			SprContext ctxComments)
+		private const string StrRemStart = @"{C:";
+		private const string StrRemEnd = @"}";
+		private static string RemoveComments(string strSeq)
 		{
-			if(strSeq == null) { Debug.Assert(false); return string.Empty; }
-
-			const string strStartP = @"{C:";
 			string str = strSeq;
-			int iOffsetP = 0;
 
-			while(iOffsetP < str.Length)
+			while(true)
 			{
-				int iStartP = str.IndexOf(strStartP, iOffsetP, SprEngine.ScMethod);
-				if(iStartP < 0) break;
+				int iStart = str.IndexOf(StrRemStart, SprEngine.ScMethod);
+				if(iStart < 0) break;
+				int iEnd = str.IndexOf(StrRemEnd, iStart + 1, SprEngine.ScMethod);
+				if(iEnd <= iStart) break;
 
-				int iStartC = iStartP + strStartP.Length, cBraces = 1;
-
-				for(int iEndP = iStartC; iEndP < str.Length; ++iEndP)
-				{
-					char ch = str[iEndP];
-					if(ch == '{') ++cBraces;
-					else if(ch == '}')
-					{
-						if(--cBraces == 0)
-						{
-							if(lComments != null)
-							{
-								string strC = str.Substring(iStartC, iEndP - iStartC);
-								if(ctxComments != null)
-									strC = Compile(strC, ctxComments);
-								lComments.Add(strC);
-							}
-
-							str = str.Remove(iStartP, iEndP - iStartP + 1);
-							break;
-						}
-					}
-				}
-
-				if(cBraces != 0) break; // Malformed input; avoid infinite loop
-				iOffsetP = iStartP;
+				str = (str.Substring(0, iStart) + str.Substring(iEnd + StrRemEnd.Length));
 			}
 
 			return str;

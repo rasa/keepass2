@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -46,24 +46,9 @@ namespace KeePass.Forms
 		private ImageList m_ilFormats = null;
 
 		private FileFormatProvider m_fmtCur = null; // Current selection
+
 		private FileFormatProvider m_fmtFinal = null; // Returned as result
-		public FileFormatProvider ResultFormat
-		{
-			get { return m_fmtFinal; }
-		}
-
 		private string[] m_vFiles = null;
-		public string[] ResultFiles
-		{
-			get { return m_vFiles; }
-		}
-
-		private PwExportInfo m_piExport = null;
-		internal PwExportInfo ExportInfo
-		{
-			get { return m_piExport; }
-			set { m_piExport = value; }
-		}
 
 		private sealed class FormatGroupEx
 		{
@@ -79,6 +64,23 @@ namespace KeePass.Forms
 			}
 		}
 
+		public FileFormatProvider ResultFormat
+		{
+			get { return m_fmtFinal; }
+		}
+
+		public string[] ResultFiles
+		{
+			get { return m_vFiles; }
+		}
+
+		private PwExportInfo m_piExport = null;
+		internal PwExportInfo ExportInfo
+		{
+			get { return m_piExport; }
+			set { m_piExport = value; }
+		}
+
 		public void InitEx(bool bExport, PwDatabase pd, PwGroup pg)
 		{
 			m_bExport = bExport;
@@ -89,7 +91,7 @@ namespace KeePass.Forms
 		public ExchangeDataForm()
 		{
 			InitializeComponent();
-			GlobalWindowManager.InitializeForm(this);
+			Program.Translation.ApplyTo(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -110,10 +112,6 @@ namespace KeePass.Forms
 
 			this.Icon = AppIcons.Default;
 			this.Text = strTitle;
-
-			UIUtil.ConfigureToolTip(m_ttRect);
-			UIUtil.SetToolTip(m_ttRect, m_btnSelFile, StrUtil.TrimDots(
-				KPRes.SelectFile, true), true);
 
 			m_lvFormats.ShowGroups = true;
 
@@ -146,21 +144,12 @@ namespace KeePass.Forms
 				lvi.Group = grp.Group;
 				lvi.Tag = f;
 
-				img = f.SmallIcon;
-				if(img == null)
-				{
-					string strExt = f.DefaultExtension;
-					if(!string.IsNullOrEmpty(strExt))
-						strExt = UIUtil.GetPrimaryFileTypeExt(strExt);
-					if(!string.IsNullOrEmpty(strExt))
-						img = FileIcons.GetImageForExtension(strExt, null);
-				}
-				if(img == null)
-					img = Properties.Resources.B16x16_Folder_Inbox;
+				Image imgSmallIcon = f.SmallIcon;
+				if(imgSmallIcon == null)
+					imgSmallIcon = Properties.Resources.B16x16_Folder_Inbox;
 
-				int iImage = lImages.IndexOf(img);
-				if(iImage < 0) { iImage = lImages.Count; lImages.Add(img); }
-				lvi.ImageIndex = iImage;
+				lvi.ImageIndex = lImages.Count;
+				lImages.Add(imgSmallIcon);
 
 				grp.Items.Add(lvi);
 			}
@@ -201,10 +190,11 @@ namespace KeePass.Forms
 			m_cbExportPostOpen.Checked = Program.Config.Defaults.ExportPostOpen;
 			m_cbExportPostShow.Checked = Program.Config.Defaults.ExportPostShow;
 
+			CustomizeForScreenReader();
 			UpdateUIState();
 		}
 
-		private void OnFormClosed(object sender, FormClosedEventArgs e)
+		private void CleanUpEx()
 		{
 			Program.Config.Defaults.ExportMasterKeySpec = m_cbExportMasterKeySpec.Checked;
 			Program.Config.Defaults.ExportParentGroups = m_cbExportParentGroups.Checked;
@@ -217,8 +207,13 @@ namespace KeePass.Forms
 				m_ilFormats.Dispose();
 				m_ilFormats = null;
 			}
+		}
 
-			GlobalWindowManager.RemoveWindow(this);
+		private void CustomizeForScreenReader()
+		{
+			if(!Program.Config.UI.OptimizeForScreenReader) return;
+
+			m_btnSelFile.Text = KPRes.SelectFile;
 		}
 
 		private void OnLinkFileFormats(object sender, LinkLabelLinkClickedEventArgs e)
@@ -354,7 +349,7 @@ namespace KeePass.Forms
 				// Allow only one file when exporting
 				if(m_bExport && !CheckFilePath(strFiles)) return false;
 			}
-			else vFiles = MemUtil.EmptyArray<string>();
+			else vFiles = new string[0];
 
 			if(m_piExport != null)
 			{
@@ -381,6 +376,12 @@ namespace KeePass.Forms
 		private void OnFormatsSelectedIndexChanged(object sender, EventArgs e)
 		{
 			UpdateUIState();
+		}
+
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
+		{
+			CleanUpEx();
+			GlobalWindowManager.RemoveWindow(this);
 		}
 
 		private void OnImportFileTextChanged(object sender, EventArgs e)

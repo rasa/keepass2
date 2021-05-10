@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.Text;
 
 using KeePassLib.Interfaces;
-using KeePassLib.Utility;
 
 #if KeePassLibSD
 using KeePassLibSD;
@@ -101,7 +100,7 @@ namespace KeePassLib.Collections
 				{
 					DateTime? odt = GetLastModificationTime(kvp.Key);
 					if(!odt.HasValue) return false;
-					if(!TimeUtil.EqualsFloor(odt.Value, kvp.Value)) return false;
+					if(odt.Value != kvp.Value) return false;
 				}
 			}
 

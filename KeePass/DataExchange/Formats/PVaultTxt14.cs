@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
+using System.IO;
+using System.Drawing;
 
 using KeePass.Resources;
 
@@ -51,6 +52,11 @@ namespace KeePass.DataExchange.Formats
 		public override string FormatName { get { return "Personal Vault TXT"; } }
 		public override string DefaultExtension { get { return "txt"; } }
 		public override string ApplicationGroup { get { return KPRes.PasswordManagers; } }
+
+		public override Image SmallIcon
+		{
+			get { return KeePass.Properties.Resources.B16x16_Imp_PVault; }
+		}
 
 		public override void Import(PwDatabase pwStorage, Stream sInput,
 			IStatusLogger slLogger)

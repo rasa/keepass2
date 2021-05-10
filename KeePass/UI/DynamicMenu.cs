@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ namespace KeePass.UI
 {
 	public sealed class DynamicMenuEventArgs : EventArgs
 	{
-		private readonly string m_strItemName;
-		private readonly object m_objTag;
+		private string m_strItemName = string.Empty;
+		private object m_objTag = null;
 
 		public string ItemName
 		{
@@ -43,7 +43,8 @@ namespace KeePass.UI
 
 		public DynamicMenuEventArgs(string strItemName, object objTag)
 		{
-			if(strItemName == null) { Debug.Assert(false); throw new ArgumentNullException("strItemName"); }
+			Debug.Assert(strItemName != null);
+			if(strItemName == null) throw new ArgumentNullException("strItemName");
 
 			m_strItemName = strItemName;
 			m_objTag = objTag;
@@ -52,52 +53,46 @@ namespace KeePass.UI
 
 	public sealed class DynamicMenu
 	{
-		private readonly ToolStripItemCollection m_tsicHost;
-		private readonly List<ToolStripItem> m_lItems = new List<ToolStripItem>();
+		private ToolStripItemCollection m_tsicHost;
+		private List<ToolStripItem> m_vMenuItems = new List<ToolStripItem>();
 
 		public event EventHandler<DynamicMenuEventArgs> MenuClick;
 
 		// Constructor required by plugins
 		public DynamicMenu(ToolStripDropDownItem tsmiHost)
 		{
-			if(tsmiHost == null) { Debug.Assert(false); throw new ArgumentNullException("tsmiHost"); }
+			Debug.Assert(tsmiHost != null);
+			if(tsmiHost == null) throw new ArgumentNullException("tsmiHost");
 
 			m_tsicHost = tsmiHost.DropDownItems;
 		}
 
 		public DynamicMenu(ToolStripItemCollection tsicHost)
 		{
-			if(tsicHost == null) { Debug.Assert(false); throw new ArgumentNullException("tsicHost"); }
+			Debug.Assert(tsicHost != null);
+			if(tsicHost == null) throw new ArgumentNullException("tsicHost");
 
 			m_tsicHost = tsicHost;
 		}
 
+		~DynamicMenu()
+		{
+			try { Clear(); } // Throws under Mono
+			catch(Exception) { Debug.Assert(false); }
+		}
+
 		public void Clear()
 		{
-			Debug.Assert(m_lItems.TrueForAll(tsi => m_tsicHost.Contains(tsi)));
-
-			if(m_tsicHost.Count == m_lItems.Count)
-				m_tsicHost.Clear();
-			else
+			for(int i = 0; i < m_vMenuItems.Count; ++i)
 			{
-				for(int i = m_lItems.Count - 1; i >= 0; --i)
-				{
-					ToolStripItem tsi = m_lItems[i];
+				ToolStripItem tsi = m_vMenuItems[m_vMenuItems.Count - i - 1];
 
-					for(int j = m_tsicHost.Count - 1; j >= 0; --j)
-					{
-						if(m_tsicHost[j] == tsi)
-						{
-							m_tsicHost.RemoveAt(j);
-							break;
-						}
-					}
-				}
+				if(tsi is ToolStripMenuItem)
+					tsi.Click -= this.OnMenuClick;
+
+				m_tsicHost.Remove(tsi);
 			}
-
-			Debug.Assert(m_lItems.TrueForAll(tsi => !m_tsicHost.Contains(tsi)));
-
-			m_lItems.Clear();
+			m_vMenuItems.Clear();
 		}
 
 		public ToolStripMenuItem AddItem(string strItemText, Image imgSmallIcon)
@@ -108,7 +103,8 @@ namespace KeePass.UI
 		public ToolStripMenuItem AddItem(string strItemText, Image imgSmallIcon,
 			object objTag)
 		{
-			if(strItemText == null) { Debug.Assert(false); throw new ArgumentNullException("strItemText"); }
+			Debug.Assert(strItemText != null);
+			if(strItemText == null) throw new ArgumentNullException("strItemText");
 
 			ToolStripMenuItem tsmi = new ToolStripMenuItem(strItemText);
 			tsmi.Click += this.OnMenuClick;
@@ -117,27 +113,28 @@ namespace KeePass.UI
 			if(imgSmallIcon != null) tsmi.Image = imgSmallIcon;
 
 			m_tsicHost.Add(tsmi);
-			m_lItems.Add(tsmi);
+			m_vMenuItems.Add(tsmi);
 			return tsmi;
 		}
 
 		public void AddSeparator()
 		{
-			ToolStripSeparator s = new ToolStripSeparator();
-			m_tsicHost.Add(s);
-			m_lItems.Add(s);
+			ToolStripSeparator sep = new ToolStripSeparator();
+
+			m_tsicHost.Add(sep);
+			m_vMenuItems.Add(sep);
 		}
 
 		private void OnMenuClick(object sender, EventArgs e)
 		{
 			ToolStripItem tsi = (sender as ToolStripItem);
-			if(tsi == null) { Debug.Assert(false); return; }
+			Debug.Assert(tsi != null); if(tsi == null) return;
 
 			string strText = tsi.Text;
-			if(strText == null) { Debug.Assert(false); return; }
+			Debug.Assert(strText != null); if(strText == null) return;
 
-			if(this.MenuClick != null)
-				this.MenuClick(sender, new DynamicMenuEventArgs(strText, tsi.Tag));
+			DynamicMenuEventArgs args = new DynamicMenuEventArgs(strText, tsi.Tag);
+			if(this.MenuClick != null) this.MenuClick(sender, args);
 		}
 	}
 }

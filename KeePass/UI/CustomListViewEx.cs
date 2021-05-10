@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@
 */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 using KeePass.Native;
 
+using KeePassLib.Delegates;
 using KeePassLib.Utility;
 
 using NativeLib = KeePassLib.Native.NativeLib;
@@ -36,10 +36,6 @@ namespace KeePass.UI
 {
 	public sealed class CustomListViewEx : ListView
 	{
-		private int m_cUpdating = 0;
-		private IComparer m_cmpUpdatingPre = null;
-		private SortOrder m_soUpdatingPre = SortOrder.None;
-
 		private ContextMenuStrip m_ctxHeader = null;
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -50,39 +46,12 @@ namespace KeePass.UI
 			set { m_ctxHeader = value; }
 		}
 
-		private bool m_bAltItemStyles = false;
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		[DefaultValue(false)]
-		internal bool UseAlternatingItemStyles
-		{
-			get { return m_bAltItemStyles; }
-			set { m_bAltItemStyles = value; }
-		}
-
 		public CustomListViewEx() : base()
 		{
 			if(Program.DesignMode) return;
 
 			try { this.DoubleBuffered = true; }
 			catch(Exception) { Debug.Assert(false); }
-		}
-
-#if DEBUG
-		protected override void Dispose(bool disposing)
-		{
-			Debug.Assert(m_cUpdating == 0);
-
-			base.Dispose(disposing);
-		}
-#endif
-
-		protected override void OnHandleCreated(EventArgs e)
-		{
-			base.OnHandleCreated(e);
-			if(Program.DesignMode) return;
-
-			UIUtil.ConfigureToolTip(this);
 		}
 
 		/* private Color m_clrPrev = Color.Black;
@@ -279,8 +248,7 @@ namespace KeePass.UI
 			try
 			{
 				if((m.Msg == NativeMethods.WM_CONTEXTMENU) && (m_ctxHeader != null) &&
-					(this.View == View.Details) && (this.HeaderStyle !=
-					ColumnHeaderStyle.None) && !NativeLib.IsUnix())
+					(this.HeaderStyle != ColumnHeaderStyle.None) && !NativeLib.IsUnix())
 				{
 					IntPtr hList = this.Handle;
 					if(hList != IntPtr.Zero)
@@ -314,69 +282,6 @@ namespace KeePass.UI
 			catch(Exception) { Debug.Assert(false); }
 
 			base.WndProc(ref m);
-		}
-
-		internal void BeginUpdateEx()
-		{
-			BeginUpdate();
-
-			if(++m_cUpdating == 1) // Increment before setting properties
-			{
-				m_cmpUpdatingPre = this.ListViewItemSorter;
-				m_soUpdatingPre = this.Sorting;
-
-				this.Sorting = SortOrder.None;
-				this.ListViewItemSorter = null;
-			}
-		}
-
-		internal void EndUpdateEx()
-		{
-			EndUpdateEx(null);
-		}
-
-		internal void EndUpdateEx(ListViewItem lviTop)
-		{
-			Debug.Assert(m_cUpdating > 0);
-
-			if(m_cUpdating == 1)
-			{
-				// The caller should not change the sorting while updating
-				Debug.Assert(this.ListViewItemSorter == null);
-				Debug.Assert(this.Sorting == SortOrder.None);
-
-				this.ListViewItemSorter = m_cmpUpdatingPre;
-				if(m_soUpdatingPre != SortOrder.None)
-					this.Sorting = m_soUpdatingPre;
-
-				m_cmpUpdatingPre = null;
-				// m_soUpdatingPre = SortOrder.None;
-
-				ApplyAlternatingItemStyles();
-
-				if(lviTop != null)
-				{
-					Debug.Assert(lviTop.ListView == this);
-					int i = lviTop.Index;
-					Debug.Assert((i >= 0) && (i < this.Items.Count));
-					UIUtil.SetTopVisibleItem(this, i, false);
-				}
-			}
-			else { Debug.Assert(lviTop == null); } // Outermost sorts, changing the view
-
-			--m_cUpdating; // Decrement after setting properties
-
-			EndUpdate();
-		}
-
-		private void ApplyAlternatingItemStyles()
-		{
-			if(!m_bAltItemStyles) return;
-
-			Color clrAlt = UIUtil.GetAlternateColorEx(this.BackColor);
-
-			UIUtil.SetAlternatingBgColors(this, clrAlt,
-				Program.Config.MainWindow.EntryListAlternatingBgColors);
 		}
 	}
 }

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -586,8 +586,6 @@ namespace KeePass.App.Configuration
 		HistoryCount,
 		AttachmentCount,
 		LastPasswordModTime,
-		AutoTypeEnabled,
-		AutoTypeSequences,
 
 		Count // Virtual identifier representing the number of types
 	}
@@ -679,10 +677,6 @@ namespace KeePass.App.Configuration
 				case AceColumnType.AttachmentCount:
 					str = KPRes.Attachments + " (" + KPRes.Count + ")"; break;
 				case AceColumnType.LastPasswordModTime: str = KPRes.LastModTimePwHist; break;
-				case AceColumnType.AutoTypeEnabled:
-					str = KPRes.AutoType + " - " + KPRes.Enabled; break;
-				case AceColumnType.AutoTypeSequences:
-					str = KPRes.AutoType + " - " + KPRes.Sequences; break;
 				default: Debug.Assert(false); break;
 			};
 

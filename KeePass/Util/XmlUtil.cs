@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -364,51 +364,23 @@ namespace KeePass.Util
 			return null;
 		}
 
-		internal static string GetPath(XmlElement xe)
-		{
-			if(xe == null) { Debug.Assert(false); return null; }
-
-			StringBuilder sb = new StringBuilder();
-			GetPathRec(sb, xe);
-			return sb.ToString();
-		}
-
-		private static void GetPathRec(StringBuilder sb, XmlNode xn)
-		{
-			XmlNode xnP = xn.ParentNode;
-			if(xnP != null)
-			{
-				if(xnP.NodeType == XmlNodeType.Element)
-					GetPathRec(sb, xnP);
-				else { Debug.Assert(xnP.NodeType == XmlNodeType.Document); }
-			}
-			else { Debug.Assert(false); }
-
-			Debug.Assert(xn.NodeType == XmlNodeType.Element);
-			sb.Append('/');
-			sb.Append(xn.Name);
-		}
-
-		internal static XmlElement FindOrCreateElement(XmlNode xnBase,
+		/* internal static XmlElement FindOrCreateChildElement(XmlNode xn,
 			string strChildPath, XmlDocument xd)
 		{
-			if(xnBase == null) { Debug.Assert(false); return null; }
+			if(xn == null) { Debug.Assert(false); return null; }
 			if(string.IsNullOrEmpty(strChildPath)) { Debug.Assert(false); return null; }
 			if(xd == null) { Debug.Assert(false); return null; }
 
-			if(strChildPath.IndexOf('/') >= 0)
+			string[] v = strChildPath.Split('/');
+			if((v != null) && (v.Length >= 2))
 			{
-				string[] v = strChildPath.Split('/');
-				if((v == null) || (v.Length < 2)) { Debug.Assert(false); return null; }
-
-				XmlElement xeCur = FindOrCreateElement(xnBase, v[0], xd);
+				XmlElement xeCur = FindOrCreateChildElement(xn, v[0], xd);
 				for(int i = 1; i < v.Length; ++i)
-					xeCur = FindOrCreateElement(xeCur, v[i], xd);
-
+					xeCur = FindOrCreateChildElement(xeCur, v[i], xd);
 				return xeCur;
 			}
 
-			foreach(XmlNode xnChild in xnBase.ChildNodes)
+			foreach(XmlNode xnChild in xn.ChildNodes)
 			{
 				if((xnChild.NodeType == XmlNodeType.Element) &&
 					(xnChild.Name == strChildPath))
@@ -420,8 +392,8 @@ namespace KeePass.Util
 			}
 
 			XmlElement xeNew = xd.CreateElement(strChildPath);
-			xnBase.AppendChild(xeNew);
+			xn.AppendChild(xeNew);
 			return xeNew;
-		}
+		} */
 	}
 }

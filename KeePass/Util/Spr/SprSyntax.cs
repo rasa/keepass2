@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -118,12 +118,11 @@ namespace KeePass.Util.Spr
 		{
 			if(rtb == null) { Debug.Assert(false); return; }
 
-			string strText = rtb.Text;
 			int iSelStart = rtb.SelectionStart;
 			int iSelLen = rtb.SelectionLength;
-			// bool bHideSel = rtb.HideSelection;
 
-			// rtb.HideSelection = true;
+			string strText = rtb.Text;
+
 			rtb.SelectAll();
 			// rtb.SelectionBackColor = SystemColors.Window;
 			rtb.SelectionColor = SystemColors.ControlText;
@@ -160,7 +159,6 @@ namespace KeePass.Util.Spr
 			}
 
 			rtb.Select(iSelStart, iSelLen);
-			// rtb.HideSelection = bHideSel;
 		}
 
 		private static List<SprStyle> GetHighlight(string str, SprContext ctx)

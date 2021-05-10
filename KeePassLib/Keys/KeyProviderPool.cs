@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,59 +20,86 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
+using System.Diagnostics;
 
 namespace KeePassLib.Keys
 {
 	public sealed class KeyProviderPool : IEnumerable<KeyProvider>
 	{
-		private readonly List<KeyProvider> m_l = new List<KeyProvider>();
+		private List<KeyProvider> m_vProviders = new List<KeyProvider>();
 
 		public int Count
 		{
-			get { return m_l.Count; }
+			get { return m_vProviders.Count; }
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return m_l.GetEnumerator();
+			return m_vProviders.GetEnumerator();
 		}
 
 		public IEnumerator<KeyProvider> GetEnumerator()
 		{
-			return m_l.GetEnumerator();
+			return m_vProviders.GetEnumerator();
 		}
 
-		public void Add(KeyProvider kp)
+		public void Add(KeyProvider prov)
 		{
-			if(kp == null) { Debug.Assert(false); throw new ArgumentNullException("kp"); }
+			Debug.Assert(prov != null); if(prov == null) throw new ArgumentNullException("prov");
 
-			m_l.Add(kp);
+			m_vProviders.Add(prov);
 		}
 
-		public bool Remove(KeyProvider kp)
+		public bool Remove(KeyProvider prov)
 		{
-			if(kp == null) { Debug.Assert(false); throw new ArgumentNullException("kp"); }
+			Debug.Assert(prov != null); if(prov == null) throw new ArgumentNullException("prov");
 
-			return m_l.Remove(kp);
+			return m_vProviders.Remove(prov);
 		}
 
-		public KeyProvider Get(string strName)
+		public KeyProvider Get(string strProviderName)
 		{
-			if(strName == null) { Debug.Assert(false); throw new ArgumentNullException("strName"); }
+			if(strProviderName == null) throw new ArgumentNullException("strProviderName");
 
-			foreach(KeyProvider kp in m_l)
+			foreach(KeyProvider prov in m_vProviders)
 			{
-				if(kp.Name == strName) return kp;
+				if(prov.Name == strProviderName) return prov;
 			}
 
-			return null; // No assert
+			return null;
 		}
 
 		public bool IsKeyProvider(string strName)
 		{
-			return (Get(strName) != null);
+			Debug.Assert(strName != null); if(strName == null) throw new ArgumentNullException("strName");
+
+			foreach(KeyProvider prov in m_vProviders)
+			{
+				if(prov.Name == strName) return true;
+			}
+
+			return false;
+		}
+
+		internal byte[] GetKey(string strProviderName, KeyProviderQueryContext ctx,
+			out bool bPerformHash)
+		{
+			Debug.Assert(strProviderName != null); if(strProviderName == null) throw new ArgumentNullException("strProviderName");
+
+			bPerformHash = true;
+
+			foreach(KeyProvider prov in m_vProviders)
+			{
+				if(prov.Name == strProviderName)
+				{
+					bPerformHash = !prov.DirectKey;
+					return prov.GetKey(ctx);
+				}
+			}
+
+			Debug.Assert(false);
+			return null;
 		}
 	}
 }

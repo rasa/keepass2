@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ namespace KeePass.Forms
 		public EditAutoTypeItemForm()
 		{
 			InitializeComponent();
-			GlobalWindowManager.InitializeForm(this);
+			Program.Translation.ApplyTo(this);
 		}
 
 		public void InitEx(AutoTypeConfig atConfig, int iAssocIndex, bool bEditSequenceOnly,
@@ -234,7 +234,7 @@ namespace KeePass.Forms
 			{
 				if(!PwDefs.IsStandardField(kvp.Key))
 				{
-					if(!bCustomInitialized)
+					if(bCustomInitialized == false)
 					{
 						rb.AppendLine();
 						rb.AppendLine();
@@ -317,7 +317,7 @@ namespace KeePass.Forms
 			else UIUtil.SetFocus(m_btnOK, this, true);
 		}
 
-		private void OnFormClosed(object sender, FormClosedEventArgs e)
+		private void CleanUpEx()
 		{
 			lock(m_objDialogSync) { m_bDialogClosed = true; }
 
@@ -334,8 +334,6 @@ namespace KeePass.Forms
 #if DEBUG
 			lock(m_oWndTasksSync) { Debug.Assert(m_dWndTasks.Count == 0); }
 #endif
-
-			GlobalWindowManager.RemoveWindow(this);
 		}
 
 		private void OnBtnOK(object sender, EventArgs e)
@@ -472,21 +470,21 @@ namespace KeePass.Forms
 
 		private static void LinkifyRtf(RichTextBox rtb)
 		{
-			string str = (rtb.Text ?? string.Empty);
-			int iOffset = 0;
+			Debug.Assert(rtb.HideSelection); // Flicker otherwise
 
-			while(iOffset < str.Length)
+			string str = rtb.Text;
+
+			int iPos = str.IndexOf('{');
+			while(iPos >= 0)
 			{
-				int iStart = str.IndexOf('{', iOffset);
-				if(iStart < iOffset) break;
+				int iEnd = str.IndexOf('}', iPos);
+				if(iEnd >= 1)
+				{
+					rtb.Select(iPos, iEnd - iPos + 1);
+					UIUtil.RtfSetSelectionLink(rtb);
+				}
 
-				int iEnd = str.IndexOf('}', iStart);
-				if(iEnd <= iStart) { Debug.Assert(false); break; }
-
-				rtb.Select(iStart, iEnd - iStart + 1);
-				UIUtil.RtfSetSelectionLink(rtb);
-
-				iOffset = iEnd + 1;
+				iPos = str.IndexOf('{', iPos + 1);
 			}
 
 			rtb.Select(0, 0);
@@ -519,6 +517,11 @@ namespace KeePass.Forms
 			EnableControlsEx();
 		}
 
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
+		{
+			GlobalWindowManager.RemoveWindow(this);
+		}
+
 		private void OnWildcardRegexLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
 			AppHelp.ShowHelp(AppDefs.HelpTopics.AutoType, AppDefs.HelpTopics.AutoTypeWindowFilters);
@@ -532,6 +535,11 @@ namespace KeePass.Forms
 		private void OnSeqCustomCheckedChanged(object sender, EventArgs e)
 		{
 			EnableControlsEx();
+		}
+
+		private void OnFormClosing(object sender, FormClosingEventArgs e)
+		{
+			CleanUpEx();
 		}
 
 		private sealed class PwlwInfo

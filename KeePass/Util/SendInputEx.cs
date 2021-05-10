@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -516,7 +516,7 @@ namespace KeePass.Util
 				uDefaultDelay = (uint)iDefOvr;
 			}
 
-			bool bFirstInput = true, bCancel = false;
+			bool bFirstInput = true;
 			foreach(SiEvent si in l)
 			{
 				// Also delay key modifiers, as a workaround for applications
@@ -564,7 +564,7 @@ namespace KeePass.Util
 						break;
 
 					case SiEventType.AppActivate:
-						if(!AppActivate(si, siEngine)) bCancel = true;
+						AppActivate(si);
 						break;
 
 					case SiEventType.Beep:
@@ -583,31 +583,20 @@ namespace KeePass.Util
 					if(uDefaultDelay < 100)
 						siEngine.Delay(uDefaultDelay);
 				}
-
-				if(bCancel) break;
 			}
 		}
 
-		private static bool AppActivate(SiEvent si, ISiEngine siEngine)
+		private static void AppActivate(SiEvent si)
 		{
 			try
 			{
-				if(string.IsNullOrEmpty(si.Text)) return true;
+				if(string.IsNullOrEmpty(si.Text)) return;
 
 				IntPtr h = NativeMethods.FindWindow(si.Text);
 				if(h != IntPtr.Zero)
-				{
-					if(NativeMethods.EnsureForegroundWindow(h))
-					{
-						siEngine.UpdateExpectedFocus();
-						return true;
-					}
-					Debug.Assert(false);
-				}
+					NativeMethods.EnsureForegroundWindow(h);
 			}
 			catch(Exception) { Debug.Assert(false); }
-
-			return false;
 		}
 
 		private static void Beep(SiEvent si)

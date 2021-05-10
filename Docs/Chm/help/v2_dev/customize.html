@@ -18,7 +18,7 @@
 	<meta name="DC.type" content="Text" />
 	<meta name="DC.format" content="text/html" />
 	<meta name="DC.language" content="en" />
-	<meta name="DC.rights" content="Copyright (C) 2003-2023 Dominik Reichl" />
+	<meta name="DC.rights" content="Copyright (C) 2003-2021 Dominik Reichl" />
 
 	<meta name="robots" content="index, follow" />
 	<meta name="flattr:id" content="42rykv" />
@@ -45,7 +45,7 @@
 
 
 <table class="sectionheader"><tr>
-<td><img src="../images/b64x64_package_system.png" alt="" /></td>
+<td><img src="../images/b64x64_package_system.png" alt="System" /></td>
 <td><h1>Customization (2.x)</h1>
 <p>KeePass 2.x features various options for network administrators to
 customize the program's appearance and behavior.</p></td>
@@ -61,7 +61,7 @@ customize the program's appearance and behavior.</p></td>
 <br />
 
 <a name="start"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_package_system.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_package_system.png" alt="System" />
 Preliminaries</h2>
 
 <p>Most options below are configured by directly editing the
@@ -77,7 +77,7 @@ want to write a plugin.</p>
 <br />
 
 <a name="masterpwreq"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_kgpg.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_kgpg.png" alt="Key" />
 Minimum Master Password Requirements</h2>
 
 <p>You can specify several properties that master passwords must have
@@ -88,7 +88,7 @@ Properties</a>.</p>
 <br />
 
 <a name="uiflags"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_file_locked.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_file_locked.png" alt="Locked" />
 Specifying UI Element States</h2>
 
 <p>The state (enabled, disabled, visible, hidden) of several user interface
@@ -132,20 +132,6 @@ the changes to the last access times are lost.</td></tr>
 <td>Do not display information dialogs when creating a new database.</td></tr>
 <tr><td>0x80000</td><td>524288</td>
 <td>Do not display auto-type obfuscation compatibility information dialogs.</td></tr>
-<tr><td>0x100000</td><td>1048576</td>
-<td>Do not clear the quick search terms list when closing/locking a database.<br />
-<em>Note:</em> Even if this flag is set, the list is cleared when exiting
-KeePass. If you frequently perform the same searches, consider using
-<a href="../v2/entry.html#tags">tags</a> or
-<a href="../base/search.html#prf">search profiles</a>.</td></tr>
-<tr><td>0x200000</td><td>2097152</td>
-<td>Enable the Input Method Editor (IME) on
-<a href="https://keepass.info/help/kb/sec_desk.html" target="_blank">secure desktops</a>.<br />
-<img src="../images/b16x16_warning.png" class="textimg" alt="Warning" />
-This can result in problems (black screen, IME/CTF process with
-high CPU usage, ...). See
-'<a href="https://keepass.info/help/kb/sec_desk.html#ime" target="_blank">Why
-does the Input Method Editor (IME) not work?</a>'.</td></tr>
 </table>
 
 <p>The value of <code>UIFlags</code> must be specified in decimal notation.</p>
@@ -157,7 +143,7 @@ menu items, you'd specify 33 as value for the <code>UIFlags</code> node
 <br />
 
 <a name="opt"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_kcmsystem.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_kcmsystem.png" alt="Settings" />
 More Options</h2>
 
 <ul class="withspc">
@@ -169,15 +155,6 @@ but changes to it are discarded when exiting KeePass).</li>
 <li><b>Configuration/Application/ExpirySoonDays</b>:<br />
 Specifies the number of days within which entries are considered
 to expire &quot;soon&quot;. The default value is 7.</li>
-
-<li><b>Configuration/Application/HelpUrl</b>:<br />
-Specifies the URL that is opened for a help page.
-This overrides all other help sources (local and online).
-<a href="../base/placeholders.html">Spr</a>-compiled;
-the relative help page path is inserted by <code>{BASE}</code>.
-This element is used only if it is stored in the
-<a href="https://keepass.info/help/kb/config_enf.html" target="_blank">enforced
-configuration file</a>.</li>
 
 <li><b>Configuration/Defaults/WinFavsBaseFolderName</b>:<br />
 For the 'Windows Favorites' export:
@@ -217,20 +194,18 @@ master keys. The default value is 3.</li>
 If this option is set to <code>true</code>, KeePass protects its windows
 against certain screen capture operations (on Windows 7 and higher;
 for details, see the
-<!-- https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowdisplayaffinity -->
-<a href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowdisplayaffinity"
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowdisplayaffinity"
 target="_blank"><code>SetWindowDisplayAffinity</code></a> function).<br />
-<img src="../images/b16x16_warning.png" class="textimg" alt="Warning" />
+<img src="../images/b16x16_warning.png" alt="Warning" class="textimg" />
 This may also prevent legitimate other software
 (accessibility-related tools like Windows Magnifier, remote desktop
 solutions, etc.) from seeing KeePass windows.</li>
 
 <li><b>Configuration/Security/ProtectProcessWithDacl</b>:<br />
-If this option is set to <code>true</code>, KeePass protects its process with a
-<!-- https://docs.microsoft.com/en-us/windows/win32/secauthz/dacls-and-aces -->
-<a href="https://learn.microsoft.com/en-us/windows/win32/secauthz/dacls-and-aces"
+If this option is set to <code>true</code>, KeePass protects its process
+with a <a href="https://docs.microsoft.com/en-us/windows/win32/secauthz/dacls-and-aces"
 target="_blank">discretionary access control list</a> (DACL).<br />
-<img src="../images/b16x16_warning.png" class="textimg" alt="Warning" />
+<img src="../images/b16x16_warning.png" alt="Warning" class="textimg" />
 Please note that this also blocks legitimate other software
 (accessibility-related tools like Windows Narrator, other security
 products like anti-virus programs or firewalls, tools providing user interface
@@ -247,13 +222,11 @@ This option works on Windows only and requires the KeePassLibC DLL
 If this option is set to <code>true</code>, the KeePass icon in the
 system tray is displayed only if the main window has been minimized
 to the tray.<br />
-<img src="../images/b16x16_warning.png" class="textimg" alt="Warning" />
+<em>Warning!</em>
 Turning on this option can result in denial-of-service problems.
 If you want to hide the KeePass icon, it is recommended to configure
-this in the system settings instead; <!-- (in Windows: 'Personalization' &rarr;
-'Taskbar' &rarr; 'Select which icons appear on the taskbar'). -->
-see '<a href="https://support.microsoft.com/en-us/windows/customize-the-taskbar-notification-area-e159e8d2-9ac5-b2bd-61c5-bb63c1d437c3"
-target="_blank">Customize the taskbar notification area</a>'.</li>
+this in the system settings instead (in Windows: 'Personalization' &rarr;
+'Taskbar' &rarr; 'Select which icons appear on the taskbar').</li>
 </ul>
 
 </body></html>

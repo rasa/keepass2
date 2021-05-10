@@ -18,7 +18,7 @@
 	<meta name="DC.type" content="Text" />
 	<meta name="DC.format" content="text/html" />
 	<meta name="DC.language" content="en" />
-	<meta name="DC.rights" content="Copyright (C) 2003-2023 Dominik Reichl" />
+	<meta name="DC.rights" content="Copyright (C) 2003-2021 Dominik Reichl" />
 
 	<meta name="robots" content="index, follow" />
 	<meta name="flattr:id" content="42rykv" />
@@ -35,7 +35,7 @@
 
 
 <table class="sectionheader"><tr>
-<td><img src="../images/b64x64_package_system.png" alt="" /></td>
+<td><img src="../images/b64x64_package_system.png" alt="System" /></td>
 <td><h1>Installation / Portability</h1>
 <p>KeePass 2.x installation, uninstallation, portability and updates.</p></td>
 </tr></table>
@@ -46,8 +46,8 @@
 <li><a href="#portable">Portable version (KeePass-2.xx.zip file)</a></li>
 <!-- <li>Other operating systems than Windows:
 <ul> -->
-<li><a href="#mono">Running KeePass under Mono (Linux, MacOS, BSD, ...)</a></li>
-<li><a href="#wine">Running KeePass under Wine (Linux, MacOS, BSD, ...)</a></li>
+<li><a href="#mono">Running KeePass under Mono (Linux, Mac OS X, BSD, ...)</a></li>
+<li><a href="#wine">Running KeePass under Wine (Linux, Mac OS X, BSD, ...)</a></li>
 <!-- <li><a href="#monoportable">Portable KeePass using Mono</a></li> -->
 <!-- </ul>
 </li> -->
@@ -56,7 +56,7 @@
 
 <br />
 <a name="info"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_tar.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_tar.png" alt="Package" />
 General information</h2>
 
 <p>When downloading KeePass, you have the choice between 3 different packages:</p>
@@ -87,7 +87,7 @@ You can find the latest translation files here:
 
 <br />
 <a name="installer"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_package_system.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_package_system.png" alt="System" />
 Installer program (KeePass-2.xx-Setup.exe file)</h2>
 
 <p>The KeePass development team provides an installer, which copies KeePass
@@ -152,7 +152,7 @@ do the 2.x installation options/components mean in detail?</a>.</p>
 <br />
 
 <a name="portable"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_usbpendrive_unmount.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_usbpendrive_unmount.png" alt="Portable" />
 Portable version (KeePass-2.xx.zip file)</h2>
 
 <p>The portable version can be carried around on portable devices (like USB
@@ -184,17 +184,17 @@ which won't be overwritten, because KeePass ZIP packages don't
 include a <i>KeePass.config.xml</i> file).</p>
 
 <p><b>Uninstallation:</b><br />
-Simply delete the KeePass folder.<!-- This will leave no trace of KeePass on
-your system. --></p>
+Simply delete the KeePass folder. This will leave no trace of KeePass on
+your system.</p>
 
 <br />
 
 <a name="mono"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_package_system.png" alt="" />
-Running KeePass under Mono (Linux, MacOS, BSD, ...)</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_package_system.png" alt="System" />
+Running KeePass under Mono (Linux, Mac OS X, BSD, ...)</h2>
 
 <p>In addition to Windows, KeePass 2.x runs under Mono,
-i.e. Linux, MacOS, BSD, etc.</p>
+i.e. Linux, Mac OS X, BSD, etc.</p>
 
 <p>Links to all supported packages can be found on the
 <a href="https://keepass.info/download.html" target="_blank">Downloads</a> page.</p>
@@ -227,8 +227,8 @@ Install the <em>keepass</em> package
 (from the Arch Linux repository; link on the downloads page).<br />
 <br /></li>
 
-<li><strong>MacOS:</strong><br />
-Install the <em>KeePass 2.x for MacOS</em> package
+<li><strong>Mac OS X:</strong><br />
+Install the <em>KeePass 2.x for Mac OS X</em> package
 (link on the downloads page).<br />
 <br /></li>
 
@@ -249,14 +249,12 @@ the <a href="https://www.mono-project.com/" target="_blank">Mono project page</a
 if you are unsure which packages to install.</li>
 
 <li>On some platforms, the Windows Forms implementation (System.Windows.Forms)
-is offered as a separate package.
-KeePass requires this package; so if you see one, install it, too.</li>
+is offered as a separate package. KeePass requires this package; so if you see one, install it, too.</li>
 
 <li>On some platforms, the Runtime namespace (System.Runtime)
-is offered as a separate package.
-KeePass requires this package; so if you see one, install it, too.</li>
+is offered as a separate package. KeePass requires this package; so if you see one, install it, too.</li>
 
-<li>If you want to use auto-type on Linux/MacOS/BSD/etc., you additionally
+<li>If you want to use auto-type on Linux / Mac OS X / BSD / etc., you additionally
 need the <code>xdotool</code> package.</li>
 
 <li>Download the portable version of KeePass (ZIP package)
@@ -273,10 +271,10 @@ or shell script file with this command line (use an absolute path to
 <code>KeePass.exe</code>, if the shortcut / shell script file is in a
 different location).</p>
 
-<!-- <p><b>Clipboard:</b><br />
+<p><b>Clipboard:</b><br />
 On some systems, Mono's clipboard routines don't work properly.
 In this case, install the <code>xsel</code> and <code>xdotool</code> packages.
-If these are installed, KeePass uses them for clipboard operations.</p> -->
+If these are installed, KeePass uses them for clipboard operations.</p>
 
 <p><b>Global Auto-Type:</b><br />
 In order to use <a href="../base/autotype.html#autoglobal">global auto-type</a>,
@@ -337,33 +335,21 @@ If you want to use auto-type on a system with a Wayland compositor,
 see the <a href="https://keepass.info/help/kb/autotype_wayland.html"
 target="_blank">Auto-Type on Wayland</a> page.</p>
 
-<p><strong>AES-KDF:</strong><br />
-For fast <a href="../base/security.html#secdictprotect">key transformations</a>
-using AES-KDF, make sure that the <code>libgcrypt</code> library is installed.</p>
-
-<p><strong>Argon2:</strong><br />
-For fast <a href="../base/security.html#secdictprotect">key transformations</a>
-using Argon2, make sure that the <code>libargon2</code> library is installed.</p>
-
 <p><strong>Plugins:</strong><br />
-On some Linux systems, the <code>mono-complete</code> package
-may be required for plugins to work properly.</p>
+On some Linux systems, the <code>mono-complete</code> package may be
+required for plugins to work properly.</p>
 
 <p><strong>TLS 1.2:</strong><br />
 For TLS 1.2 support, Mono 4.8.0 or higher (or .NET Framework 4.5 or higher)
 is required.</p>
-
-<p><strong>Fonts:</strong><br />
-On some Linux systems, the <code>ttf-mscorefonts-installer</code> package
-may be required.</p>
 </li>
 </ul>
 
 <br />
 
 <a name="wine"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_package_system.png" alt="" />
-Running KeePass under Wine (Linux, MacOS, BSD, ...)</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_package_system.png" alt="System" />
+Running KeePass under Wine (Linux, Mac OS X, BSD, ...)</h2>
 
 <p>Although you can run KeePass 2.x more or less natively on Unix-like systems
 using Mono (see above), the user interface does not always look pretty.
@@ -397,8 +383,8 @@ target="_blank">Wikipedia: Windows XP visual styles</a>.</p>
 Wine currently does not implement all Windows API functions required for
 auto-type, i.e. auto-type does not work when running KeePass under Wine.</p>
 
-<!-- <p><strong>MacOS.</strong>
-In order to make a MacOS application bundle wrapper, you can use
+<!-- <p><strong>Mac OS X.</strong>
+In order to make a Mac application bundle wrapper, you can use
 <a href="http://wineskin.urgesoftware.com/" target="_blank">Wineskin</a>.
 In the wrapper settings, we recommend to go to 'Screen Options' and turn on
 the option 'Use Mac Driver instead of X11'.</p> -->
@@ -406,7 +392,7 @@ the option 'Use Mac Driver instead of X11'.</p> -->
 <!-- <br />
 
 <a name="monoportable"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_usbpendrive_unmount.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_usbpendrive_unmount.png" alt="Portable" />
 Portable KeePass using Mono</h2>
 
 <p><i>The approach below worked perfectly when this documentation was written.
@@ -414,7 +400,7 @@ However, as this type of Mono installation is nowhere mentioned on the Mono
 website, it might stop working with a future Mono release.</i></p>
 
 <p>Although almost all of today's PCs can run .NET applications (the .NET Framework
-is already preinstalled on Windows &ge; Vista, and for all major Linux/MacOS
+is already preinstalled on Windows &ge; Vista, and for all major Linux / Mac OS X
 distributions Mono is available, which actually even is a dependency of the GNOME
 &ge; 2.16 desktop), you still might want to run KeePass 2.x on a PC without
 any .NET support, like an old Windows XP system where you don't have administrative
@@ -456,7 +442,7 @@ Framework or Mono) is highly recommended instead!</p>
 <br />
 
 <a name="mig1x"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_package_system.png" alt="" />
+<h2 class="sectiontitle"><img src="../images/b16x16_package_system.png" alt="System" />
 Migrating from KeePass 1.x to 2.x</h2>
 
 <p>In order to migrate from KeePass 1.x to 2.x, follow these steps:</p>

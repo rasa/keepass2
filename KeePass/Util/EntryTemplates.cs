@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ using System.Windows.Forms;
 
 using KeePass.Forms;
 using KeePass.Resources;
-using KeePass.UI;
 
 using KeePassLib;
 using KeePassLib.Delegates;
@@ -196,11 +195,9 @@ namespace KeePass.Util
 				return l;
 			}
 
-			AccessKeyManagerEx ak = new AccessKeyManagerEx();
-
 			foreach(PwGroup pgSub in pg.Groups)
 			{
-				string strText = ak.CreateText(pgSub.Name, true);
+				string strText = StrUtil.EncodeMenuText(pgSub.Name);
 				ToolStripMenuItem tsmi = new ToolStripMenuItem(strText);
 				tsmi.Image = GetImage(pgSub.IconId, pgSub.CustomIconUuid);
 				tsmi.Tag = pgSub;
@@ -234,8 +231,8 @@ namespace KeePass.Util
 
 			foreach(PwEntry pe in pg.Entries)
 			{
-				string strText = ak.CreateText(pe.Strings.ReadSafe(
-					PwDefs.TitleField), true);
+				string strText = StrUtil.EncodeMenuText(pe.Strings.ReadSafe(
+					PwDefs.TitleField));
 				ToolStripMenuItem tsmi = new ToolStripMenuItem(strText);
 				tsmi.Image = GetImage(pe.IconId, pe.CustomIconUuid);
 				tsmi.Tag = pe;

@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ namespace KeePass.Forms
 		public XmlReplaceForm()
 		{
 			InitializeComponent();
-			GlobalWindowManager.InitializeForm(this);
+			Program.Translation.ApplyTo(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -65,11 +65,11 @@ namespace KeePass.Forms
 			this.Icon = AppIcons.Default;
 			this.Text = KPRes.XmlReplace;
 
-			m_imgWarning = UIUtil.IconToBitmap(SystemIcons.Warning,
-				DpiUtil.ScaleIntX(16), DpiUtil.ScaleIntY(16));
+			Bitmap bmpBig = SystemIcons.Warning.ToBitmap();
+			m_imgWarning = GfxUtil.ScaleImage(bmpBig, DpiUtil.ScaleIntX(16),
+				DpiUtil.ScaleIntY(16), ScaleTransformFlags.UIIcon);
+			bmpBig.Dispose();
 			m_picWarning.Image = m_imgWarning;
-
-			AccessibilityEx.SetName(m_picWarning, KPRes.Warning);
 
 			FontUtil.AssignDefaultBold(m_rbRemove);
 			FontUtil.AssignDefaultBold(m_rbReplace);
@@ -78,9 +78,10 @@ namespace KeePass.Forms
 			m_rbInnerText.Checked = true;
 
 			EnableControlsEx();
+			UIUtil.SetFocus(m_tbSelNodes, this);
 		}
 
-		private void OnFormClosed(object sender, FormClosedEventArgs e)
+		private void CleanUpEx()
 		{
 			if(m_imgWarning != null)
 			{
@@ -89,7 +90,11 @@ namespace KeePass.Forms
 				m_imgWarning = null;
 			}
 			else { Debug.Assert(false); }
+		}
 
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
+		{
+			CleanUpEx();
 			GlobalWindowManager.RemoveWindow(this);
 		}
 

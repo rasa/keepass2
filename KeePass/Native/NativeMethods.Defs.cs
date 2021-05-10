@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@ namespace KeePass.Native
 	{
 		internal const int WM_SETFOCUS = 0x0007;
 		internal const int WM_KILLFOCUS = 0x0008;
-		internal const int WM_SETTINGCHANGE = 0x001A;
-		internal const int WM_WINDOWPOSCHANGING = 0x0046;
 		internal const int WM_CONTEXTMENU = 0x007B;
 		internal const int WM_KEYDOWN = 0x0100;
 		internal const int WM_KEYUP = 0x0101;
@@ -121,8 +119,6 @@ namespace KeePass.Native
 
 		internal const int SW_SHOW = 5;
 
-		internal const uint SWP_SHOWWINDOW = 0x0040;
-
 		internal const int GCLP_HICON = -14;
 		internal const int GCLP_HICONSM = -34;
 
@@ -172,7 +168,6 @@ namespace KeePass.Native
 		internal const int LVM_FIRST = 0x1000;
 		// internal const int LVM_ENSUREVISIBLE = LVM_FIRST + 19;
 		internal const int LVM_SCROLL = LVM_FIRST + 20;
-		internal const int LVM_GETTOOLTIPS = LVM_FIRST + 78;
 		// internal const int LVM_SETGROUPINFO = LVM_FIRST + 147; // >= Vista
 		// internal const int LVM_GETGROUPINFOBYINDEX = LVM_FIRST + 153; // >= Vista
 
@@ -182,17 +177,13 @@ namespace KeePass.Native
 
 		internal const int TTM_SETDELAYTIME = WM_USER + 3;
 		internal const int TTM_GETDELAYTIME = WM_USER + 21;
-		internal const int TTDT_RESHOW = 1;
 		internal const int TTDT_AUTOPOP = 2;
-		internal const int TTDT_INITIAL = 3;
 
 		internal const int WM_MOUSEACTIVATE = 0x21;
 		internal const int MA_ACTIVATE = 1;
 		internal const int MA_ACTIVATEANDEAT = 2;
 		internal const int MA_NOACTIVATE = 3;
 		internal const int MA_NOACTIVATEANDEAT = 4;
-
-		internal const int IDI_SHIELD = 32518;
 
 		internal const int BCM_SETSHIELD = 0x160C;
 
@@ -241,8 +232,8 @@ namespace KeePass.Native
 		internal const uint CF_UNICODETEXT = 13;
 
 		internal const uint SND_ASYNC = 0x0001;
-		internal const uint SND_NODEFAULT = 0x0002;
 		internal const uint SND_FILENAME = 0x00020000;
+		internal const uint SND_NODEFAULT = 0x0002;
 
 		internal const int LOGPIXELSX = 88;
 		internal const int LOGPIXELSY = 90;
@@ -302,8 +293,6 @@ namespace KeePass.Native
 
 		internal const uint WDA_NONE = 0x00000000;
 		internal const uint WDA_MONITOR = 0x00000001;
-
-		internal const uint SPI_GETSCREENREADER = 0x0046;
 
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);

@@ -28,7 +28,6 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.components = new System.ComponentModel.Container();
 			this.m_bannerImage = new System.Windows.Forms.PictureBox();
 			this.m_btnOK = new System.Windows.Forms.Button();
 			this.m_btnCancel = new System.Windows.Forms.Button();
@@ -50,7 +49,6 @@
 			this.m_grpExportPost = new System.Windows.Forms.GroupBox();
 			this.m_cbExportPostShow = new System.Windows.Forms.CheckBox();
 			this.m_cbExportPostOpen = new System.Windows.Forms.CheckBox();
-			this.m_ttRect = new System.Windows.Forms.ToolTip(this.components);
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).BeginInit();
 			this.m_grpFormat.SuspendLayout();
 			this.m_grpFiles.SuspendLayout();
@@ -345,6 +343,5 @@
 		private System.Windows.Forms.LinkLabel m_lnkExportParentGroups;
 		private System.Windows.Forms.Label m_lblExportMasterKeySpec;
 		private System.Windows.Forms.CheckBox m_cbExportMasterKeySpec;
-		private System.Windows.Forms.ToolTip m_ttRect;
 	}
 }

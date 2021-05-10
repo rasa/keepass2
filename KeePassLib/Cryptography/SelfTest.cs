@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -900,11 +900,11 @@ namespace KeePassLib.Cryptography
 				"37383930313233343536373839303132");
 			if(HmacOtp.GenerateTimeOtp(pbSecret,
 				new DateTime(1970, 1, 1, 0, 0, 59, DateTimeKind.Utc), 0, 8,
-				HmacOtp.AlgHmacSha256) != "46119246")
+				"HMAC-SHA-256") != "46119246")
 				throw new SecurityException("TimeOtp-SHA256-1");
 			if(HmacOtp.GenerateTimeOtp(pbSecret,
 				new DateTime(2603, 10, 11, 11, 33, 20, DateTimeKind.Utc), 0, 8,
-				HmacOtp.AlgHmacSha256) != "77737706")
+				"HMAC-SHA-256") != "77737706")
 				throw new SecurityException("TimeOtp-SHA256-2");
 
 			pbSecret = MemUtil.HexStringToByteArray("31323334353637383930313233343536" +
@@ -912,11 +912,11 @@ namespace KeePassLib.Cryptography
 				"39303132333435363738393031323334");
 			if(HmacOtp.GenerateTimeOtp(pbSecret,
 				new DateTime(1970, 1, 1, 0, 0, 59, DateTimeKind.Utc), 0, 8,
-				HmacOtp.AlgHmacSha512) != "90693936")
+				"HMAC-SHA-512") != "90693936")
 				throw new SecurityException("TimeOtp-SHA512-1");
 			if(HmacOtp.GenerateTimeOtp(pbSecret,
 				new DateTime(2603, 10, 11, 11, 33, 20, DateTimeKind.Utc), 0, 8,
-				HmacOtp.AlgHmacSha512) != "47863826")
+				"HMAC-SHA-512") != "47863826")
 				throw new SecurityException("TimeOtp-SHA512-2");
 #endif
 		}
@@ -989,10 +989,7 @@ namespace KeePassLib.Cryptography
 
 				string strIns = new string(ch, c);
 				str = str.Insert(x, strIns);
-				if((r.Next() & 1) == 0)
-					ps = ps.Insert(x, ("ABC" + strIns + "XY").ToCharArray(),
-						3, strIns.Length);
-				else ps = ps.Insert(x, strIns);
+				ps = ps.Insert(x, strIns);
 
 				if(ps.IsProtected != bProt)
 					throw new SecurityException("ProtectedString-11");
@@ -1110,17 +1107,17 @@ namespace KeePassLib.Cryptography
 			pbExp = Encoding.ASCII.GetBytes("Key provider based on one-time passwords.");
 			if(!MemUtil.ArraysEqual(pbRes, pbExp)) throw new Exception("Base32-7");
 
-			const int iE = 0 - 0x10203040;
-			pbRes = MemUtil.Int32ToBytes(iE);
+			int i = 0 - 0x10203040;
+			pbRes = MemUtil.Int32ToBytes(i);
 			if(MemUtil.ByteArrayToHexString(pbRes) != "C0CFDFEF")
 				throw new Exception("MemUtil-8"); // Must be little-endian
-			if(MemUtil.BytesToUInt32(pbRes) != unchecked((uint)iE))
+			if(MemUtil.BytesToUInt32(pbRes) != (uint)i)
 				throw new Exception("MemUtil-9");
-			if(MemUtil.BytesToInt32(pbRes) != iE)
+			if(MemUtil.BytesToInt32(pbRes) != i)
 				throw new Exception("MemUtil-10");
 
 			ArrayHelperEx<char> ah = MemUtil.ArrayHelperExOfChar;
-			for(int i = 0; i < 30; ++i)
+			for(int j = 0; j < 30; ++j)
 			{
 				string strA = r.Next(30).ToString();
 				string strB = r.Next(30).ToString();
@@ -1133,33 +1130,6 @@ namespace KeePassLib.Cryptography
 					Math.Sign(string.CompareOrdinal(strA, strB))))
 					throw new Exception("MemUtil-12");
 			}
-
-			try
-			{
-				Dictionary<uint, bool> d = new Dictionary<uint, bool>();
-
-				pb = new byte[24];
-				for(int i = 0; i < pb.Length; ++i) pb[i] = (byte)(i + 1);
-				for(int i = 0; i < pb.Length; ++i)
-				{
-					for(int cb = 1; (i + cb) <= pb.Length; ++cb)
-						d.Add(MemUtil.Hash32(pb, i, cb), true); // Throws on dup.
-				}
-
-				for(int cb = 0; cb < 32; ++cb)
-				{
-					pb = new byte[cb];
-					d.Add(MemUtil.Hash32(pb, 0, cb), true);
-
-					for(int i = 0; i < cb; ++i)
-					{
-						pb[i] = 0x80;
-						d.Add(MemUtil.Hash32(pb, 0, cb), true);
-						pb[i] = 0;
-					}
-				}
-			}
-			catch(Exception) { throw new Exception("Hash32"); }
 #endif
 		}
 
@@ -1281,13 +1251,6 @@ namespace KeePassLib.Cryptography
 				throw new InvalidOperationException("StrUtil-NewLine9");
 			if(!StrUtil.IsNewLineNormalized(string.Empty.ToCharArray(), false))
 				throw new InvalidOperationException("StrUtil-NewLine10");
-
-			if(StrUtil.RemoveAccelerator(@"&Test") != "Test")
-				throw new InvalidOperationException("StrUtil-Accel1");
-			if(StrUtil.RemoveAccelerator(@"Test(&T)") != "Test")
-				throw new InvalidOperationException("StrUtil-Accel2");
-			if(StrUtil.RemoveAccelerator(@"Test (TA) (&T) (TB)") != "Test (TA) (TB)")
-				throw new InvalidOperationException("StrUtil-Accel3");
 #endif
 		}
 

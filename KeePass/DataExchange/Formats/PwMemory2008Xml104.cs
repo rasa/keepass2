@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -43,15 +44,20 @@ namespace KeePass.DataExchange.Formats
 		public override string DefaultExtension { get { return "xml"; } }
 		public override string ApplicationGroup { get { return KPRes.PasswordManagers; } }
 
+		public override Image SmallIcon
+		{
+			get { return KeePass.Properties.Resources.B16x16_Imp_PwMem2008; }
+		}
+
 		public override void Import(PwDatabase pwStorage, Stream sInput,
 			IStatusLogger slLogger)
 		{
 			string str = Preprocess(sInput);
 
-			PwMemory2008XmlFile_Priv f = null;
+			PwMem2008XmlFile_Priv f = null;
 			using(MemoryStream ms = new MemoryStream(StrUtil.Utf8.GetBytes(str), false))
 			{
-				f = XmlUtilEx.Deserialize<PwMemory2008XmlFile_Priv>(ms);
+				f = XmlUtilEx.Deserialize<PwMem2008XmlFile_Priv>(ms);
 			}
 			if((f == null) || (f.Cells == null)) return;
 
@@ -116,7 +122,7 @@ namespace KeePass.DataExchange.Formats
 	}
 
 	[XmlRoot("CACHE")]
-	public sealed class PwMemory2008XmlFile_Priv
+	public sealed class PwMem2008XmlFile_Priv
 	{
 		[XmlElement("TITLE")]
 		public string Title { get; set; }

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,11 +23,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 using System.Windows.Forms;
-using System.Xml.Serialization;
 
 using KeePass.App.Configuration;
 using KeePass.Resources;
-using KeePass.Util;
 
 using KeePassLib;
 using KeePassLib.Utility;
@@ -41,7 +39,7 @@ namespace KeePass.App
 	{
 		Plugins = 0,
 		Export,
-		ExportNoKey, // Obsolete (for backward compatibility with plugins only)
+		ExportNoKey, // Don't require the current key to be repeated
 		Import,
 		Print,
 		PrintNoKey, // Don't require the current key to be repeated
@@ -79,13 +77,12 @@ namespace KeePass.App
 			set { m_bExport = value; }
 		}
 
-		// Obsolete (for backward compatibility with plugins only)
-		[DefaultValue(false)]
-		[XmlIgnore]
+		private bool m_bExportNoKey = true;
+		[DefaultValue(true)]
 		public bool ExportNoKey
 		{
-			get { Debug.Assert(false); return false; }
-			set { Debug.Assert(false); }
+			get { return m_bExportNoKey; }
+			set { m_bExportNoKey = value; }
 		}
 
 		private bool m_bImport = true;
@@ -406,15 +403,6 @@ namespace KeePass.App
 			}
 
 			return b;
-		}
-
-		internal static bool TryWithKey(AppPolicyId p, bool bNoKeyRepeat,
-			PwDatabase pd, string strContext)
-		{
-			if(!Try(p)) return false;
-
-			if(bNoKeyRepeat) return true;
-			return KeyUtil.ReAskKey(pd, true, strContext);
 		}
 
 		internal static void ApplyToConfig()

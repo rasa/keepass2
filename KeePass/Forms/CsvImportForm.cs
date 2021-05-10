@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ namespace KeePass.Forms
 		public CsvImportForm()
 		{
 			InitializeComponent();
-			GlobalWindowManager.InitializeForm(this);
+			Program.Translation.ApplyTo(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -164,9 +164,6 @@ namespace KeePass.Forms
 
 			m_cmbFieldFormat.Text = string.Empty;
 
-			AccessibilityEx.SetName(m_btnFieldMoveUp, KPRes.MoveUp);
-			AccessibilityEx.SetName(m_btnFieldMoveDown, KPRes.MoveDown);
-
 			m_bInitializing = false;
 
 			UpdateTextPreview();
@@ -175,6 +172,8 @@ namespace KeePass.Forms
 
 			ProcessResize();
 			EnableControlsEx();
+
+			UIUtil.SetFocus(m_btnTabNext, this);
 		}
 
 		private void OnFormClosed(object sender, FormClosedEventArgs e)
@@ -238,7 +237,7 @@ namespace KeePass.Forms
 					};
 				else if(t == CsvFieldType.Group)
 					vItems = new string[] { string.Empty, ".", "/", "\\" };
-				else vItems = MemUtil.EmptyArray<string>();
+				else vItems = new string[0];
 
 				foreach(string strPre in vItems)
 					m_cmbFieldFormat.Items.Add(strPre);

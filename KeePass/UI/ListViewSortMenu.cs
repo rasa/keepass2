@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 using KeePass.Resources;
 
@@ -119,7 +119,8 @@ namespace KeePass.UI
 
 			DeleteMenuItems();
 
-			ListSorter ls = (m_lv.ListViewItemSorter as ListSorter);
+			IComparer icSorter = m_lv.ListViewItemSorter;
+			ListSorter ls = ((icSorter != null) ? (icSorter as ListSorter) : null);
 			if(ls != null)
 			{
 				m_iCurSortColumn = ls.Column;
@@ -129,12 +130,7 @@ namespace KeePass.UI
 			}
 			else m_iCurSortColumn = -1;
 
-			AccessKeyManagerEx ak = new AccessKeyManagerEx();
-			string strNoSort = ak.RegisterText(KPRes.NoSort);
-			string strAsc = ak.RegisterText(KPRes.Ascending);
-			string strDesc = ak.RegisterText(KPRes.Descending);
-
-			m_tsmiNoSort = new ToolStripMenuItem(strNoSort);
+			m_tsmiNoSort = new ToolStripMenuItem(KPRes.NoSort);
 			if(m_iCurSortColumn < 0) UIUtil.SetRadioChecked(m_tsmiNoSort, true);
 			m_tsmiNoSort.Click += this.OnNoSort;
 			m_tsmiMenu.DropDownItems.Add(m_tsmiNoSort);
@@ -145,7 +141,8 @@ namespace KeePass.UI
 			m_vColumns = new List<ToolStripMenuItem>();
 			foreach(ColumnHeader ch in m_lv.Columns)
 			{
-				string strText = ak.CreateText(ch.Text, true);
+				string strText = (ch.Text ?? string.Empty);
+				strText = StrUtil.EncodeMenuText(strText);
 
 				ToolStripMenuItem tsmi = new ToolStripMenuItem(strText);
 				if(ch.Index == m_iCurSortColumn) UIUtil.SetRadioChecked(tsmi, true);
@@ -158,14 +155,14 @@ namespace KeePass.UI
 			m_tssSep1 = new ToolStripSeparator();
 			m_tsmiMenu.DropDownItems.Add(m_tssSep1);
 
-			m_tsmiAsc = new ToolStripMenuItem(strAsc);
+			m_tsmiAsc = new ToolStripMenuItem(KPRes.Ascending);
 			if((m_iCurSortColumn >= 0) && m_bCurSortAsc)
 				UIUtil.SetRadioChecked(m_tsmiAsc, true);
 			m_tsmiAsc.Click += this.OnSortAscDesc;
 			if(m_iCurSortColumn < 0) m_tsmiAsc.Enabled = false;
 			m_tsmiMenu.DropDownItems.Add(m_tsmiAsc);
 
-			m_tsmiDesc = new ToolStripMenuItem(strDesc);
+			m_tsmiDesc = new ToolStripMenuItem(KPRes.Descending);
 			if((m_iCurSortColumn >= 0) && !m_bCurSortAsc)
 				UIUtil.SetRadioChecked(m_tsmiDesc, true);
 			m_tsmiDesc.Click += this.OnSortAscDesc;

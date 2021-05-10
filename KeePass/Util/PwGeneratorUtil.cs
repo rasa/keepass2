@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using KeePass.App.Configuration;
 using KeePass.Resources;
 
 #if !KeePassUAP
@@ -38,52 +37,49 @@ namespace KeePass.Util
 {
 	public static class PwGeneratorUtil
 	{
-		private static string g_strBuiltInSuffix = null;
+		private static string m_strBuiltInSuffix = null;
 		internal static string BuiltInSuffix
 		{
 			get
 			{
-				if(g_strBuiltInSuffix == null)
-					g_strBuiltInSuffix = " (" + KPRes.BuiltIn + ")";
-				return g_strBuiltInSuffix;
+				if(m_strBuiltInSuffix == null)
+					m_strBuiltInSuffix = " (" + KPRes.BuiltIn + ")";
+				return m_strBuiltInSuffix;
 			}
 		}
 
-		private static List<PwProfile> g_lBuiltIn = null;
+		private static List<PwProfile> m_lBuiltIn = null;
 		public static List<PwProfile> BuiltInProfiles
 		{
 			get
 			{
-				if(g_lBuiltIn == null) g_lBuiltIn = AllocStdProfiles();
-				return g_lBuiltIn;
+				if(m_lBuiltIn == null) AllocStandardProfiles();
+				return m_lBuiltIn;
 			}
 		}
 
-		private static List<PwProfile> AllocStdProfiles()
+		private static void AllocStandardProfiles()
 		{
-			List<PwProfile> l = new List<PwProfile>();
+			m_lBuiltIn = new List<PwProfile>();
+
+			AddStdPattern(KPRes.RandomMacAddress, @"HH\-HH\-HH\-HH\-HH\-HH");
 
 			string strHex = KPRes.HexKeyEx;
-			AddStdPattern(l, strHex.Replace(@"{PARAM}", "40"), @"H{10}");
-			AddStdPattern(l, strHex.Replace(@"{PARAM}", "128"), @"H{32}");
-			AddStdPattern(l, strHex.Replace(@"{PARAM}", "256"), @"H{64}");
-
-			AddStdPattern(l, KPRes.MacAddress, "HH\\-HH\\-HH\\-HH\\-HH\\-HH");
-
-			return l;
+			AddStdPattern(strHex.Replace(@"{PARAM}", "40"), @"h{10}");
+			AddStdPattern(strHex.Replace(@"{PARAM}", "128"), @"h{32}");
+			AddStdPattern(strHex.Replace(@"{PARAM}", "256"), @"h{64}");
 		}
 
-		private static void AddStdPattern(List<PwProfile> l, string strName,
-			string strPattern)
+		private static void AddStdPattern(string strName, string strPattern)
 		{
-			PwProfile prf = new PwProfile();
+			PwProfile p = new PwProfile();
 
-			prf.Name = strName + PwGeneratorUtil.BuiltInSuffix;
-			prf.GeneratorType = PasswordGeneratorType.Pattern;
-			prf.Pattern = strPattern;
-			prf.CollectUserEntropy = false;
+			p.Name = strName + PwGeneratorUtil.BuiltInSuffix;
+			p.CollectUserEntropy = false;
+			p.GeneratorType = PasswordGeneratorType.Pattern;
+			p.Pattern = strPattern;
 
-			l.Add(prf);
+			m_lBuiltIn.Add(p);
 		}
 
 		/// <summary>
@@ -95,7 +91,7 @@ namespace KeePass.Util
 			List<PwProfile> lUser = Program.Config.PasswordGenerator.UserProfiles;
 
 			// Sort it in the configuration file
-			if(bSort) SortProfiles(lUser);
+			if(bSort) lUser.Sort(PwGeneratorUtil.CompareProfilesByName);
 
 			// Remove old built-in profiles by KeePass <= 2.17
 			for(int i = lUser.Count - 1; i >= 0; --i)
@@ -106,7 +102,7 @@ namespace KeePass.Util
 			List<PwProfile> l = new List<PwProfile>();
 			l.AddRange(PwGeneratorUtil.BuiltInProfiles);
 			l.AddRange(lUser);
-			if(bSort) SortProfiles(l);
+			if(bSort) l.Sort(PwGeneratorUtil.CompareProfilesByName);
 			return l;
 		}
 
@@ -114,12 +110,11 @@ namespace KeePass.Util
 		{
 			if(strName == null) { Debug.Assert(false); return false; }
 
-			string strNameS = strName + PwGeneratorUtil.BuiltInSuffix;
-
-			foreach(PwProfile prf in PwGeneratorUtil.BuiltInProfiles)
+			string strWithSuffix = strName + PwGeneratorUtil.BuiltInSuffix;
+			foreach(PwProfile p in PwGeneratorUtil.BuiltInProfiles)
 			{
-				if(prf.Name.Equals(strName, StrUtil.CaseIgnoreCmp) ||
-					prf.Name.Equals(strNameS, StrUtil.CaseIgnoreCmp))
+				if(p.Name.Equals(strName, StrUtil.CaseIgnoreCmp) ||
+					p.Name.Equals(strWithSuffix, StrUtil.CaseIgnoreCmp))
 					return true;
 			}
 
@@ -133,29 +128,6 @@ namespace KeePass.Util
 			if(b == null) { Debug.Assert(false); return 1; }
 
 			return StrUtil.CompareNaturally(a.Name, b.Name);
-		}
-
-		internal static void SortProfiles(List<PwProfile> l)
-		{
-			if(l == null) { Debug.Assert(false); return; }
-
-			l.Sort(PwGeneratorUtil.CompareProfilesByName);
-		}
-
-		internal static int FindProfile(List<PwProfile> l, string strName,
-			bool bIgnoreCase)
-		{
-			if(l == null) { Debug.Assert(false); return -1; }
-
-			StringComparison sc = (bIgnoreCase ? StrUtil.CaseIgnoreCmp :
-				StringComparison.Ordinal);
-
-			for(int i = 0; i < l.Count; ++i)
-			{
-				if(l[i].Name.Equals(strName, sc)) return i;
-			}
-
-			return -1;
 		}
 
 #if !KeePassUAP
@@ -235,14 +207,12 @@ namespace KeePass.Util
 
 		internal static void GenerateAuto(PwEntry pe, PwDatabase pd)
 		{
-			if((pe == null) || (pd == null)) { Debug.Assert(false); return; }
+			if(pe == null) { Debug.Assert(false); return; }
+			if(pd == null) { Debug.Assert(false); return; }
 
-			AcePasswordGenerator acePG = Program.Config.PasswordGenerator;
-			PwProfile prf = (acePG.ProfilesEnabled ?
-				acePG.AutoGeneratedPasswordsProfile : new PwProfile());
-
-			ProtectedString ps = GenerateAcceptable(prf, null, pe, pd, false);
-
+			ProtectedString ps = GenerateAcceptable(
+				Program.Config.PasswordGenerator.AutoGeneratedPasswordsProfile,
+				null, pe, pd, false);
 			pe.Strings.Set(PwDefs.PasswordField, ps.WithProtection(
 				pd.MemoryProtection.ProtectPassword));
 		}

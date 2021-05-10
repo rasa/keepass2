@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -360,21 +360,22 @@ namespace KeePassLib.Security
 			return pbData;
 		}
 
-		private int? m_oiHash = null;
+		private int? m_hash = null;
 		public override int GetHashCode()
 		{
-			lock(m_objSync) { if(m_oiHash.HasValue) return m_oiHash.Value; }
+			if(m_hash.HasValue) return m_hash.Value;
+
+			int h = (m_bProtected ? 0x7B11D289 : 0);
 
 			byte[] pb = ReadData();
-			int h = (int)MemUtil.Hash32(pb, 0, pb.Length);
-
-			if(m_bProtected)
+			unchecked
 			{
-				h ^= 0x57851B93;
-				MemUtil.ZeroByteArray(pb);
+				for(int i = 0; i < pb.Length; ++i)
+					h = (h << 3) + h + (int)pb[i];
 			}
+			if(m_bProtected) MemUtil.ZeroByteArray(pb);
 
-			lock(m_objSync) { m_oiHash = h; }
+			m_hash = h;
 			return h;
 		}
 

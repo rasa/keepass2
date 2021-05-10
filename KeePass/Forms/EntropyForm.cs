@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
 
@@ -40,12 +40,11 @@ namespace KeePass.Forms
 {
 	public partial class EntropyForm : Form
 	{
-		private SHA256Managed m_h = null;
-		private float m_fBits = 0;
+		private byte[] m_pbEntropy = null;
+		private LinkedList<uint> m_llPool = new LinkedList<uint>();
 
 		private Bitmap m_bmpRandom = null;
 
-		private byte[] m_pbEntropy = null;
 		public byte[] GeneratedEntropy
 		{
 			get { return m_pbEntropy; }
@@ -53,21 +52,20 @@ namespace KeePass.Forms
 
 		public static byte[] CollectEntropyIfEnabled(PwProfile pp)
 		{
-			if(pp == null) { Debug.Assert(false); return null; }
 			if(!pp.CollectUserEntropy) return null;
 
 			EntropyForm ef = new EntropyForm();
 			if(UIUtil.ShowDialogNotValue(ef, DialogResult.OK)) return null;
 
-			byte[] pb = ef.GeneratedEntropy;
+			byte[] pbGen = ef.GeneratedEntropy;
 			UIUtil.DestroyForm(ef);
-			return pb;
+			return pbGen;
 		}
 
 		public EntropyForm()
 		{
 			InitializeComponent();
-			GlobalWindowManager.InitializeForm(this);
+			Program.Translation.ApplyTo(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -86,59 +84,55 @@ namespace KeePass.Forms
 			m_bmpRandom = CreateRandomBitmap(m_picRandom.ClientSize);
 			m_picRandom.Image = m_bmpRandom;
 
-			m_h = new SHA256Managed();
-
-			byte[] pb = Guid.NewGuid().ToByteArray();
-			m_h.TransformBlock(pb, 0, pb.Length, pb, 0);
-
 			UpdateUIState();
 			UIUtil.SetFocus(m_tbEdit, this);
 		}
 
 		private void UpdateUIState()
 		{
-			int cBits = Math.Min((int)m_fBits, 256); // Max. of SHA-256
-
-			m_pbGenerated.Value = (cBits * 100) / 256;
-
+			int nBits = m_llPool.Count / 8;
 			Debug.Assert(!m_lblStatus.AutoSize); // For RTL support
-			m_lblStatus.Text = KPRes.BitsEx.Replace(@"{PARAM}", cBits.ToString());
+			m_lblStatus.Text = KPRes.BitsEx.Replace(@"{PARAM}", nBits.ToString());
+
+			if(nBits > 256) { Debug.Assert(false); m_pbGenerated.Value = 100; }
+			else m_pbGenerated.Value = (nBits * 100) / 256;
 		}
 
 		private void OnRandomMouseMove(object sender, MouseEventArgs e)
 		{
-			if(m_h == null) { Debug.Assert(false); return; }
+			if(m_llPool.Count >= 2048) return;
 
-			byte[] pb = new byte[8 + 4 + 4];
-			MemUtil.Int64ToBytesEx(DateTime.UtcNow.ToBinary(), pb, 0);
-			MemUtil.Int32ToBytesEx(e.X, pb, 8);
-			MemUtil.Int32ToBytesEx(e.Y, pb, 12);
-			m_h.TransformBlock(pb, 0, pb.Length, pb, 0);
+			uint ul = (uint)((e.X << 8) ^ e.Y);
+			ul ^= (uint)(Environment.TickCount << 16);
 
-			m_fBits += 0.125f;
+			m_llPool.AddLast(ul);
 
 			UpdateUIState();
 		}
 
 		private void OnBtnOK(object sender, EventArgs e)
 		{
-			if(m_h == null) { Debug.Assert(false); return; }
-
-			string str = m_tbEdit.Text;
-			if(!string.IsNullOrEmpty(str))
+			using(MemoryStream ms = new MemoryStream())
 			{
-				byte[] pbText = StrUtil.Utf8.GetBytes(str);
-				m_h.TransformBlock(pbText, 0, pbText.Length, pbText, 0);
+				// Prevent empty / low entropy buffer
+				byte[] pbGuid = Guid.NewGuid().ToByteArray();
+				ms.Write(pbGuid, 0, pbGuid.Length);
+
+				foreach(uint ln in m_llPool)
+					ms.Write(MemUtil.UInt32ToBytes(ln), 0, 4);
+
+				if(m_tbEdit.Text.Length > 0)
+				{
+					byte[] pbUTF8 = StrUtil.Utf8.GetBytes(m_tbEdit.Text);
+					ms.Write(pbUTF8, 0, pbUTF8.Length);
+				}
+
+				byte[] pbColl = ms.ToArray();
+
+				m_pbEntropy = CryptoUtil.HashSha256(pbColl);
+
+				CryptoRandom.Instance.AddEntropy(pbColl);
 			}
-
-			m_h.TransformFinalBlock(MemUtil.EmptyByteArray, 0, 0);
-
-			byte[] pb = m_h.Hash;
-			m_pbEntropy = pb;
-			CryptoRandom.Instance.AddEntropy(pb);
-
-			m_h.Clear();
-			m_h = null;
 		}
 
 		private void OnBtnCancel(object sender, EventArgs e)
@@ -147,15 +141,10 @@ namespace KeePass.Forms
 
 		private void OnFormClosed(object sender, FormClosedEventArgs e)
 		{
-			if(m_h != null) // E.g. when clicking [Cancel]
-			{
-				m_h.Clear();
-				m_h = null;
-			}
-
 			if(m_bmpRandom != null)
 			{
 				m_picRandom.Image = null;
+
 				m_bmpRandom.Dispose();
 				m_bmpRandom = null;
 			}

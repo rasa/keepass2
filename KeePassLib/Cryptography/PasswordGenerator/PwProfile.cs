@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Text;
 using System.Xml.Serialization;
+using System.ComponentModel;
+using System.Diagnostics;
 
 using KeePassLib.Interfaces;
 using KeePassLib.Security;
@@ -53,18 +53,14 @@ namespace KeePassLib.Cryptography.PasswordGenerator
 		Custom = 2
 	}
 
-	public sealed class PwProfile : IDeepCloneable<PwProfile>, IEquatable<PwProfile>
+	public sealed class PwProfile : IDeepCloneable<PwProfile>
 	{
 		private string m_strName = string.Empty;
 		[DefaultValue("")]
 		public string Name
 		{
 			get { return m_strName; }
-			set
-			{
-				if(value == null) throw new ArgumentNullException("value");
-				m_strName = value;
-			}
+			set { m_strName = value; }
 		}
 
 		private PasswordGeneratorType m_type = PasswordGeneratorType.CharSet;
@@ -106,12 +102,12 @@ namespace KeePassLib.Cryptography.PasswordGenerator
 		[DefaultValue("")]
 		public string CharSetRanges
 		{
-			get { UpdateCharSet(true); return m_strCharSetRanges; }
+			get { this.UpdateCharSet(true); return m_strCharSetRanges; }
 			set
 			{
 				if(value == null) throw new ArgumentNullException("value");
 				m_strCharSetRanges = value;
-				UpdateCharSet(false);
+				this.UpdateCharSet(false);
 			}
 		}
 
@@ -119,12 +115,12 @@ namespace KeePassLib.Cryptography.PasswordGenerator
 		[DefaultValue("")]
 		public string CharSetAdditional
 		{
-			get { UpdateCharSet(true); return m_strCharSetAdditional; }
+			get { this.UpdateCharSet(true); return m_strCharSetAdditional; }
 			set
 			{
 				if(value == null) throw new ArgumentNullException("value");
 				m_strCharSetAdditional = value;
-				UpdateCharSet(false);
+				this.UpdateCharSet(false);
 			}
 		}
 
@@ -133,11 +129,7 @@ namespace KeePassLib.Cryptography.PasswordGenerator
 		public string Pattern
 		{
 			get { return m_strPattern; }
-			set
-			{
-				if(value == null) throw new ArgumentNullException("value");
-				m_strPattern = value;
-			}
+			set { m_strPattern = value; }
 		}
 
 		private bool m_bPatternPermute = false;
@@ -176,15 +168,15 @@ namespace KeePassLib.Cryptography.PasswordGenerator
 			}
 		}
 
-		private string m_strCustomUuid = string.Empty;
+		private string m_strCustomID = string.Empty;
 		[DefaultValue("")]
 		public string CustomAlgorithmUuid
 		{
-			get { return m_strCustomUuid; }
+			get { return m_strCustomID; }
 			set
 			{
 				if(value == null) throw new ArgumentNullException("value");
-				m_strCustomUuid = value;
+				m_strCustomID = value;
 			}
 		}
 
@@ -220,48 +212,15 @@ namespace KeePassLib.Cryptography.PasswordGenerator
 			p.m_bNoLookAlike = m_bNoLookAlike;
 			p.m_bNoRepeat = m_bNoRepeat;
 			p.m_strExclude = m_strExclude;
-			p.m_strCustomUuid = m_strCustomUuid;
+			p.m_strCustomID = m_strCustomID;
 			p.m_strCustomOpt = m_strCustomOpt;
 
 			return p;
 		}
 
-		public bool Equals(PwProfile other)
+		private void UpdateCharSet(bool bSetXml)
 		{
-			if(object.ReferenceEquals(other, this)) return true;
-			if(object.ReferenceEquals(other, null)) return false;
-
-			if(m_strName != other.m_strName) return false;
-			if(m_type != other.m_type) return false;
-			if(m_bUserEntropy != other.m_bUserEntropy) return false;
-			if(m_uLength != other.m_uLength) return false;
-			if(!m_pwCharSet.Equals(other.m_pwCharSet)) return false;
-			// if(m_strCharSetRanges != other.m_strCharSetRanges) return false;
-			// if(m_strCharSetAdditional != other.m_strCharSetAdditional) return false;
-			if(m_strPattern != other.m_strPattern) return false;
-			if(m_bPatternPermute != other.m_bPatternPermute) return false;
-			if(m_bNoLookAlike != other.m_bNoLookAlike) return false;
-			if(m_bNoRepeat != other.m_bNoRepeat) return false;
-			if(m_strExclude != other.m_strExclude) return false;
-			if(m_strCustomUuid != other.m_strCustomUuid) return false;
-			if(m_strCustomOpt != other.m_strCustomOpt) return false;
-
-			return true;
-		}
-
-		public override bool Equals(object obj)
-		{
-			return Equals(obj as PwProfile);
-		}
-
-		public override int GetHashCode()
-		{
-			return m_strName.GetHashCode();
-		}
-
-		private void UpdateCharSet(bool bSetStrings)
-		{
-			if(bSetStrings)
+			if(bSetXml)
 			{
 				PwCharSet pcs = new PwCharSet(m_pwCharSet.ToString());
 				m_strCharSetRanges = pcs.PackAndRemoveCharRanges();
@@ -311,8 +270,7 @@ namespace KeePassLib.Cryptography.PasswordGenerator
 
 		public bool HasSecurityReducingOption()
 		{
-			// Cf. PwGeneratorForm.EnableControlsEx
-			return (m_bNoLookAlike || m_bNoRepeat || (m_strExclude.Length != 0));
+			return (m_bNoLookAlike || m_bNoRepeat || (m_strExclude.Length > 0));
 		}
 	}
 }

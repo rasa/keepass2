@@ -52,11 +52,11 @@
 			this.m_numKdfIt = new System.Windows.Forms.NumericUpDown();
 			this.m_btnHelp = new System.Windows.Forms.Button();
 			this.m_ttRect = new System.Windows.Forms.ToolTip(this.components);
-			this.m_lblCmpIntro = new System.Windows.Forms.Label();
+			this.m_lblCompressionIntro = new System.Windows.Forms.Label();
 			this.m_tabMain = new System.Windows.Forms.TabControl();
 			this.m_tabGeneral = new System.Windows.Forms.TabPage();
 			this.m_cbColor = new System.Windows.Forms.CheckBox();
-			this.m_btnColor = new KeePass.UI.ColorButtonEx();
+			this.m_btnColor = new System.Windows.Forms.Button();
 			this.m_tbDefaultUser = new System.Windows.Forms.TextBox();
 			this.m_lblDefaultUser = new System.Windows.Forms.Label();
 			this.m_tbDbDesc = new KeePass.UI.PromptedTextBox();
@@ -66,10 +66,15 @@
 			this.m_tabSecurity = new System.Windows.Forms.TabPage();
 			this.m_lblSecIntro = new System.Windows.Forms.Label();
 			this.m_tabCompression = new System.Windows.Forms.TabPage();
-			this.m_rbCmpNone = new System.Windows.Forms.RadioButton();
-			this.m_rbCmpGZip = new System.Windows.Forms.RadioButton();
-			this.m_lblCmpGZip = new System.Windows.Forms.Label();
-			this.m_lblCmpNone = new System.Windows.Forms.Label();
+			this.m_lblHeaderCpAlgo = new System.Windows.Forms.Label();
+			this.m_lblCpGZipPerf = new System.Windows.Forms.Label();
+			this.m_lblCpGZipCp = new System.Windows.Forms.Label();
+			this.m_lblCpNonePerf = new System.Windows.Forms.Label();
+			this.m_lblCpNoneCp = new System.Windows.Forms.Label();
+			this.m_lblHeaderPerf = new System.Windows.Forms.Label();
+			this.m_lblHeaderCp = new System.Windows.Forms.Label();
+			this.m_rbGZip = new System.Windows.Forms.RadioButton();
+			this.m_rbNone = new System.Windows.Forms.RadioButton();
 			this.m_tabRecycleBin = new System.Windows.Forms.TabPage();
 			this.m_cmbRecycleBin = new System.Windows.Forms.ComboBox();
 			this.m_lblRecycleBinGroup = new System.Windows.Forms.Label();
@@ -128,7 +133,7 @@
 			this.m_btnOK.Location = new System.Drawing.Point(318, 425);
 			this.m_btnOK.Name = "m_btnOK";
 			this.m_btnOK.Size = new System.Drawing.Size(75, 23);
-			this.m_btnOK.TabIndex = 0;
+			this.m_btnOK.TabIndex = 2;
 			this.m_btnOK.Text = "OK";
 			this.m_btnOK.UseVisualStyleBackColor = true;
 			this.m_btnOK.Click += new System.EventHandler(this.OnBtnOK);
@@ -139,7 +144,7 @@
 			this.m_btnCancel.Location = new System.Drawing.Point(399, 425);
 			this.m_btnCancel.Name = "m_btnCancel";
 			this.m_btnCancel.Size = new System.Drawing.Size(75, 23);
-			this.m_btnCancel.TabIndex = 1;
+			this.m_btnCancel.TabIndex = 3;
 			this.m_btnCancel.Text = "Cancel";
 			this.m_btnCancel.UseVisualStyleBackColor = true;
 			this.m_btnCancel.Click += new System.EventHandler(this.OnBtnCancel);
@@ -329,19 +334,18 @@
 			this.m_btnHelp.Location = new System.Drawing.Point(11, 425);
 			this.m_btnHelp.Name = "m_btnHelp";
 			this.m_btnHelp.Size = new System.Drawing.Size(75, 23);
-			this.m_btnHelp.TabIndex = 3;
+			this.m_btnHelp.TabIndex = 4;
 			this.m_btnHelp.Text = "&Help";
 			this.m_btnHelp.UseVisualStyleBackColor = true;
 			this.m_btnHelp.Click += new System.EventHandler(this.OnBtnHelp);
 			// 
-			// m_lblCmpIntro
+			// m_lblCompressionIntro
 			// 
-			this.m_lblCmpIntro.AutoSize = true;
-			this.m_lblCmpIntro.Location = new System.Drawing.Point(3, 12);
-			this.m_lblCmpIntro.Name = "m_lblCmpIntro";
-			this.m_lblCmpIntro.Size = new System.Drawing.Size(268, 13);
-			this.m_lblCmpIntro.TabIndex = 0;
-			this.m_lblCmpIntro.Text = "Data compression reduces the size of the database file.";
+			this.m_lblCompressionIntro.Location = new System.Drawing.Point(3, 12);
+			this.m_lblCompressionIntro.Name = "m_lblCompressionIntro";
+			this.m_lblCompressionIntro.Size = new System.Drawing.Size(435, 15);
+			this.m_lblCompressionIntro.TabIndex = 0;
+			this.m_lblCompressionIntro.Text = "Data compression reduces the size of the database.";
 			// 
 			// m_tabMain
 			// 
@@ -354,7 +358,7 @@
 			this.m_tabMain.Name = "m_tabMain";
 			this.m_tabMain.SelectedIndex = 0;
 			this.m_tabMain.Size = new System.Drawing.Size(463, 346);
-			this.m_tabMain.TabIndex = 2;
+			this.m_tabMain.TabIndex = 0;
 			// 
 			// m_tabGeneral
 			// 
@@ -392,6 +396,7 @@
 			this.m_btnColor.Size = new System.Drawing.Size(48, 23);
 			this.m_btnColor.TabIndex = 7;
 			this.m_btnColor.UseVisualStyleBackColor = true;
+			this.m_btnColor.Click += new System.EventHandler(this.OnBtnColor);
 			// 
 			// m_tbDefaultUser
 			// 
@@ -468,11 +473,16 @@
 			// 
 			// m_tabCompression
 			// 
-			this.m_tabCompression.Controls.Add(this.m_rbCmpNone);
-			this.m_tabCompression.Controls.Add(this.m_rbCmpGZip);
-			this.m_tabCompression.Controls.Add(this.m_lblCmpGZip);
-			this.m_tabCompression.Controls.Add(this.m_lblCmpIntro);
-			this.m_tabCompression.Controls.Add(this.m_lblCmpNone);
+			this.m_tabCompression.Controls.Add(this.m_lblHeaderCpAlgo);
+			this.m_tabCompression.Controls.Add(this.m_lblCpGZipPerf);
+			this.m_tabCompression.Controls.Add(this.m_lblCpGZipCp);
+			this.m_tabCompression.Controls.Add(this.m_lblCpNonePerf);
+			this.m_tabCompression.Controls.Add(this.m_lblCpNoneCp);
+			this.m_tabCompression.Controls.Add(this.m_lblHeaderPerf);
+			this.m_tabCompression.Controls.Add(this.m_lblHeaderCp);
+			this.m_tabCompression.Controls.Add(this.m_rbGZip);
+			this.m_tabCompression.Controls.Add(this.m_rbNone);
+			this.m_tabCompression.Controls.Add(this.m_lblCompressionIntro);
 			this.m_tabCompression.Location = new System.Drawing.Point(4, 22);
 			this.m_tabCompression.Name = "m_tabCompression";
 			this.m_tabCompression.Size = new System.Drawing.Size(455, 320);
@@ -480,45 +490,90 @@
 			this.m_tabCompression.Text = "Compression";
 			this.m_tabCompression.UseVisualStyleBackColor = true;
 			// 
-			// m_rbCmpNone
+			// m_lblHeaderCpAlgo
 			// 
-			this.m_rbCmpNone.AutoSize = true;
-			this.m_rbCmpNone.Location = new System.Drawing.Point(6, 37);
-			this.m_rbCmpNone.Name = "m_rbCmpNone";
-			this.m_rbCmpNone.Size = new System.Drawing.Size(51, 17);
-			this.m_rbCmpNone.TabIndex = 1;
-			this.m_rbCmpNone.TabStop = true;
-			this.m_rbCmpNone.Text = "&None";
-			this.m_rbCmpNone.UseVisualStyleBackColor = true;
+			this.m_lblHeaderCpAlgo.AutoSize = true;
+			this.m_lblHeaderCpAlgo.Location = new System.Drawing.Point(23, 56);
+			this.m_lblHeaderCpAlgo.Name = "m_lblHeaderCpAlgo";
+			this.m_lblHeaderCpAlgo.Size = new System.Drawing.Size(50, 13);
+			this.m_lblHeaderCpAlgo.TabIndex = 1;
+			this.m_lblHeaderCpAlgo.Text = "Algorithm";
 			// 
-			// m_rbCmpGZip
+			// m_lblCpGZipPerf
 			// 
-			this.m_rbCmpGZip.AutoSize = true;
-			this.m_rbCmpGZip.Location = new System.Drawing.Point(6, 82);
-			this.m_rbCmpGZip.Name = "m_rbCmpGZip";
-			this.m_rbCmpGZip.Size = new System.Drawing.Size(48, 17);
-			this.m_rbCmpGZip.TabIndex = 3;
-			this.m_rbCmpGZip.TabStop = true;
-			this.m_rbCmpGZip.Text = "&GZip";
-			this.m_rbCmpGZip.UseVisualStyleBackColor = true;
+			this.m_lblCpGZipPerf.AutoSize = true;
+			this.m_lblCpGZipPerf.Location = new System.Drawing.Point(189, 101);
+			this.m_lblCpGZipPerf.Name = "m_lblCpGZipPerf";
+			this.m_lblCpGZipPerf.Size = new System.Drawing.Size(55, 13);
+			this.m_lblCpGZipPerf.TabIndex = 9;
+			this.m_lblCpGZipPerf.Text = "Very good";
 			// 
-			// m_lblCmpGZip
+			// m_lblCpGZipCp
 			// 
-			this.m_lblCmpGZip.AutoSize = true;
-			this.m_lblCmpGZip.Location = new System.Drawing.Point(22, 102);
-			this.m_lblCmpGZip.Name = "m_lblCmpGZip";
-			this.m_lblCmpGZip.Size = new System.Drawing.Size(232, 13);
-			this.m_lblCmpGZip.TabIndex = 4;
-			this.m_lblCmpGZip.Text = "Moderate compression, very good performance.";
+			this.m_lblCpGZipCp.AutoSize = true;
+			this.m_lblCpGZipCp.Location = new System.Drawing.Point(91, 101);
+			this.m_lblCpGZipCp.Name = "m_lblCpGZipCp";
+			this.m_lblCpGZipCp.Size = new System.Drawing.Size(52, 13);
+			this.m_lblCpGZipCp.TabIndex = 8;
+			this.m_lblCpGZipCp.Text = "Moderate";
 			// 
-			// m_lblCmpNone
+			// m_lblCpNonePerf
 			// 
-			this.m_lblCmpNone.AutoSize = true;
-			this.m_lblCmpNone.Location = new System.Drawing.Point(22, 57);
-			this.m_lblCmpNone.Name = "m_lblCmpNone";
-			this.m_lblCmpNone.Size = new System.Drawing.Size(265, 13);
-			this.m_lblCmpNone.TabIndex = 2;
-			this.m_lblCmpNone.Text = "No compression, moderate performance (more file I/O).";
+			this.m_lblCpNonePerf.AutoSize = true;
+			this.m_lblCpNonePerf.Location = new System.Drawing.Point(189, 78);
+			this.m_lblCpNonePerf.Name = "m_lblCpNonePerf";
+			this.m_lblCpNonePerf.Size = new System.Drawing.Size(52, 13);
+			this.m_lblCpNonePerf.TabIndex = 6;
+			this.m_lblCpNonePerf.Text = "Moderate";
+			// 
+			// m_lblCpNoneCp
+			// 
+			this.m_lblCpNoneCp.AutoSize = true;
+			this.m_lblCpNoneCp.Location = new System.Drawing.Point(91, 78);
+			this.m_lblCpNoneCp.Name = "m_lblCpNoneCp";
+			this.m_lblCpNoneCp.Size = new System.Drawing.Size(83, 13);
+			this.m_lblCpNoneCp.TabIndex = 5;
+			this.m_lblCpNoneCp.Text = "No compression";
+			// 
+			// m_lblHeaderPerf
+			// 
+			this.m_lblHeaderPerf.AutoSize = true;
+			this.m_lblHeaderPerf.Location = new System.Drawing.Point(189, 56);
+			this.m_lblHeaderPerf.Name = "m_lblHeaderPerf";
+			this.m_lblHeaderPerf.Size = new System.Drawing.Size(67, 13);
+			this.m_lblHeaderPerf.TabIndex = 3;
+			this.m_lblHeaderPerf.Text = "Performance";
+			// 
+			// m_lblHeaderCp
+			// 
+			this.m_lblHeaderCp.AutoSize = true;
+			this.m_lblHeaderCp.Location = new System.Drawing.Point(91, 56);
+			this.m_lblHeaderCp.Name = "m_lblHeaderCp";
+			this.m_lblHeaderCp.Size = new System.Drawing.Size(67, 13);
+			this.m_lblHeaderCp.TabIndex = 2;
+			this.m_lblHeaderCp.Text = "Compression";
+			// 
+			// m_rbGZip
+			// 
+			this.m_rbGZip.AutoSize = true;
+			this.m_rbGZip.Location = new System.Drawing.Point(6, 99);
+			this.m_rbGZip.Name = "m_rbGZip";
+			this.m_rbGZip.Size = new System.Drawing.Size(48, 17);
+			this.m_rbGZip.TabIndex = 7;
+			this.m_rbGZip.TabStop = true;
+			this.m_rbGZip.Text = "&GZip";
+			this.m_rbGZip.UseVisualStyleBackColor = true;
+			// 
+			// m_rbNone
+			// 
+			this.m_rbNone.AutoSize = true;
+			this.m_rbNone.Location = new System.Drawing.Point(6, 76);
+			this.m_rbNone.Name = "m_rbNone";
+			this.m_rbNone.Size = new System.Drawing.Size(51, 17);
+			this.m_rbNone.TabIndex = 4;
+			this.m_rbNone.TabStop = true;
+			this.m_rbNone.Text = "&None";
+			this.m_rbNone.UseVisualStyleBackColor = true;
 			// 
 			// m_tabRecycleBin
 			// 
@@ -741,7 +796,7 @@
 			this.m_btnCancelOp.Location = new System.Drawing.Point(180, 425);
 			this.m_btnCancelOp.Name = "m_btnCancelOp";
 			this.m_btnCancelOp.Size = new System.Drawing.Size(132, 23);
-			this.m_btnCancelOp.TabIndex = 4;
+			this.m_btnCancelOp.TabIndex = 1;
 			this.m_btnCancelOp.Text = "&Cancel Operation";
 			this.m_btnCancelOp.UseVisualStyleBackColor = true;
 			this.m_btnCancelOp.Click += new System.EventHandler(this.OnBtnCancelOp);
@@ -815,7 +870,7 @@
 		private System.Windows.Forms.NumericUpDown m_numKdfIt;
 		private System.Windows.Forms.Button m_btnHelp;
 		private System.Windows.Forms.ToolTip m_ttRect;
-		private System.Windows.Forms.Label m_lblCmpIntro;
+		private System.Windows.Forms.Label m_lblCompressionIntro;
 		private System.Windows.Forms.TabControl m_tabMain;
 		private System.Windows.Forms.TabPage m_tabGeneral;
 		private System.Windows.Forms.TabPage m_tabSecurity;
@@ -825,10 +880,15 @@
 		private KeePass.UI.PromptedTextBox m_tbDbName;
 		private System.Windows.Forms.Label m_lblDbName;
 		private System.Windows.Forms.Label m_lblSecIntro;
-		private System.Windows.Forms.RadioButton m_rbCmpGZip;
-		private System.Windows.Forms.RadioButton m_rbCmpNone;
-		private System.Windows.Forms.Label m_lblCmpNone;
-		private System.Windows.Forms.Label m_lblCmpGZip;
+		private System.Windows.Forms.RadioButton m_rbGZip;
+		private System.Windows.Forms.RadioButton m_rbNone;
+		private System.Windows.Forms.Label m_lblCpNonePerf;
+		private System.Windows.Forms.Label m_lblCpNoneCp;
+		private System.Windows.Forms.Label m_lblHeaderPerf;
+		private System.Windows.Forms.Label m_lblHeaderCp;
+		private System.Windows.Forms.Label m_lblCpGZipPerf;
+		private System.Windows.Forms.Label m_lblCpGZipCp;
+		private System.Windows.Forms.Label m_lblHeaderCpAlgo;
 		private System.Windows.Forms.TextBox m_tbDefaultUser;
 		private System.Windows.Forms.Label m_lblDefaultUser;
 		private System.Windows.Forms.TabPage m_tabRecycleBin;
@@ -851,7 +911,7 @@
 		private System.Windows.Forms.NumericUpDown m_numHistoryMaxSize;
 		private System.Windows.Forms.NumericUpDown m_numHistoryMaxItems;
 		private System.Windows.Forms.CheckBox m_cbHistoryMaxSize;
-		private KeePass.UI.ColorButtonEx m_btnColor;
+		private System.Windows.Forms.Button m_btnColor;
 		private System.Windows.Forms.CheckBox m_cbColor;
 		private System.Windows.Forms.ComboBox m_cmbKdf;
 		private System.Windows.Forms.Label m_lblKdf;

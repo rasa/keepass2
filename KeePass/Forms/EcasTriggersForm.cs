@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Serialization;
 
 using KeePass.App;
 using KeePass.App.Configuration;
@@ -40,20 +42,22 @@ namespace KeePass.Forms
 {
 	public partial class EcasTriggersForm : Form
 	{
-		private EcasTriggerSystem m_etsInOut = null;
-		private EcasTriggerSystem m_ets = null;
+		private EcasTriggerSystem m_triggersInOut = null;
+		private EcasTriggerSystem m_triggers = null;
 
 		private ImageList m_ilIcons = null;
+
+		private const string XmlTriggerRootName = "TriggerCollection";
 
 		public ContextMenuStrip ToolsContextMenu
 		{
 			get { return m_ctxTools; }
 		}
 
-		public bool InitEx(EcasTriggerSystem ets, ImageList ilIcons)
+		public bool InitEx(EcasTriggerSystem triggers, ImageList ilIcons)
 		{
-			m_etsInOut = ets;
-			m_ets = ets.CloneDeep();
+			m_triggersInOut = triggers;
+			m_triggers = triggers.CloneDeep();
 
 			m_ilIcons = ilIcons;
 
@@ -64,15 +68,16 @@ namespace KeePass.Forms
 		{
 			InitializeComponent();
 
-			GlobalWindowManager.InitializeForm(this);
+			Program.Translation.ApplyTo(this);
 			Program.Translation.ApplyTo("KeePass.Forms.EcasTriggersForm.m_ctxTools", m_ctxTools.Items);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
 		{
-			if(m_ets == null) { Debug.Assert(false); throw new InvalidOperationException(); }
+			if(m_triggers == null) { Debug.Assert(false); return; }
 
 			GlobalWindowManager.AddWindow(this);
+			GlobalWindowManager.CustomizeControl(m_ctxTools);
 
 			BannerFactory.CreateBannerEx(this, m_bannerImage,
 				Properties.Resources.B48x48_Make_KDevelop, KPRes.Triggers,
@@ -80,38 +85,36 @@ namespace KeePass.Forms
 			this.Text = KPRes.Triggers;
 			this.Icon = AppIcons.Default;
 
-			int w = (m_lvTriggers.ClientSize.Width - UIUtil.GetVScrollBarWidth() - 1);
-			m_lvTriggers.Columns.Add(KPRes.Triggers, w);
+			int nWidth = (m_lvTriggers.ClientSize.Width - UIUtil.GetVScrollBarWidth() - 1);
+			m_lvTriggers.Columns.Add(KPRes.Triggers, nWidth);
 
 			m_lvTriggers.SmallImageList = m_ilIcons;
 
-			m_cbEnableTriggers.Checked = m_ets.Enabled;
+			m_cbEnableTriggers.Checked = m_triggers.Enabled;
 			UpdateTriggerListEx(false);
 
-			AccessibilityEx.SetName(m_btnMoveUp, KPRes.MoveUp);
-			AccessibilityEx.SetName(m_btnMoveDown, KPRes.MoveDown);
+			EcasTriggerSystem ts = Program.TriggerSystem;
+			EcasTriggerSystem tsCfg = Program.Config.Application.TriggerSystem;
+			if(object.ReferenceEquals(m_triggersInOut, ts) &&
+				AppConfigEx.IsOptionEnforced(tsCfg, "Enabled"))
+				m_cbEnableTriggers.Enabled = false;
+		}
 
-			Debug.Assert(m_btnOK.FlatStyle == m_btnCancel.FlatStyle);
-			UIUtil.SetShield(m_btnOK, true);
+		private void CleanUpEx()
+		{
+			m_lvTriggers.SmallImageList = null; // Detach event handlers
 		}
 
 		private void OnFormClosed(object sender, FormClosedEventArgs e)
 		{
-			m_lvTriggers.SmallImageList = null; // Detach event handlers
-
+			CleanUpEx();
 			GlobalWindowManager.RemoveWindow(this);
 		}
 
 		private void OnBtnOK(object sender, EventArgs e)
 		{
-			m_ets.Enabled = m_cbEnableTriggers.Checked;
-
-			AppConfigEx cfg = new AppConfigEx();
-			cfg.Application.TriggerSystem = m_ets;
-
-			if(!AppConfigEx.EnforceSections(AceSections.TriggerSystem,
-				cfg, true, true, this, sender))
-				this.DialogResult = DialogResult.None;
+			m_triggersInOut.Enabled = m_cbEnableTriggers.Checked;
+			m_triggersInOut.TriggerCollection = m_triggers.TriggerCollection;
 		}
 
 		private void OnBtnCancel(object sender, EventArgs e)
@@ -131,10 +134,12 @@ namespace KeePass.Forms
 
 			bool bMove = (bEnabled && (m_lvTriggers.Items.Count >= 2) &&
 				(nSelCount >= 1));
-			UIUtil.SetEnabledFast(bMove, m_btnMoveUp, m_btnMoveDown);
+			m_btnMoveUp.Enabled = bMove;
+			m_btnMoveDown.Enabled = bMove;
 
-			UIUtil.SetEnabledFast(bEnabled, m_ctxToolsCopyTriggers,
-				m_ctxToolsCopySelectedTriggers, m_ctxToolsPasteTriggers);
+			m_ctxToolsCopyTriggers.Enabled = bEnabled;
+			m_ctxToolsCopySelectedTriggers.Enabled = bEnabled;
+			m_ctxToolsPasteTriggers.Enabled = bEnabled;
 		}
 
 		private void UpdateTriggerListEx(bool bRestoreSelected)
@@ -145,7 +150,7 @@ namespace KeePass.Forms
 
 			m_lvTriggers.BeginUpdate();
 			m_lvTriggers.Items.Clear();
-			foreach(EcasTrigger t in m_ets.TriggerCollection)
+			foreach(EcasTrigger t in m_triggers.TriggerCollection)
 			{
 				ListViewItem lvi = m_lvTriggers.Items.Add(t.Name);
 				lvi.SubItems.Add(t.Comments);
@@ -167,7 +172,7 @@ namespace KeePass.Forms
 			f.InitEx(tNew, false, m_ilIcons);
 			if(UIUtil.ShowDialogAndDestroy(f) == DialogResult.OK)
 			{
-				m_ets.TriggerCollection.Add(tNew);
+				m_triggers.TriggerCollection.Add(tNew);
 				UpdateTriggerListEx(false);
 			}
 		}
@@ -185,18 +190,18 @@ namespace KeePass.Forms
 
 		private void OnBtnDelete(object sender, EventArgs e)
 		{
-			UIUtil.DeleteSelectedItems(m_lvTriggers, m_ets.TriggerCollection);
+			UIUtil.DeleteSelectedItems(m_lvTriggers, m_triggers.TriggerCollection);
 		}
 
 		private void OnBtnMoveUp(object sender, EventArgs e)
 		{
-			UIUtil.MoveSelectedItemsInternalOne(m_lvTriggers, m_ets.TriggerCollection, true);
+			UIUtil.MoveSelectedItemsInternalOne(m_lvTriggers, m_triggers.TriggerCollection, true);
 			UpdateTriggerListEx(true);
 		}
 
 		private void OnBtnMoveDown(object sender, EventArgs e)
 		{
-			UIUtil.MoveSelectedItemsInternalOne(m_lvTriggers, m_ets.TriggerCollection, false);
+			UIUtil.MoveSelectedItemsInternalOne(m_lvTriggers, m_triggers.TriggerCollection, false);
 			UpdateTriggerListEx(true);
 		}
 
@@ -212,11 +217,12 @@ namespace KeePass.Forms
 
 		private void DoCopyTriggers(ListViewItem[] vTriggers)
 		{
-			if(vTriggers == null) { Debug.Assert(false); return; }
+			if(vTriggers == null) return;
 
 			try
 			{
-				if(vTriggers.Length == 0) { ClipboardUtil.Clear(); return; }
+				ClipboardUtil.Clear();
+				if(vTriggers.Length == 0) return;
 
 				EcasTriggerContainer v = new EcasTriggerContainer();
 				for(int iTrigger = 0; iTrigger < vTriggers.Length; ++iTrigger)
@@ -260,10 +266,10 @@ namespace KeePass.Forms
 
 					foreach(EcasTrigger t in c.Triggers)
 					{
-						if(m_ets.FindObjectByUuid(t.Uuid) != null)
+						if(m_triggers.FindObjectByUuid(t.Uuid) != null)
 							t.Uuid = new PwUuid(true);
 
-						m_ets.TriggerCollection.Add(t);
+						m_triggers.TriggerCollection.Add(t);
 					}
 				}
 			}

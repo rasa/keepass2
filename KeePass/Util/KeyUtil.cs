@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,9 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 
 using KeePass.App;
@@ -31,11 +29,7 @@ using KeePass.Resources;
 using KeePass.UI;
 
 using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Cryptography;
-using KeePassLib.Cryptography.KeyDerivation;
 using KeePassLib.Keys;
-using KeePassLib.Native;
 using KeePassLib.Resources;
 using KeePassLib.Security;
 using KeePassLib.Serialization;
@@ -45,224 +39,110 @@ namespace KeePass.Util
 {
 	public static class KeyUtil
 	{
-		private const string KdfPrcParams = "P";
-		private const string KdfPrcTime = "T";
-		private const string KdfPrcError = "E";
-
-		internal static CompositeKey CreateKey(byte[] pbPasswordUtf8,
-			string strKeyFile, bool bUserAccount, IOConnectionInfo ioc,
-			bool bNewKey, bool bSecureDesktop)
-		{
-			Debug.Assert(ioc != null);
-
-			CompositeKey ck = new CompositeKey();
-			bool bPassword = (pbPasswordUtf8 != null);
-			string strNP = MessageService.NewParagraph;
-
-			if(bPassword)
-				ck.AddUserKey(new KcpPassword(pbPasswordUtf8,
-					Program.Config.Security.MasterPassword.RememberWhileOpen));
-
-			if(!string.IsNullOrEmpty(strKeyFile) && (strKeyFile !=
-				KPRes.NoKeyFileSpecifiedMeta))
-			{
-				KeyProvider kp = Program.KeyProviderPool.Get(strKeyFile);
-				if(kp != null)
-				{
-					byte[] pbKey = null;
-					try
-					{
-						if(bSecureDesktop && !kp.SecureDesktopCompatible)
-							throw new Exception(KPRes.KeyProvIncmpWithSD + strNP +
-								KPRes.KeyProvIncmpWithSDHint);
-						if(kp.Exclusive && (bPassword || bUserAccount))
-							throw new Exception(KPRes.KeyProvExclusive);
-
-						KeyProviderQueryContext ctx = new KeyProviderQueryContext(
-							ioc, bNewKey, bSecureDesktop);
-
-						pbKey = kp.GetKey(ctx);
-
-						if((pbKey != null) && (pbKey.Length != 0))
-							ck.AddUserKey(new KcpCustomKey(strKeyFile, pbKey,
-								!kp.DirectKey));
-						else return null; // Provider has shown error message
-					}
-					catch(Exception ex)
-					{
-						throw new Exception(strKeyFile + strNP + ex.Message);
-					}
-					finally { if(pbKey != null) MemUtil.ZeroByteArray(pbKey); }
-				}
-				else // Key file
-				{
-					try { ck.AddUserKey(new KcpKeyFile(strKeyFile, bNewKey)); }
-					catch(Exception ex)
-					{
-						throw new Exception(strKeyFile + strNP + KLRes.FileLoadFailed +
-							strNP + ex.Message);
-					}
-				}
-			}
-
-			if(bUserAccount) ck.AddUserKey(new KcpUserAccount());
-
-			return ((ck.UserKeyCount != 0) ? ck : null);
-		}
-
-		internal static CompositeKey KeyFromUI(CheckBox cbPassword,
-			PwInputControlGroup icgPassword, SecureTextBoxEx stbPassword,
-			CheckBox cbKeyFile, ComboBox cmbKeyFile, CheckBox cbUserAccount,
-			IOConnectionInfo ioc, bool bSecureDesktop)
-		{
-			if(cbPassword == null) { Debug.Assert(false); return null; }
-			if(stbPassword == null) { Debug.Assert(false); return null; }
-			if(cbKeyFile == null) { Debug.Assert(false); return null; }
-			if(cmbKeyFile == null) { Debug.Assert(false); return null; }
-			if(cbUserAccount == null) { Debug.Assert(false); return null; }
-
-			bool bNewKey = (icgPassword != null);
-			byte[] pbPasswordUtf8 = null;
-
-			try
-			{
-				if(cbPassword.Checked)
-				{
-					pbPasswordUtf8 = stbPassword.TextEx.ReadUtf8();
-
-					if(bNewKey)
-					{
-						if(!icgPassword.ValidateData(true)) return null;
-
-						string strError = ValidateNewMasterPassword(pbPasswordUtf8,
-							(uint)stbPassword.TextLength);
-						if(strError != null)
-						{
-							if(strError.Length != 0) MessageService.ShowWarning(strError);
-							return null;
-						}
-					}
-				}
-
-				string strKeyFile = null;
-				if(cbKeyFile.Checked) strKeyFile = cmbKeyFile.Text;
-
-				return CreateKey(pbPasswordUtf8, strKeyFile, cbUserAccount.Checked,
-					ioc, bNewKey, bSecureDesktop);
-			}
-			catch(Exception ex) { MessageService.ShowWarning(ex); }
-			finally
-			{
-				if(pbPasswordUtf8 != null) MemUtil.ZeroByteArray(pbPasswordUtf8);
-			}
-
-			return null;
-		}
-
-		private static string ValidateNewMasterPassword(byte[] pbUtf8, uint cChars)
-		{
-			if(pbUtf8 == null) { Debug.Assert(false); throw new ArgumentNullException("pbUtf8"); }
-
-#if DEBUG
-			char[] vChars = StrUtil.Utf8.GetChars(pbUtf8);
-			Debug.Assert(vChars.Length == (int)cChars);
-			MemUtil.ZeroArray<char>(vChars);
-#endif
-
-			uint cBits = QualityEstimation.EstimatePasswordBits(pbUtf8);
-
-			uint cMinChars = Program.Config.Security.MasterPassword.MinimumLength;
-			if(cChars < cMinChars)
-				return KPRes.MasterPasswordMinLengthFailed.Replace(@"{PARAM}",
-					cMinChars.ToString());
-
-			uint cMinBits = Program.Config.Security.MasterPassword.MinimumQuality;
-			if(cBits < cMinBits)
-				return KPRes.MasterPasswordMinQualityFailed.Replace(@"{PARAM}",
-					cMinBits.ToString());
-
-			string strError = Program.KeyValidatorPool.Validate(pbUtf8,
-				KeyValidationType.MasterPassword);
-			if(strError != null) return strError;
-
-			if(cChars == 0)
-			{
-				if(!MessageService.AskYesNo(KPRes.EmptyMasterPw +
-					MessageService.NewParagraph + KPRes.EmptyMasterPwHint +
-					MessageService.NewParagraph + KPRes.EmptyMasterPwQuestion,
-					null, false))
-					return string.Empty;
-			}
-
-			if(cBits <= PwDefs.QualityBitsWeak)
-			{
-				string str = KPRes.MasterPasswordWeak + MessageService.NewParagraph +
-					KPRes.MasterPasswordConfirm;
-				if(!MessageService.AskYesNo(str, null, false, MessageBoxIcon.Warning))
-					return string.Empty;
-			}
-
-			return null;
-		}
-
 		public static CompositeKey KeyFromCommandLine(CommandLineArgs args)
 		{
 			if(args == null) throw new ArgumentNullException("args");
 
-			string strFile = args.FileName;
-			IOConnectionInfo ioc = (!string.IsNullOrEmpty(strFile) ?
-				IOConnectionInfo.FromPath(strFile) : new IOConnectionInfo());
-
+			CompositeKey cmpKey = new CompositeKey();
 			string strPassword = args[AppDefs.CommandLineOptions.Password];
 			string strPasswordEnc = args[AppDefs.CommandLineOptions.PasswordEncrypted];
 			string strPasswordStdIn = args[AppDefs.CommandLineOptions.PasswordStdIn];
 			string strKeyFile = args[AppDefs.CommandLineOptions.KeyFile];
 			string strUserAcc = args[AppDefs.CommandLineOptions.UserAccount];
 
-			byte[] pbPasswordUtf8 = null;
-			try
+			Action<byte[]> fAddPwB = delegate(byte[] pbPw)
 			{
-				if(strPassword != null)
-					pbPasswordUtf8 = StrUtil.Utf8.GetBytes(strPassword);
-				else if(strPasswordEnc != null)
-					pbPasswordUtf8 = StrUtil.Utf8.GetBytes(StrUtil.DecryptString(
-						strPasswordEnc));
-				else if(strPasswordStdIn != null)
-				{
-					ProtectedString ps = ReadPasswordStdIn(true);
-					if(ps == null) return null;
-					pbPasswordUtf8 = ps.ReadUtf8();
-				}
+				cmpKey.AddUserKey(new KcpPassword(pbPw,
+					Program.Config.Security.MasterPassword.RememberWhileOpen));
+			};
 
-				return CreateKey(pbPasswordUtf8, strKeyFile, (strUserAcc != null),
-					ioc, false, false);
-			}
-			catch(Exception ex) { MessageService.ShowWarning(ex); }
-			finally
+			Action<string> fAddPwS = delegate(string strPw)
 			{
-				if(pbPasswordUtf8 != null) MemUtil.ZeroByteArray(pbPasswordUtf8);
-				ClearKeyOptions(args, false, false);
+				byte[] pb = StrUtil.Utf8.GetBytes(strPw);
+				try { fAddPwB(pb); }
+				finally { MemUtil.ZeroByteArray(pb); }
+			};
+
+			if(strPassword != null)
+				fAddPwS(strPassword);
+			else if(strPasswordEnc != null)
+				fAddPwS(StrUtil.DecryptString(strPasswordEnc));
+			else if(strPasswordStdIn != null)
+			{
+				ProtectedString ps = ReadPasswordStdIn(true);
+				if(ps != null)
+				{
+					byte[] pb = ps.ReadUtf8();
+					try { fAddPwB(pb); }
+					finally { MemUtil.ZeroByteArray(pb); }
+				}
+			}
+
+			if(strKeyFile != null)
+			{
+				if(Program.KeyProviderPool.IsKeyProvider(strKeyFile))
+				{
+					KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(
+						IOConnectionInfo.FromPath(args.FileName), false, false);
+
+					bool bPerformHash;
+					byte[] pbProvKey = Program.KeyProviderPool.GetKey(strKeyFile, ctxKP,
+						out bPerformHash);
+					if((pbProvKey != null) && (pbProvKey.Length > 0))
+					{
+						try { cmpKey.AddUserKey(new KcpCustomKey(strKeyFile, pbProvKey, bPerformHash)); }
+						catch(Exception exCKP)
+						{
+							MessageService.ShowWarning(strKeyFile, exCKP);
+							return null;
+						}
+						finally { MemUtil.ZeroByteArray(pbProvKey); }
+					}
+					else return null; // Provider has shown error message
+				}
+				else // Key file
+				{
+					try { cmpKey.AddUserKey(new KcpKeyFile(strKeyFile)); }
+					catch(Exception exFile)
+					{
+						MessageService.ShowWarning(strKeyFile, KLRes.FileLoadFailed, exFile);
+						return null;
+					}
+				}
+			}
+			
+			if(strUserAcc != null)
+			{
+				try { cmpKey.AddUserKey(new KcpUserAccount()); }
+				catch(Exception exUA)
+				{
+					MessageService.ShowWarning(exUA);
+					return null;
+				}
+			}
+
+			if(cmpKey.UserKeyCount > 0)
+			{
+				ClearKeyOptions(args, true);
+				return cmpKey;
 			}
 
 			return null;
 		}
 
-		internal static void ClearKeyOptions(CommandLineArgs args, bool bForce,
-			bool bClearPreSelect)
+		private static void ClearKeyOptions(CommandLineArgs args, bool bOnlyIfOptionEnabled)
 		{
 			if(args == null) { Debug.Assert(false); return; }
 
-			if(!bForce && !Program.Config.Security.ClearKeyCommandLineParams)
+			if(bOnlyIfOptionEnabled && !Program.Config.Security.ClearKeyCommandLineParams)
 				return;
 
 			args.Remove(AppDefs.CommandLineOptions.Password);
 			args.Remove(AppDefs.CommandLineOptions.PasswordEncrypted);
 			args.Remove(AppDefs.CommandLineOptions.PasswordStdIn);
 			args.Remove(AppDefs.CommandLineOptions.KeyFile);
+			args.Remove(AppDefs.CommandLineOptions.PreSelect);
 			args.Remove(AppDefs.CommandLineOptions.UserAccount);
-
-			if(bClearPreSelect)
-				args.Remove(AppDefs.CommandLineOptions.PreSelect);
 		}
 
 		private static bool g_bReadPwStdIn = false;
@@ -292,7 +172,7 @@ namespace KeePass.Util
 
 		internal static string[] MakeCtxIndependent(string[] vCmdLineArgs)
 		{
-			if(vCmdLineArgs == null) { Debug.Assert(false); return MemUtil.EmptyArray<string>(); }
+			if(vCmdLineArgs == null) { Debug.Assert(false); return new string[0]; }
 
 			CommandLineArgs cl = new CommandLineArgs(vCmdLineArgs);
 			List<string> lFlt = new List<string>();
@@ -318,131 +198,24 @@ namespace KeePass.Util
 			return lFlt.ToArray();
 		}
 
-		public static bool ReAskKey(PwDatabase pd, bool bFailWithUI)
+		public static bool ReAskKey(PwDatabase pwDatabase, bool bFailWithUI)
 		{
-			return ReAskKey(pd, bFailWithUI, null);
-		}
+			if(pwDatabase == null) { Debug.Assert(false); return false; }
 
-		internal static bool ReAskKey(PwDatabase pd, bool bFailWithUI,
-			string strContext)
-		{
-			if(pd == null) { Debug.Assert(false); return false; }
+			KeyPromptForm dlg = new KeyPromptForm();
+			dlg.InitEx(pwDatabase.IOConnectionInfo, false, true,
+				KPRes.EnterCurrentCompositeKey);
+			if(UIUtil.ShowDialogNotValue(dlg, DialogResult.OK)) return false;
 
-			string strTitle = GetReAskKeyTitle(strContext);
+			CompositeKey ck = dlg.CompositeKey;
+			bool bResult = ck.EqualsValue(pwDatabase.MasterKey);
 
-			KeyPromptFormResult r;
-			DialogResult dr = KeyPromptForm.ShowDialog(pd.IOConnectionInfo,
-				false, strTitle, out r);
-			if((dr != DialogResult.OK) || (r == null)) return false;
-
-			CompositeKey ck = r.CompositeKey;
-			bool bEqual = ck.EqualsValue(pd.MasterKey);
-
-			if(!bEqual && bFailWithUI)
+			if(!bResult)
 				MessageService.ShowWarning(KLRes.InvalidCompositeKey,
-					KLRes.InvalidCompositeKeyHint);
+						KLRes.InvalidCompositeKeyHint);
 
-			return bEqual;
-		}
-
-		internal static string GetReAskKeyTitle(string strContext)
-		{
-			string str = KPRes.EnterCurrentCompositeKey;
-
-			if(!string.IsNullOrEmpty(strContext))
-				str += " (" + strContext + ")";
-
-			return str;
-		}
-
-		// Returns false if the child process cannot be spawned.
-		// Throws an exception if an exception occurs in the child process
-		// during the KDF computation.
-		internal static bool KdfPrcTest(KdfParameters p, out ulong uTimeMS)
-		{
-			uTimeMS = 0;
-			if(p == null) { Debug.Assert(false); return false; }
-
-			Process prc = null;
-			string strError = null;
-			try
-			{
-				VariantDictionary d = new VariantDictionary();
-				d.SetByteArray(KdfPrcParams, KdfParameters.SerializeExt(p));
-
-				string strInfoFile = Program.TempFilesPool.GetTempFileName(true);
-				File.WriteAllBytes(strInfoFile, VariantDictionary.Serialize(d));
-
-				string strArgs = "-" + AppDefs.CommandLineOptions.KdfTest +
-					":\"" + NativeLib.EncodeDataToArgs(strInfoFile) + "\"";
-
-				prc = WinUtil.StartSelfEx(strArgs);
-				if(prc == null) { Debug.Assert(false); return false; }
-				prc.WaitForExit();
-
-				d = VariantDictionary.Deserialize(File.ReadAllBytes(strInfoFile));
-
-				strError = d.GetString(KdfPrcError);
-				if(string.IsNullOrEmpty(strError))
-				{
-					uTimeMS = d.GetUInt64(KdfPrcTime, ulong.MaxValue);
-					if(uTimeMS != ulong.MaxValue) return true;
-					else { Debug.Assert(false); }
-				}
-			}
-			catch(ThreadAbortException) { }
-			catch(Exception) { Debug.Assert(false); }
-			finally
-			{
-				if(prc != null)
-				{
-					try { if(!prc.HasExited) prc.Kill(); }
-					catch(Exception) { Debug.Assert(false); }
-					try { prc.Dispose(); }
-					catch(Exception) { Debug.Assert(false); }
-				}
-			}
-
-			if(!string.IsNullOrEmpty(strError)) throw new Exception(strError);
-			return false;
-		}
-
-		// Returns true if and only if the command line parameter is present
-		internal static bool KdfPrcTestAsChild()
-		{
-			string strInfoFile = Program.CommandLineArgs[AppDefs.CommandLineOptions.KdfTest];
-			if(string.IsNullOrEmpty(strInfoFile)) return false;
-
-			VariantDictionary d = null;
-			try
-			{
-				d = VariantDictionary.Deserialize(File.ReadAllBytes(strInfoFile));
-
-				byte[] pb = d.GetByteArray(KdfPrcParams);
-				if((pb == null) || (pb.Length == 0)) { Debug.Assert(false); return true; }
-
-				KdfParameters p = KdfParameters.DeserializeExt(pb);
-				if(p == null) { Debug.Assert(false); return true; }
-
-				KdfEngine kdf = KdfPool.Get(p.KdfUuid);
-				if(kdf == null) { Debug.Assert(false); return true; }
-
-				d.SetUInt64(KdfPrcTime, kdf.Test(p));
-			}
-			catch(Exception ex)
-			{
-				Debug.Assert(false);
-				if((d != null) && !string.IsNullOrEmpty(ex.Message))
-					d.SetString(KdfPrcError, ex.Message);
-			}
-
-			try
-			{
-				if(d != null)
-					File.WriteAllBytes(strInfoFile, VariantDictionary.Serialize(d));
-			}
-			catch(Exception) { Debug.Assert(false); }
-			return true;
+			UIUtil.DestroyForm(dlg);
+			return bResult;
 		}
 	}
 }
