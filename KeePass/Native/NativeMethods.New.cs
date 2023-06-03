@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -80,6 +80,42 @@ namespace KeePass.Native
 			finally { if(p != IntPtr.Zero) Marshal.FreeCoTaskMem(p); }
 
 			return (bTrim ? strWindow.Trim() : strWindow);
+		}
+
+		internal static char[] GetWindowTextV(IntPtr hWnd, bool bZeroBuffer)
+		{
+			if(hWnd == IntPtr.Zero) { Debug.Assert(false); return MemUtil.EmptyArray<char>(); }
+
+			int cc = GetWindowTextLength(hWnd);
+			if(cc <= 0) return MemUtil.EmptyArray<char>();
+
+			int cb = (cc + 2) * Marshal.SystemDefaultCharSize;
+
+			char[] v;
+			IntPtr p = IntPtr.Zero;
+			try
+			{
+				p = Marshal.AllocCoTaskMem(cb);
+				if(p == IntPtr.Zero) { Debug.Assert(false); return MemUtil.EmptyArray<char>(); }
+				MemUtil.ZeroMemory(p, cb);
+
+				int ccReal = GetWindowText(hWnd, p, cc + 1);
+				if(ccReal <= 0) { Debug.Assert(false); return MemUtil.EmptyArray<char>(); }
+
+				v = new char[ccReal];
+				Marshal.Copy(p, v, 0, ccReal);
+				Debug.Assert(Array.IndexOf(v, '\0') < 0);
+			}
+			finally
+			{
+				if(p != IntPtr.Zero)
+				{
+					if(bZeroBuffer) MemUtil.ZeroMemory(p, cb);
+					Marshal.FreeCoTaskMem(p);
+				}
+			}
+
+			return v;
 		}
 
 		/* internal static string GetWindowClassName(IntPtr hWnd)
@@ -872,6 +908,11 @@ namespace KeePass.Native
 			finally { if(pState != IntPtr.Zero) Marshal.FreeHGlobal(pState); }
 
 			return null;
+		}
+
+		internal static IntPtr MakeIntResource(int i)
+		{
+			return new IntPtr(i & 0xFFFF);
 		}
 	}
 }

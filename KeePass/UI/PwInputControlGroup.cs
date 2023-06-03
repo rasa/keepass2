@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -546,7 +546,7 @@ namespace KeePass.UI
 				MonoWorkarounds.IsRequired(100001));
 
 			// Too much spacing between the dots when using the default font
-			// cb.Text = new string(SecureTextBoxEx.PasswordCharEx, 3);
+			// cb.Text = SecureTextBoxEx.GetPasswordCharString(3);
 			cb.Text = string.Empty;
 
 			Image img = Properties.Resources.B19x07_3BlackDots;

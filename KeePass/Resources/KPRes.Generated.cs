@@ -37,14 +37,17 @@ namespace KeePass.Resources
 			m_strAddGroupDesc = TryGetEx(dictNew, "AddGroupDesc", m_strAddGroupDesc);
 			m_strAddStringField = TryGetEx(dictNew, "AddStringField", m_strAddStringField);
 			m_strAddStringFieldDesc = TryGetEx(dictNew, "AddStringFieldDesc", m_strAddStringFieldDesc);
+			m_strAdminPassword = TryGetEx(dictNew, "AdminPassword", m_strAdminPassword);
 			m_strAdvanced = TryGetEx(dictNew, "Advanced", m_strAdvanced);
 			m_strAfterDatabaseOpen = TryGetEx(dictNew, "AfterDatabaseOpen", m_strAfterDatabaseOpen);
 			m_strAlignCenter = TryGetEx(dictNew, "AlignCenter", m_strAlignCenter);
 			m_strAlignLeft = TryGetEx(dictNew, "AlignLeft", m_strAlignLeft);
 			m_strAlignRight = TryGetEx(dictNew, "AlignRight", m_strAlignRight);
 			m_strAll = TryGetEx(dictNew, "All", m_strAll);
+			m_strAllDataInclOrg = TryGetEx(dictNew, "AllDataInclOrg", m_strAllDataInclOrg);
 			m_strAllFiles = TryGetEx(dictNew, "AllFiles", m_strAllFiles);
 			m_strAllSupportedFiles = TryGetEx(dictNew, "AllSupportedFiles", m_strAllSupportedFiles);
+			m_strAllUsers = TryGetEx(dictNew, "AllUsers", m_strAllUsers);
 			m_strApplication = TryGetEx(dictNew, "Application", m_strApplication);
 			m_strApplicationExit = TryGetEx(dictNew, "ApplicationExit", m_strApplicationExit);
 			m_strApplicationInitialized = TryGetEx(dictNew, "ApplicationInitialized", m_strApplicationInitialized);
@@ -79,6 +82,8 @@ namespace KeePass.Resources
 			m_strAutoSaveAtExit = TryGetEx(dictNew, "AutoSaveAtExit", m_strAutoSaveAtExit);
 			m_strAutoShowExpiredEntries = TryGetEx(dictNew, "AutoShowExpiredEntries", m_strAutoShowExpiredEntries);
 			m_strAutoShowSoonToExpireEntries = TryGetEx(dictNew, "AutoShowSoonToExpireEntries", m_strAutoShowSoonToExpireEntries);
+			m_strAutoSortDeactivateQ = TryGetEx(dictNew, "AutoSortDeactivateQ", m_strAutoSortDeactivateQ);
+			m_strAutoSortNoRearrange = TryGetEx(dictNew, "AutoSortNoRearrange", m_strAutoSortNoRearrange);
 			m_strAutoType = TryGetEx(dictNew, "AutoType", m_strAutoType);
 			m_strAutoTypeAbortedOnWindow = TryGetEx(dictNew, "AutoTypeAbortedOnWindow", m_strAutoTypeAbortedOnWindow);
 			m_strAutoTypeAlwaysShowSelDialog = TryGetEx(dictNew, "AutoTypeAlwaysShowSelDialog", m_strAutoTypeAlwaysShowSelDialog);
@@ -109,6 +114,7 @@ namespace KeePass.Resources
 			m_strBits = TryGetEx(dictNew, "Bits", m_strBits);
 			m_strBitsA = TryGetEx(dictNew, "BitsA", m_strBitsA);
 			m_strBitsEx = TryGetEx(dictNew, "BitsEx", m_strBitsEx);
+			m_strBlue = TryGetEx(dictNew, "Blue", m_strBlue);
 			m_strBold = TryGetEx(dictNew, "Bold", m_strBold);
 			m_strBothForms = TryGetEx(dictNew, "BothForms", m_strBothForms);
 			m_strBrowser = TryGetEx(dictNew, "Browser", m_strBrowser);
@@ -134,6 +140,7 @@ namespace KeePass.Resources
 			m_strClipboardClearDesc = TryGetEx(dictNew, "ClipboardClearDesc", m_strClipboardClearDesc);
 			m_strClipboardClearInSeconds = TryGetEx(dictNew, "ClipboardClearInSeconds", m_strClipboardClearInSeconds);
 			m_strClipboardClearOnExit = TryGetEx(dictNew, "ClipboardClearOnExit", m_strClipboardClearOnExit);
+			m_strClipboardClearTime = TryGetEx(dictNew, "ClipboardClearTime", m_strClipboardClearTime);
 			m_strClipboardDataCopied = TryGetEx(dictNew, "ClipboardDataCopied", m_strClipboardDataCopied);
 			m_strClipboardMain = TryGetEx(dictNew, "ClipboardMain", m_strClipboardMain);
 			m_strClipboardNoPersist = TryGetEx(dictNew, "ClipboardNoPersist", m_strClipboardNoPersist);
@@ -150,12 +157,19 @@ namespace KeePass.Resources
 			m_strColumns = TryGetEx(dictNew, "Columns", m_strColumns);
 			m_strComments = TryGetEx(dictNew, "Comments", m_strComments);
 			m_strCompany = TryGetEx(dictNew, "Company", m_strCompany);
+			m_strCompareEntries = TryGetEx(dictNew, "CompareEntries", m_strCompareEntries);
 			m_strComparison = TryGetEx(dictNew, "Comparison", m_strComparison);
 			m_strCompatWithOldVer = TryGetEx(dictNew, "CompatWithOldVer", m_strCompatWithOldVer);
 			m_strComponent = TryGetEx(dictNew, "Component", m_strComponent);
 			m_strCondition = TryGetEx(dictNew, "Condition", m_strCondition);
 			m_strConfigAffectAdmin = TryGetEx(dictNew, "ConfigAffectAdmin", m_strConfigAffectAdmin);
 			m_strConfigAffectUser = TryGetEx(dictNew, "ConfigAffectUser", m_strConfigAffectUser);
+			m_strConfigEnfAdminUac = TryGetEx(dictNew, "ConfigEnfAdminUac", m_strConfigEnfAdminUac);
+			m_strConfigEnfAllUsers = TryGetEx(dictNew, "ConfigEnfAllUsers", m_strConfigEnfAllUsers);
+			m_strConfigEnfChangeValue = TryGetEx(dictNew, "ConfigEnfChangeValue", m_strConfigEnfChangeValue);
+			m_strConfigEnfDialogSubset = TryGetEx(dictNew, "ConfigEnfDialogSubset", m_strConfigEnfDialogSubset);
+			m_strConfigEnfEdit = TryGetEx(dictNew, "ConfigEnfEdit", m_strConfigEnfEdit);
+			m_strConfigEnfSaveItemsAbout = TryGetEx(dictNew, "ConfigEnfSaveItemsAbout", m_strConfigEnfSaveItemsAbout);
 			m_strConfigError = TryGetEx(dictNew, "ConfigError", m_strConfigError);
 			m_strConfigOverwriteBackup = TryGetEx(dictNew, "ConfigOverwriteBackup", m_strConfigOverwriteBackup);
 			m_strConfigureAutoType = TryGetEx(dictNew, "ConfigureAutoType", m_strConfigureAutoType);
@@ -167,6 +181,7 @@ namespace KeePass.Resources
 			m_strConfigureKeystrokeSeq = TryGetEx(dictNew, "ConfigureKeystrokeSeq", m_strConfigureKeystrokeSeq);
 			m_strConfigureKeystrokeSeqDesc = TryGetEx(dictNew, "ConfigureKeystrokeSeqDesc", m_strConfigureKeystrokeSeqDesc);
 			m_strConfigureOnNewDatabase3 = TryGetEx(dictNew, "ConfigureOnNewDatabase3", m_strConfigureOnNewDatabase3);
+			m_strConfirmExport = TryGetEx(dictNew, "ConfirmExport", m_strConfirmExport);
 			m_strConsiderDashesEq = TryGetEx(dictNew, "ConsiderDashesEq", m_strConsiderDashesEq);
 			m_strContact = TryGetEx(dictNew, "Contact", m_strContact);
 			m_strContainsOp = TryGetEx(dictNew, "ContainsOp", m_strContainsOp);
@@ -177,12 +192,16 @@ namespace KeePass.Resources
 			m_strCopyEntriesUCmd = TryGetEx(dictNew, "CopyEntriesUCmd", m_strCopyEntriesUCmd);
 			m_strCopyEntryECmd = TryGetEx(dictNew, "CopyEntryECmd", m_strCopyEntryECmd);
 			m_strCopyEntryUCmd = TryGetEx(dictNew, "CopyEntryUCmd", m_strCopyEntryUCmd);
+			m_strCopyHmacOtp = TryGetEx(dictNew, "CopyHmacOtp", m_strCopyHmacOtp);
 			m_strCopyInitialPasswordDesc = TryGetEx(dictNew, "CopyInitialPasswordDesc", m_strCopyInitialPasswordDesc);
 			m_strCopyLink = TryGetEx(dictNew, "CopyLink", m_strCopyLink);
+			m_strCopyNotes = TryGetEx(dictNew, "CopyNotes", m_strCopyNotes);
 			m_strCopyObject = TryGetEx(dictNew, "CopyObject", m_strCopyObject);
 			m_strCopyOfItem = TryGetEx(dictNew, "CopyOfItem", m_strCopyOfItem);
 			m_strCopyPasswordMenu = TryGetEx(dictNew, "CopyPasswordMenu", m_strCopyPasswordMenu);
 			m_strCopyTanMenu = TryGetEx(dictNew, "CopyTanMenu", m_strCopyTanMenu);
+			m_strCopyTimeOtp = TryGetEx(dictNew, "CopyTimeOtp", m_strCopyTimeOtp);
+			m_strCopyTitle = TryGetEx(dictNew, "CopyTitle", m_strCopyTitle);
 			m_strCopyUrls = TryGetEx(dictNew, "CopyUrls", m_strCopyUrls);
 			m_strCopyUrlsInsteadOfOpening = TryGetEx(dictNew, "CopyUrlsInsteadOfOpening", m_strCopyUrlsInsteadOfOpening);
 			m_strCopyUserName = TryGetEx(dictNew, "CopyUserName", m_strCopyUserName);
@@ -202,6 +221,7 @@ namespace KeePass.Resources
 			m_strCsvTextFile = TryGetEx(dictNew, "CsvTextFile", m_strCsvTextFile);
 			m_strCtrlAltAConflict = TryGetEx(dictNew, "CtrlAltAConflict", m_strCtrlAltAConflict);
 			m_strCtrlAltAConflictHint = TryGetEx(dictNew, "CtrlAltAConflictHint", m_strCtrlAltAConflictHint);
+			m_strCurrent = TryGetEx(dictNew, "Current", m_strCurrent);
 			m_strCurrentStyle = TryGetEx(dictNew, "CurrentStyle", m_strCurrentStyle);
 			m_strCustom = TryGetEx(dictNew, "Custom", m_strCustom);
 			m_strCustomColor = TryGetEx(dictNew, "CustomColor", m_strCustomColor);
@@ -211,6 +231,7 @@ namespace KeePass.Resources
 			m_strCustomTbButtonClicked = TryGetEx(dictNew, "CustomTbButtonClicked", m_strCustomTbButtonClicked);
 			m_strCustomTbButtonRemove = TryGetEx(dictNew, "CustomTbButtonRemove", m_strCustomTbButtonRemove);
 			m_strCut = TryGetEx(dictNew, "Cut", m_strCut);
+			m_strDark = TryGetEx(dictNew, "Dark", m_strDark);
 			m_strData = TryGetEx(dictNew, "Data", m_strData);
 			m_strDatabase = TryGetEx(dictNew, "Database", m_strDatabase);
 			m_strDatabaseDescPrompt = TryGetEx(dictNew, "DatabaseDescPrompt", m_strDatabaseDescPrompt);
@@ -248,6 +269,7 @@ namespace KeePass.Resources
 			m_strDescription = TryGetEx(dictNew, "Description", m_strDescription);
 			m_strDestination = TryGetEx(dictNew, "Destination", m_strDestination);
 			m_strDetails = TryGetEx(dictNew, "Details", m_strDetails);
+			m_strDialog = TryGetEx(dictNew, "Dialog", m_strDialog);
 			m_strDialogNoShowAgain = TryGetEx(dictNew, "DialogNoShowAgain", m_strDialogNoShowAgain);
 			m_strDialogs = TryGetEx(dictNew, "Dialogs", m_strDialogs);
 			m_strDisable = TryGetEx(dictNew, "Disable", m_strDisable);
@@ -291,11 +313,14 @@ namespace KeePass.Resources
 			m_strEncoding = TryGetEx(dictNew, "Encoding", m_strEncoding);
 			m_strEncodingFail = TryGetEx(dictNew, "EncodingFail", m_strEncodingFail);
 			m_strEndsWith = TryGetEx(dictNew, "EndsWith", m_strEndsWith);
+			m_strEnforce = TryGetEx(dictNew, "Enforce", m_strEnforce);
+			m_strEnforceOptions = TryGetEx(dictNew, "EnforceOptions", m_strEnforceOptions);
 			m_strEnterCompositeKey = TryGetEx(dictNew, "EnterCompositeKey", m_strEnterCompositeKey);
 			m_strEnterCurrentCompositeKey = TryGetEx(dictNew, "EnterCurrentCompositeKey", m_strEnterCurrentCompositeKey);
 			m_strEntropyDesc = TryGetEx(dictNew, "EntropyDesc", m_strEntropyDesc);
 			m_strEntropyTitle = TryGetEx(dictNew, "EntropyTitle", m_strEntropyTitle);
 			m_strEntry = TryGetEx(dictNew, "Entry", m_strEntry);
+			m_strEntryDifferences = TryGetEx(dictNew, "EntryDifferences", m_strEntryDifferences);
 			m_strEntryList = TryGetEx(dictNew, "EntryList", m_strEntryList);
 			m_strEntryListAutoResizeColumns = TryGetEx(dictNew, "EntryListAutoResizeColumns", m_strEntryListAutoResizeColumns);
 			m_strEntrySelGroupSel = TryGetEx(dictNew, "EntrySelGroupSel", m_strEntrySelGroupSel);
@@ -311,6 +336,7 @@ namespace KeePass.Resources
 			m_strExitInsteadOfLockingAlways = TryGetEx(dictNew, "ExitInsteadOfLockingAlways", m_strExitInsteadOfLockingAlways);
 			m_strExpiredEntries = TryGetEx(dictNew, "ExpiredEntries", m_strExpiredEntries);
 			m_strExpiredEntriesCanMatch = TryGetEx(dictNew, "ExpiredEntriesCanMatch", m_strExpiredEntriesCanMatch);
+			m_strExpiryDefaultDays = TryGetEx(dictNew, "ExpiryDefaultDays", m_strExpiryDefaultDays);
 			m_strExpiryTime = TryGetEx(dictNew, "ExpiryTime", m_strExpiryTime);
 			m_strExpiryTimeDateOnly = TryGetEx(dictNew, "ExpiryTimeDateOnly", m_strExpiryTimeDateOnly);
 			m_strExport = TryGetEx(dictNew, "Export", m_strExport);
@@ -384,6 +410,7 @@ namespace KeePass.Resources
 			m_strFont = TryGetEx(dictNew, "Font", m_strFont);
 			m_strFontDefault = TryGetEx(dictNew, "FontDefault", m_strFontDefault);
 			m_strForceSystemFontUnix = TryGetEx(dictNew, "ForceSystemFontUnix", m_strForceSystemFontUnix);
+			m_strForegroundColor = TryGetEx(dictNew, "ForegroundColor", m_strForegroundColor);
 			m_strFormat = TryGetEx(dictNew, "Format", m_strFormat);
 			m_strFormatNoDatabaseDesc = TryGetEx(dictNew, "FormatNoDatabaseDesc", m_strFormatNoDatabaseDesc);
 			m_strFormatNoDatabaseName = TryGetEx(dictNew, "FormatNoDatabaseName", m_strFormatNoDatabaseName);
@@ -417,7 +444,6 @@ namespace KeePass.Resources
 			m_strHideUsingAsterisks = TryGetEx(dictNew, "HideUsingAsterisks", m_strHideUsingAsterisks);
 			m_strHistory = TryGetEx(dictNew, "History", m_strHistory);
 			m_strHistoryBased = TryGetEx(dictNew, "HistoryBased", m_strHistoryBased);
-			m_strHmacOtp = TryGetEx(dictNew, "HmacOtp", m_strHmacOtp);
 			m_strHomebanking = TryGetEx(dictNew, "Homebanking", m_strHomebanking);
 			m_strHost = TryGetEx(dictNew, "Host", m_strHost);
 			m_strHotKeyAltOnly = TryGetEx(dictNew, "HotKeyAltOnly", m_strHotKeyAltOnly);
@@ -459,6 +485,9 @@ namespace KeePass.Resources
 			m_strIOConnection = TryGetEx(dictNew, "IOConnection", m_strIOConnection);
 			m_strIOConnectionLong = TryGetEx(dictNew, "IOConnectionLong", m_strIOConnectionLong);
 			m_strItalic = TryGetEx(dictNew, "Italic", m_strItalic);
+			m_strItemsCheckEnable = TryGetEx(dictNew, "ItemsCheckEnable", m_strItemsCheckEnable);
+			m_strItemsDisabled = TryGetEx(dictNew, "ItemsDisabled", m_strItemsDisabled);
+			m_strItemsNoSensitiveEsp = TryGetEx(dictNew, "ItemsNoSensitiveEsp", m_strItemsNoSensitiveEsp);
 			m_strIterations = TryGetEx(dictNew, "Iterations", m_strIterations);
 			m_strKdbKeePassLibC = TryGetEx(dictNew, "KdbKeePassLibC", m_strKdbKeePassLibC);
 			m_strKdbWUA = TryGetEx(dictNew, "KdbWUA", m_strKdbWUA);
@@ -508,12 +537,15 @@ namespace KeePass.Resources
 			m_strLastModifiedEntriesList = TryGetEx(dictNew, "LastModifiedEntriesList", m_strLastModifiedEntriesList);
 			m_strLastModTimePwHist = TryGetEx(dictNew, "LastModTimePwHist", m_strLastModTimePwHist);
 			m_strLatestVersionWeb = TryGetEx(dictNew, "LatestVersionWeb", m_strLatestVersionWeb);
+			m_strLight = TryGetEx(dictNew, "Light", m_strLight);
 			m_strLimitSingleInstance = TryGetEx(dictNew, "LimitSingleInstance", m_strLimitSingleInstance);
 			m_strLng1xSel = TryGetEx(dictNew, "Lng1xSel", m_strLng1xSel);
 			m_strLng2xWeb = TryGetEx(dictNew, "Lng2xWeb", m_strLng2xWeb);
 			m_strLngInAppDir = TryGetEx(dictNew, "LngInAppDir", m_strLngInAppDir);
 			m_strLngInAppDirNote = TryGetEx(dictNew, "LngInAppDirNote", m_strLngInAppDirNote);
 			m_strLngInAppDirQ = TryGetEx(dictNew, "LngInAppDirQ", m_strLngInAppDirQ);
+			m_strLockAfterGlobalTime = TryGetEx(dictNew, "LockAfterGlobalTime", m_strLockAfterGlobalTime);
+			m_strLockAfterTime = TryGetEx(dictNew, "LockAfterTime", m_strLockAfterTime);
 			m_strLocked = TryGetEx(dictNew, "Locked", m_strLocked);
 			m_strLockMenuLock = TryGetEx(dictNew, "LockMenuLock", m_strLockMenuLock);
 			m_strLockMenuUnlock = TryGetEx(dictNew, "LockMenuUnlock", m_strLockMenuUnlock);
@@ -556,6 +588,7 @@ namespace KeePass.Resources
 			m_strMinimized = TryGetEx(dictNew, "Minimized", m_strMinimized);
 			m_strMinimizeToTray = TryGetEx(dictNew, "MinimizeToTray", m_strMinimizeToTray);
 			m_strMinimizeToTrayStc = TryGetEx(dictNew, "MinimizeToTrayStc", m_strMinimizeToTrayStc);
+			m_strModified = TryGetEx(dictNew, "Modified", m_strModified);
 			m_strMore = TryGetEx(dictNew, "More", m_strMore);
 			m_strMoreAnd = TryGetEx(dictNew, "MoreAnd", m_strMoreAnd);
 			m_strMoreEntries = TryGetEx(dictNew, "MoreEntries", m_strMoreEntries);
@@ -579,6 +612,7 @@ namespace KeePass.Resources
 			m_strNeverExpires = TryGetEx(dictNew, "NeverExpires", m_strNeverExpires);
 			m_strNew = TryGetEx(dictNew, "New", m_strNew);
 			m_strNewDatabase = TryGetEx(dictNew, "NewDatabase", m_strNewDatabase);
+			m_strNewer = TryGetEx(dictNew, "Newer", m_strNewer);
 			m_strNewerNetRequired = TryGetEx(dictNew, "NewerNetRequired", m_strNewerNetRequired);
 			m_strNewGroup = TryGetEx(dictNew, "NewGroup", m_strNewGroup);
 			m_strNewLine = TryGetEx(dictNew, "NewLine", m_strNewLine);
@@ -605,6 +639,7 @@ namespace KeePass.Resources
 			m_strOff = TryGetEx(dictNew, "Off", m_strOff);
 			m_strOfLower = TryGetEx(dictNew, "OfLower", m_strOfLower);
 			m_strOk = TryGetEx(dictNew, "Ok", m_strOk);
+			m_strOlder = TryGetEx(dictNew, "Older", m_strOlder);
 			m_strOldFormat = TryGetEx(dictNew, "OldFormat", m_strOldFormat);
 			m_strOn = TryGetEx(dictNew, "On", m_strOn);
 			m_strOpAborted = TryGetEx(dictNew, "OpAborted", m_strOpAborted);
@@ -674,6 +709,7 @@ namespace KeePass.Resources
 			m_strPluginsCompilingAndLoading = TryGetEx(dictNew, "PluginsCompilingAndLoading", m_strPluginsCompilingAndLoading);
 			m_strPluginsDesc = TryGetEx(dictNew, "PluginsDesc", m_strPluginsDesc);
 			m_strPluginUpdateHint = TryGetEx(dictNew, "PluginUpdateHint", m_strPluginUpdateHint);
+			m_strPolicy = TryGetEx(dictNew, "Policy", m_strPolicy);
 			m_strPolicyAutoTypeDesc = TryGetEx(dictNew, "PolicyAutoTypeDesc", m_strPolicyAutoTypeDesc);
 			m_strPolicyAutoTypeWithoutContextDesc = TryGetEx(dictNew, "PolicyAutoTypeWithoutContextDesc", m_strPolicyAutoTypeWithoutContextDesc);
 			m_strPolicyChangeMasterKey = TryGetEx(dictNew, "PolicyChangeMasterKey", m_strPolicyChangeMasterKey);
@@ -704,9 +740,12 @@ namespace KeePass.Resources
 			m_strProfileSave = TryGetEx(dictNew, "ProfileSave", m_strProfileSave);
 			m_strProfileSaveDesc = TryGetEx(dictNew, "ProfileSaveDesc", m_strProfileSaveDesc);
 			m_strProfileSavePrompt = TryGetEx(dictNew, "ProfileSavePrompt", m_strProfileSavePrompt);
+			m_strProperties = TryGetEx(dictNew, "Properties", m_strProperties);
 			m_strPwGenOpen = TryGetEx(dictNew, "PwGenOpen", m_strPwGenOpen);
+			m_strPwGenProfiles = TryGetEx(dictNew, "PwGenProfiles", m_strPwGenProfiles);
 			m_strQuality = TryGetEx(dictNew, "Quality", m_strQuality);
 			m_strQualityCheckToggle = TryGetEx(dictNew, "QualityCheckToggle", m_strQualityCheckToggle);
+			m_strQualityEstimation = TryGetEx(dictNew, "QualityEstimation", m_strQualityEstimation);
 			m_strQuick = TryGetEx(dictNew, "Quick", m_strQuick);
 			m_strQuickSearchDerefData = TryGetEx(dictNew, "QuickSearchDerefData", m_strQuickSearchDerefData);
 			m_strQuickSearchExclExpired = TryGetEx(dictNew, "QuickSearchExclExpired", m_strQuickSearchExclExpired);
@@ -755,6 +794,7 @@ namespace KeePass.Resources
 			m_strSavedDatabaseFile = TryGetEx(dictNew, "SavedDatabaseFile", m_strSavedDatabaseFile);
 			m_strSaveFilesTo = TryGetEx(dictNew, "SaveFilesTo", m_strSaveFilesTo);
 			m_strSaveForceSync = TryGetEx(dictNew, "SaveForceSync", m_strSaveForceSync);
+			m_strSaveObjectAs = TryGetEx(dictNew, "SaveObjectAs", m_strSaveObjectAs);
 			m_strSavingDatabase = TryGetEx(dictNew, "SavingDatabase", m_strSavingDatabase);
 			m_strSavingDatabaseFile = TryGetEx(dictNew, "SavingDatabaseFile", m_strSavingDatabaseFile);
 			m_strSavingPost = TryGetEx(dictNew, "SavingPost", m_strSavingPost);
@@ -800,10 +840,11 @@ namespace KeePass.Resources
 			m_strShowDerefDataAsync = TryGetEx(dictNew, "ShowDerefDataAsync", m_strShowDerefDataAsync);
 			m_strShowEntriesByTag = TryGetEx(dictNew, "ShowEntriesByTag", m_strShowEntriesByTag);
 			m_strShowFullPathInTitleBar = TryGetEx(dictNew, "ShowFullPathInTitleBar", m_strShowFullPathInTitleBar);
+			m_strShowHmacOtp = TryGetEx(dictNew, "ShowHmacOtp", m_strShowHmacOtp);
 			m_strShowIn = TryGetEx(dictNew, "ShowIn", m_strShowIn);
 			m_strShowMessageBox = TryGetEx(dictNew, "ShowMessageBox", m_strShowMessageBox);
 			m_strShowMore = TryGetEx(dictNew, "ShowMore", m_strShowMore);
-			m_strShowObject = TryGetEx(dictNew, "ShowObject", m_strShowObject);
+			m_strShowTimeOtp = TryGetEx(dictNew, "ShowTimeOtp", m_strShowTimeOtp);
 			m_strShowWithFileManager = TryGetEx(dictNew, "ShowWithFileManager", m_strShowWithFileManager);
 			m_strSimilarPasswords = TryGetEx(dictNew, "SimilarPasswords", m_strSimilarPasswords);
 			m_strSimilarPasswordsGroup = TryGetEx(dictNew, "SimilarPasswordsGroup", m_strSimilarPasswordsGroup);
@@ -852,7 +893,6 @@ namespace KeePass.Resources
 			m_strTextColor = TryGetEx(dictNew, "TextColor", m_strTextColor);
 			m_strTextViewer = TryGetEx(dictNew, "TextViewer", m_strTextViewer);
 			m_strTime = TryGetEx(dictNew, "Time", m_strTime);
-			m_strTimeOtp = TryGetEx(dictNew, "TimeOtp", m_strTimeOtp);
 			m_strTimeReq = TryGetEx(dictNew, "TimeReq", m_strTimeReq);
 			m_strTimerRestartOnActivity = TryGetEx(dictNew, "TimerRestartOnActivity", m_strTimerRestartOnActivity);
 			m_strTimeSpan = TryGetEx(dictNew, "TimeSpan", m_strTimeSpan);
@@ -888,6 +928,7 @@ namespace KeePass.Resources
 			m_strUnhidePasswordsDesc = TryGetEx(dictNew, "UnhidePasswordsDesc", m_strUnhidePasswordsDesc);
 			m_strUnhideSourceCharactersToo = TryGetEx(dictNew, "UnhideSourceCharactersToo", m_strUnhideSourceCharactersToo);
 			m_strUnknown = TryGetEx(dictNew, "Unknown", m_strUnknown);
+			m_strUnsaved = TryGetEx(dictNew, "Unsaved", m_strUnsaved);
 			m_strUnsupportedByMono = TryGetEx(dictNew, "UnsupportedByMono", m_strUnsupportedByMono);
 			m_strUpdateCheck = TryGetEx(dictNew, "UpdateCheck", m_strUpdateCheck);
 			m_strUpdateCheckEnableQ = TryGetEx(dictNew, "UpdateCheckEnableQ", m_strUpdateCheckEnableQ);
@@ -966,14 +1007,17 @@ namespace KeePass.Resources
 			"AddGroupDesc",
 			"AddStringField",
 			"AddStringFieldDesc",
+			"AdminPassword",
 			"Advanced",
 			"AfterDatabaseOpen",
 			"AlignCenter",
 			"AlignLeft",
 			"AlignRight",
 			"All",
+			"AllDataInclOrg",
 			"AllFiles",
 			"AllSupportedFiles",
+			"AllUsers",
 			"Application",
 			"ApplicationExit",
 			"ApplicationInitialized",
@@ -1008,6 +1052,8 @@ namespace KeePass.Resources
 			"AutoSaveAtExit",
 			"AutoShowExpiredEntries",
 			"AutoShowSoonToExpireEntries",
+			"AutoSortDeactivateQ",
+			"AutoSortNoRearrange",
 			"AutoType",
 			"AutoTypeAbortedOnWindow",
 			"AutoTypeAlwaysShowSelDialog",
@@ -1038,6 +1084,7 @@ namespace KeePass.Resources
 			"Bits",
 			"BitsA",
 			"BitsEx",
+			"Blue",
 			"Bold",
 			"BothForms",
 			"Browser",
@@ -1063,6 +1110,7 @@ namespace KeePass.Resources
 			"ClipboardClearDesc",
 			"ClipboardClearInSeconds",
 			"ClipboardClearOnExit",
+			"ClipboardClearTime",
 			"ClipboardDataCopied",
 			"ClipboardMain",
 			"ClipboardNoPersist",
@@ -1079,12 +1127,19 @@ namespace KeePass.Resources
 			"Columns",
 			"Comments",
 			"Company",
+			"CompareEntries",
 			"Comparison",
 			"CompatWithOldVer",
 			"Component",
 			"Condition",
 			"ConfigAffectAdmin",
 			"ConfigAffectUser",
+			"ConfigEnfAdminUac",
+			"ConfigEnfAllUsers",
+			"ConfigEnfChangeValue",
+			"ConfigEnfDialogSubset",
+			"ConfigEnfEdit",
+			"ConfigEnfSaveItemsAbout",
 			"ConfigError",
 			"ConfigOverwriteBackup",
 			"ConfigureAutoType",
@@ -1096,6 +1151,7 @@ namespace KeePass.Resources
 			"ConfigureKeystrokeSeq",
 			"ConfigureKeystrokeSeqDesc",
 			"ConfigureOnNewDatabase3",
+			"ConfirmExport",
 			"ConsiderDashesEq",
 			"Contact",
 			"ContainsOp",
@@ -1106,12 +1162,16 @@ namespace KeePass.Resources
 			"CopyEntriesUCmd",
 			"CopyEntryECmd",
 			"CopyEntryUCmd",
+			"CopyHmacOtp",
 			"CopyInitialPasswordDesc",
 			"CopyLink",
+			"CopyNotes",
 			"CopyObject",
 			"CopyOfItem",
 			"CopyPasswordMenu",
 			"CopyTanMenu",
+			"CopyTimeOtp",
+			"CopyTitle",
 			"CopyUrls",
 			"CopyUrlsInsteadOfOpening",
 			"CopyUserName",
@@ -1131,6 +1191,7 @@ namespace KeePass.Resources
 			"CsvTextFile",
 			"CtrlAltAConflict",
 			"CtrlAltAConflictHint",
+			"Current",
 			"CurrentStyle",
 			"Custom",
 			"CustomColor",
@@ -1140,6 +1201,7 @@ namespace KeePass.Resources
 			"CustomTbButtonClicked",
 			"CustomTbButtonRemove",
 			"Cut",
+			"Dark",
 			"Data",
 			"Database",
 			"DatabaseDescPrompt",
@@ -1177,6 +1239,7 @@ namespace KeePass.Resources
 			"Description",
 			"Destination",
 			"Details",
+			"Dialog",
 			"DialogNoShowAgain",
 			"Dialogs",
 			"Disable",
@@ -1220,11 +1283,14 @@ namespace KeePass.Resources
 			"Encoding",
 			"EncodingFail",
 			"EndsWith",
+			"Enforce",
+			"EnforceOptions",
 			"EnterCompositeKey",
 			"EnterCurrentCompositeKey",
 			"EntropyDesc",
 			"EntropyTitle",
 			"Entry",
+			"EntryDifferences",
 			"EntryList",
 			"EntryListAutoResizeColumns",
 			"EntrySelGroupSel",
@@ -1240,6 +1306,7 @@ namespace KeePass.Resources
 			"ExitInsteadOfLockingAlways",
 			"ExpiredEntries",
 			"ExpiredEntriesCanMatch",
+			"ExpiryDefaultDays",
 			"ExpiryTime",
 			"ExpiryTimeDateOnly",
 			"Export",
@@ -1313,6 +1380,7 @@ namespace KeePass.Resources
 			"Font",
 			"FontDefault",
 			"ForceSystemFontUnix",
+			"ForegroundColor",
 			"Format",
 			"FormatNoDatabaseDesc",
 			"FormatNoDatabaseName",
@@ -1346,7 +1414,6 @@ namespace KeePass.Resources
 			"HideUsingAsterisks",
 			"History",
 			"HistoryBased",
-			"HmacOtp",
 			"Homebanking",
 			"Host",
 			"HotKeyAltOnly",
@@ -1388,6 +1455,9 @@ namespace KeePass.Resources
 			"IOConnection",
 			"IOConnectionLong",
 			"Italic",
+			"ItemsCheckEnable",
+			"ItemsDisabled",
+			"ItemsNoSensitiveEsp",
 			"Iterations",
 			"KdbKeePassLibC",
 			"KdbWUA",
@@ -1437,12 +1507,15 @@ namespace KeePass.Resources
 			"LastModifiedEntriesList",
 			"LastModTimePwHist",
 			"LatestVersionWeb",
+			"Light",
 			"LimitSingleInstance",
 			"Lng1xSel",
 			"Lng2xWeb",
 			"LngInAppDir",
 			"LngInAppDirNote",
 			"LngInAppDirQ",
+			"LockAfterGlobalTime",
+			"LockAfterTime",
 			"Locked",
 			"LockMenuLock",
 			"LockMenuUnlock",
@@ -1485,6 +1558,7 @@ namespace KeePass.Resources
 			"Minimized",
 			"MinimizeToTray",
 			"MinimizeToTrayStc",
+			"Modified",
 			"More",
 			"MoreAnd",
 			"MoreEntries",
@@ -1508,6 +1582,7 @@ namespace KeePass.Resources
 			"NeverExpires",
 			"New",
 			"NewDatabase",
+			"Newer",
 			"NewerNetRequired",
 			"NewGroup",
 			"NewLine",
@@ -1534,6 +1609,7 @@ namespace KeePass.Resources
 			"Off",
 			"OfLower",
 			"Ok",
+			"Older",
 			"OldFormat",
 			"On",
 			"OpAborted",
@@ -1603,6 +1679,7 @@ namespace KeePass.Resources
 			"PluginsCompilingAndLoading",
 			"PluginsDesc",
 			"PluginUpdateHint",
+			"Policy",
 			"PolicyAutoTypeDesc",
 			"PolicyAutoTypeWithoutContextDesc",
 			"PolicyChangeMasterKey",
@@ -1633,9 +1710,12 @@ namespace KeePass.Resources
 			"ProfileSave",
 			"ProfileSaveDesc",
 			"ProfileSavePrompt",
+			"Properties",
 			"PwGenOpen",
+			"PwGenProfiles",
 			"Quality",
 			"QualityCheckToggle",
+			"QualityEstimation",
 			"Quick",
 			"QuickSearchDerefData",
 			"QuickSearchExclExpired",
@@ -1684,6 +1764,7 @@ namespace KeePass.Resources
 			"SavedDatabaseFile",
 			"SaveFilesTo",
 			"SaveForceSync",
+			"SaveObjectAs",
 			"SavingDatabase",
 			"SavingDatabaseFile",
 			"SavingPost",
@@ -1729,10 +1810,11 @@ namespace KeePass.Resources
 			"ShowDerefDataAsync",
 			"ShowEntriesByTag",
 			"ShowFullPathInTitleBar",
+			"ShowHmacOtp",
 			"ShowIn",
 			"ShowMessageBox",
 			"ShowMore",
-			"ShowObject",
+			"ShowTimeOtp",
 			"ShowWithFileManager",
 			"SimilarPasswords",
 			"SimilarPasswordsGroup",
@@ -1781,7 +1863,6 @@ namespace KeePass.Resources
 			"TextColor",
 			"TextViewer",
 			"Time",
-			"TimeOtp",
 			"TimeReq",
 			"TimerRestartOnActivity",
 			"TimeSpan",
@@ -1817,6 +1898,7 @@ namespace KeePass.Resources
 			"UnhidePasswordsDesc",
 			"UnhideSourceCharactersToo",
 			"Unknown",
+			"Unsaved",
 			"UnsupportedByMono",
 			"UpdateCheck",
 			"UpdateCheckEnableQ",
@@ -2009,6 +2091,17 @@ namespace KeePass.Resources
 			get { return m_strAddStringFieldDesc; }
 		}
 
+		private static string m_strAdminPassword =
+			@"Administrator password";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Administrator password'.
+		/// </summary>
+		public static string AdminPassword
+		{
+			get { return m_strAdminPassword; }
+		}
+
 		private static string m_strAdvanced =
 			@"Advanced";
 		/// <summary>
@@ -2075,6 +2168,17 @@ namespace KeePass.Resources
 			get { return m_strAll; }
 		}
 
+		private static string m_strAllDataInclOrg =
+			@"All Data (Incl. Organizational Data)";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'All Data (Incl. Organizational Data)'.
+		/// </summary>
+		public static string AllDataInclOrg
+		{
+			get { return m_strAllDataInclOrg; }
+		}
+
 		private static string m_strAllFiles =
 			@"All Files";
 		/// <summary>
@@ -2095,6 +2199,17 @@ namespace KeePass.Resources
 		public static string AllSupportedFiles
 		{
 			get { return m_strAllSupportedFiles; }
+		}
+
+		private static string m_strAllUsers =
+			@"All Users";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'All Users'.
+		/// </summary>
+		public static string AllUsers
+		{
+			get { return m_strAllUsers; }
 		}
 
 		private static string m_strApplication =
@@ -2471,6 +2586,28 @@ namespace KeePass.Resources
 			get { return m_strAutoShowSoonToExpireEntries; }
 		}
 
+		private static string m_strAutoSortDeactivateQ =
+			@"Do you want to deactivate automatic sorting?";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Do you want to deactivate automatic sorting?'.
+		/// </summary>
+		public static string AutoSortDeactivateQ
+		{
+			get { return m_strAutoSortDeactivateQ; }
+		}
+
+		private static string m_strAutoSortNoRearrange =
+			@"Entries currently cannot be rearranged, because automatic sorting is activated.";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Entries currently cannot be rearranged, because automatic sorting is activated.'.
+		/// </summary>
+		public static string AutoSortNoRearrange
+		{
+			get { return m_strAutoSortNoRearrange; }
+		}
+
 		private static string m_strAutoType =
 			@"Auto-Type";
 		/// <summary>
@@ -2801,6 +2938,17 @@ namespace KeePass.Resources
 			get { return m_strBitsEx; }
 		}
 
+		private static string m_strBlue =
+			@"Blue";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Blue'.
+		/// </summary>
+		public static string Blue
+		{
+			get { return m_strBlue; }
+		}
+
 		private static string m_strBold =
 			@"Bold";
 		/// <summary>
@@ -3076,6 +3224,17 @@ namespace KeePass.Resources
 			get { return m_strClipboardClearOnExit; }
 		}
 
+		private static string m_strClipboardClearTime =
+			@"&Clipboard auto-clear time (seconds; main entry list)";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// '&amp;Clipboard auto-clear time (seconds; main entry list)'.
+		/// </summary>
+		public static string ClipboardClearTime
+		{
+			get { return m_strClipboardClearTime; }
+		}
+
 		private static string m_strClipboardDataCopied =
 			@"Data copied to clipboard.";
 		/// <summary>
@@ -3252,6 +3411,17 @@ namespace KeePass.Resources
 			get { return m_strCompany; }
 		}
 
+		private static string m_strCompareEntries =
+			@"Compare Entries";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Compare Entries'.
+		/// </summary>
+		public static string CompareEntries
+		{
+			get { return m_strCompareEntries; }
+		}
+
 		private static string m_strComparison =
 			@"Comparison";
 		/// <summary>
@@ -3297,10 +3467,10 @@ namespace KeePass.Resources
 		}
 
 		private static string m_strConfigAffectAdmin =
-			@"Changes to the configuration/policy will affect you and all users of this KeePass installation.";
+			@"Changes to the configuration/policy will affect all users of this KeePass installation.";
 		/// <summary>
 		/// Look up a localized string similar to
-		/// 'Changes to the configuration/policy will affect you and all users of this KeePass installation.'.
+		/// 'Changes to the configuration/policy will affect all users of this KeePass installation.'.
 		/// </summary>
 		public static string ConfigAffectAdmin
 		{
@@ -3308,14 +3478,80 @@ namespace KeePass.Resources
 		}
 
 		private static string m_strConfigAffectUser =
-			@"Changes to the configuration/policy will only affect you. Policy flags that are enforced by the administrator are reset after restarting KeePass.";
+			@"Changes to the configuration/policy will affect only you. Policy flags that are enforced by the administrator are reset when restarting KeePass.";
 		/// <summary>
 		/// Look up a localized string similar to
-		/// 'Changes to the configuration/policy will only affect you. Policy flags that are enforced by the administrator are reset after restarting KeePass.'.
+		/// 'Changes to the configuration/policy will affect only you. Policy flags that are enforced by the administrator are reset when restarting KeePass.'.
 		/// </summary>
 		public static string ConfigAffectUser
 		{
 			get { return m_strConfigAffectUser; }
+		}
+
+		private static string m_strConfigEnfAdminUac =
+			@"Write access to the enforced configuration file may require administrator permission. A User Account Control dialog will be displayed, if necessary.";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Write access to the enforced configuration file may require administrator permission. A User Account Control dialog will be displayed, if necessary.'.
+		/// </summary>
+		public static string ConfigEnfAdminUac
+		{
+			get { return m_strConfigEnfAdminUac; }
+		}
+
+		private static string m_strConfigEnfAllUsers =
+			@"The enforced configuration file applies to all users who use this KeePass installation. Therefore, make sure that your items are suitable for all users.";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'The enforced configuration file applies to all users who use this KeePass installation. Therefore, make sure that your items are suitable for all users.'.
+		/// </summary>
+		public static string ConfigEnfAllUsers
+		{
+			get { return m_strConfigEnfAllUsers; }
+		}
+
+		private static string m_strConfigEnfChangeValue =
+			@"If you want to change the value of an enforced option, deactivate the enforcement (using this dialog), change the value (using the options dialog) and activate the enforcement again (using this dialog).";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'If you want to change the value of an enforced option, deactivate the enforcement (using this dialog), change the value (using the options dialog) and activate the enforcement again (using this dialog).'.
+		/// </summary>
+		public static string ConfigEnfChangeValue
+		{
+			get { return m_strConfigEnfChangeValue; }
+		}
+
+		private static string m_strConfigEnfDialogSubset =
+			@"This dialog supports only a subset of all options. More options can be enforced by editing the enforced configuration file using an XML/text editor.";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'This dialog supports only a subset of all options. More options can be enforced by editing the enforced configuration file using an XML/text editor.'.
+		/// </summary>
+		public static string ConfigEnfDialogSubset
+		{
+			get { return m_strConfigEnfDialogSubset; }
+		}
+
+		private static string m_strConfigEnfEdit =
+			@"Edit the enforced configuration file.";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Edit the enforced configuration file.'.
+		/// </summary>
+		public static string ConfigEnfEdit
+		{
+			get { return m_strConfigEnfEdit; }
+		}
+
+		private static string m_strConfigEnfSaveItemsAbout =
+			@"You are about to save items to the enforced configuration file.";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'You are about to save items to the enforced configuration file.'.
+		/// </summary>
+		public static string ConfigEnfSaveItemsAbout
+		{
+			get { return m_strConfigEnfSaveItemsAbout; }
 		}
 
 		private static string m_strConfigError =
@@ -3439,6 +3675,17 @@ namespace KeePass.Resources
 			get { return m_strConfigureOnNewDatabase3; }
 		}
 
+		private static string m_strConfirmExport =
+			@"Confirm Export";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Confirm Export'.
+		/// </summary>
+		public static string ConfirmExport
+		{
+			get { return m_strConfirmExport; }
+		}
+
 		private static string m_strConsiderDashesEq =
 			@"Consider similar dashes as identical";
 		/// <summary>
@@ -3549,6 +3796,17 @@ namespace KeePass.Resources
 			get { return m_strCopyEntryUCmd; }
 		}
 
+		private static string m_strCopyHmacOtp =
+			@"Copy &HMAC-Based OTP";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Copy &amp;HMAC-Based OTP'.
+		/// </summary>
+		public static string CopyHmacOtp
+		{
+			get { return m_strCopyHmacOtp; }
+		}
+
 		private static string m_strCopyInitialPasswordDesc =
 			@"Copy the password that was current when the dialog was opened";
 		/// <summary>
@@ -3569,6 +3827,17 @@ namespace KeePass.Resources
 		public static string CopyLink
 		{
 			get { return m_strCopyLink; }
+		}
+
+		private static string m_strCopyNotes =
+			@"Copy &Notes";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Copy &amp;Notes'.
+		/// </summary>
+		public static string CopyNotes
+		{
+			get { return m_strCopyNotes; }
 		}
 
 		private static string m_strCopyObject =
@@ -3613,6 +3882,28 @@ namespace KeePass.Resources
 		public static string CopyTanMenu
 		{
 			get { return m_strCopyTanMenu; }
+		}
+
+		private static string m_strCopyTimeOtp =
+			@"Copy T&ime-Based OTP";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Copy T&amp;ime-Based OTP'.
+		/// </summary>
+		public static string CopyTimeOtp
+		{
+			get { return m_strCopyTimeOtp; }
+		}
+
+		private static string m_strCopyTitle =
+			@"Copy &Title";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Copy &amp;Title'.
+		/// </summary>
+		public static string CopyTitle
+		{
+			get { return m_strCopyTitle; }
 		}
 
 		private static string m_strCopyUrls =
@@ -3824,6 +4115,17 @@ namespace KeePass.Resources
 			get { return m_strCtrlAltAConflictHint; }
 		}
 
+		private static string m_strCurrent =
+			@"Current";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Current'.
+		/// </summary>
+		public static string Current
+		{
+			get { return m_strCurrent; }
+		}
+
 		private static string m_strCurrentStyle =
 			@"Current style";
 		/// <summary>
@@ -3921,6 +4223,17 @@ namespace KeePass.Resources
 		public static string Cut
 		{
 			get { return m_strCut; }
+		}
+
+		private static string m_strDark =
+			@"Dark";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Dark'.
+		/// </summary>
+		public static string Dark
+		{
+			get { return m_strDark; }
 		}
 
 		private static string m_strData =
@@ -4330,6 +4643,17 @@ namespace KeePass.Resources
 			get { return m_strDetails; }
 		}
 
+		private static string m_strDialog =
+			@"Dialog";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Dialog'.
+		/// </summary>
+		public static string Dialog
+		{
+			get { return m_strDialog; }
+		}
+
 		private static string m_strDialogNoShowAgain =
 			@"Do not show this dialog again.";
 		/// <summary>
@@ -4551,10 +4875,10 @@ namespace KeePass.Resources
 		}
 
 		private static string m_strEditEntryDesc =
-			@"You're editing an existing entry.";
+			@"You are editing an existing entry.";
 		/// <summary>
 		/// Look up a localized string similar to
-		/// 'You&#39;re editing an existing entry.'.
+		/// 'You are editing an existing entry.'.
 		/// </summary>
 		public static string EditEntryDesc
 		{
@@ -4803,6 +5127,28 @@ namespace KeePass.Resources
 			get { return m_strEndsWith; }
 		}
 
+		private static string m_strEnforce =
+			@"Enforce";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Enforce'.
+		/// </summary>
+		public static string Enforce
+		{
+			get { return m_strEnforce; }
+		}
+
+		private static string m_strEnforceOptions =
+			@"Enforce Options";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Enforce Options'.
+		/// </summary>
+		public static string EnforceOptions
+		{
+			get { return m_strEnforceOptions; }
+		}
+
 		private static string m_strEnterCompositeKey =
 			@"Enter Master Key";
 		/// <summary>
@@ -4856,6 +5202,17 @@ namespace KeePass.Resources
 		public static string Entry
 		{
 			get { return m_strEntry; }
+		}
+
+		private static string m_strEntryDifferences =
+			@"Differences between the two entries";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Differences between the two entries'.
+		/// </summary>
+		public static string EntryDifferences
+		{
+			get { return m_strEntryDifferences; }
 		}
 
 		private static string m_strEntryList =
@@ -5021,6 +5378,17 @@ namespace KeePass.Resources
 		public static string ExpiredEntriesCanMatch
 		{
 			get { return m_strExpiredEntriesCanMatch; }
+		}
+
+		private static string m_strExpiryDefaultDays =
+			@"By default, &new entries expire in the following number of days";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'By default, &amp;new entries expire in the following number of days'.
+		/// </summary>
+		public static string ExpiryDefaultDays
+		{
+			get { return m_strExpiryDefaultDays; }
 		}
 
 		private static string m_strExpiryTime =
@@ -5826,6 +6194,17 @@ namespace KeePass.Resources
 			get { return m_strForceSystemFontUnix; }
 		}
 
+		private static string m_strForegroundColor =
+			@"Foreground Color";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Foreground Color'.
+		/// </summary>
+		public static string ForegroundColor
+		{
+			get { return m_strForegroundColor; }
+		}
+
 		private static string m_strFormat =
 			@"Format";
 		/// <summary>
@@ -6187,17 +6566,6 @@ namespace KeePass.Resources
 		public static string HistoryBased
 		{
 			get { return m_strHistoryBased; }
-		}
-
-		private static string m_strHmacOtp =
-			@"HMAC-Based OTP";
-		/// <summary>
-		/// Look up a localized string similar to
-		/// 'HMAC-Based OTP'.
-		/// </summary>
-		public static string HmacOtp
-		{
-			get { return m_strHmacOtp; }
 		}
 
 		private static string m_strHomebanking =
@@ -6649,6 +7017,39 @@ namespace KeePass.Resources
 		public static string Italic
 		{
 			get { return m_strItalic; }
+		}
+
+		private static string m_strItemsCheckEnable =
+			@"If you want to use these items, open the corresponding dialogs, check the items (with regard to security, privacy, functionality, compatibility, etc.) and enable them.";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'If you want to use these items, open the corresponding dialogs, check the items (with regard to security, privacy, functionality, compatibility, etc.) and enable them.'.
+		/// </summary>
+		public static string ItemsCheckEnable
+		{
+			get { return m_strItemsCheckEnable; }
+		}
+
+		private static string m_strItemsDisabled =
+			@"The following items have been disabled:";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'The following items have been disabled:'.
+		/// </summary>
+		public static string ItemsDisabled
+		{
+			get { return m_strItemsDisabled; }
+		}
+
+		private static string m_strItemsNoSensitiveEsp =
+			@"Especially, the items should not contain any sensitive data (for security/privacy reasons).";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Especially, the items should not contain any sensitive data (for security/privacy reasons).'.
+		/// </summary>
+		public static string ItemsNoSensitiveEsp
+		{
+			get { return m_strItemsNoSensitiveEsp; }
 		}
 
 		private static string m_strIterations =
@@ -7190,6 +7591,17 @@ namespace KeePass.Resources
 			get { return m_strLatestVersionWeb; }
 		}
 
+		private static string m_strLight =
+			@"Light";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Light'.
+		/// </summary>
+		public static string Light
+		{
+			get { return m_strLight; }
+		}
+
 		private static string m_strLimitSingleInstance =
 			@"Limit to single instance";
 		/// <summary>
@@ -7254,6 +7666,28 @@ namespace KeePass.Resources
 		public static string LngInAppDirQ
 		{
 			get { return m_strLngInAppDirQ; }
+		}
+
+		private static string m_strLockAfterGlobalTime =
+			@"L&ock workspace after global user inactivity (seconds)";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'L&amp;ock workspace after global user inactivity (seconds)'.
+		/// </summary>
+		public static string LockAfterGlobalTime
+		{
+			get { return m_strLockAfterGlobalTime; }
+		}
+
+		private static string m_strLockAfterTime =
+			@"&Lock workspace after KeePass inactivity (seconds)";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// '&amp;Lock workspace after KeePass inactivity (seconds)'.
+		/// </summary>
+		public static string LockAfterTime
+		{
+			get { return m_strLockAfterTime; }
 		}
 
 		private static string m_strLocked =
@@ -7718,6 +8152,17 @@ namespace KeePass.Resources
 			get { return m_strMinimizeToTrayStc; }
 		}
 
+		private static string m_strModified =
+			@"Modified";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Modified'.
+		/// </summary>
+		public static string Modified
+		{
+			get { return m_strModified; }
+		}
+
 		private static string m_strMore =
 			@"More";
 		/// <summary>
@@ -7969,6 +8414,17 @@ namespace KeePass.Resources
 		public static string NewDatabase
 		{
 			get { return m_strNewDatabase; }
+		}
+
+		private static string m_strNewer =
+			@"Newer";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Newer'.
+		/// </summary>
+		public static string Newer
+		{
+			get { return m_strNewer; }
 		}
 
 		private static string m_strNewerNetRequired =
@@ -8255,6 +8711,17 @@ namespace KeePass.Resources
 		public static string Ok
 		{
 			get { return m_strOk; }
+		}
+
+		private static string m_strOlder =
+			@"Older";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Older'.
+		/// </summary>
+		public static string Older
+		{
+			get { return m_strOlder; }
 		}
 
 		private static string m_strOldFormat =
@@ -9016,6 +9483,17 @@ namespace KeePass.Resources
 			get { return m_strPluginUpdateHint; }
 		}
 
+		private static string m_strPolicy =
+			@"Policy";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Policy'.
+		/// </summary>
+		public static string Policy
+		{
+			get { return m_strPolicy; }
+		}
+
 		private static string m_strPolicyAutoTypeDesc =
 			@"Allow auto-typing entries to other windows.";
 		/// <summary>
@@ -9346,6 +9824,17 @@ namespace KeePass.Resources
 			get { return m_strProfileSavePrompt; }
 		}
 
+		private static string m_strProperties =
+			@"Properties";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Properties'.
+		/// </summary>
+		public static string Properties
+		{
+			get { return m_strProperties; }
+		}
+
 		private static string m_strPwGenOpen =
 			@"Open Password Generator...";
 		/// <summary>
@@ -9355,6 +9844,17 @@ namespace KeePass.Resources
 		public static string PwGenOpen
 		{
 			get { return m_strPwGenOpen; }
+		}
+
+		private static string m_strPwGenProfiles =
+			@"Password Generator Profiles";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Password Generator Profiles'.
+		/// </summary>
+		public static string PwGenProfiles
+		{
+			get { return m_strPwGenProfiles; }
 		}
 
 		private static string m_strQuality =
@@ -9377,6 +9877,17 @@ namespace KeePass.Resources
 		public static string QualityCheckToggle
 		{
 			get { return m_strQualityCheckToggle; }
+		}
+
+		private static string m_strQualityEstimation =
+			@"Quality Estimation";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Quality Estimation'.
+		/// </summary>
+		public static string QualityEstimation
+		{
+			get { return m_strQualityEstimation; }
 		}
 
 		private static string m_strQuick =
@@ -9907,6 +10418,17 @@ namespace KeePass.Resources
 			get { return m_strSaveForceSync; }
 		}
 
+		private static string m_strSaveObjectAs =
+			@"Save {PARAM} As";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Save {PARAM} As'.
+		/// </summary>
+		public static string SaveObjectAs
+		{
+			get { return m_strSaveObjectAs; }
+		}
+
 		private static string m_strSavingDatabase =
 			@"Saving database...";
 		/// <summary>
@@ -10402,6 +10924,17 @@ namespace KeePass.Resources
 			get { return m_strShowFullPathInTitleBar; }
 		}
 
+		private static string m_strShowHmacOtp =
+			@"Show H&MAC-Based OTP";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'Show H&amp;MAC-Based OTP'.
+		/// </summary>
+		public static string ShowHmacOtp
+		{
+			get { return m_strShowHmacOtp; }
+		}
+
 		private static string m_strShowIn =
 			@"Show in";
 		/// <summary>
@@ -10435,15 +10968,15 @@ namespace KeePass.Resources
 			get { return m_strShowMore; }
 		}
 
-		private static string m_strShowObject =
-			@"Show {PARAM}";
+		private static string m_strShowTimeOtp =
+			@"Show Tim&e-Based OTP";
 		/// <summary>
 		/// Look up a localized string similar to
-		/// 'Show {PARAM}'.
+		/// 'Show Tim&amp;e-Based OTP'.
 		/// </summary>
-		public static string ShowObject
+		public static string ShowTimeOtp
 		{
-			get { return m_strShowObject; }
+			get { return m_strShowTimeOtp; }
 		}
 
 		private static string m_strShowWithFileManager =
@@ -10974,17 +11507,6 @@ namespace KeePass.Resources
 			get { return m_strTime; }
 		}
 
-		private static string m_strTimeOtp =
-			@"Time-Based OTP";
-		/// <summary>
-		/// Look up a localized string similar to
-		/// 'Time-Based OTP'.
-		/// </summary>
-		public static string TimeOtp
-		{
-			get { return m_strTimeOtp; }
-		}
-
 		private static string m_strTimeReq =
 			@"may take some time";
 		/// <summary>
@@ -11368,6 +11890,17 @@ namespace KeePass.Resources
 		public static string Unknown
 		{
 			get { return m_strUnknown; }
+		}
+
+		private static string m_strUnsaved =
+			@"unsaved";
+		/// <summary>
+		/// Look up a localized string similar to
+		/// 'unsaved'.
+		/// </summary>
+		public static string Unsaved
+		{
+			get { return m_strUnsaved; }
 		}
 
 		private static string m_strUnsupportedByMono =
@@ -11778,10 +12311,10 @@ namespace KeePass.Resources
 		}
 
 		private static string m_strViewEntryDesc =
-			@"You're viewing an entry.";
+			@"You are viewing an entry.";
 		/// <summary>
 		/// Look up a localized string similar to
-		/// 'You&#39;re viewing an entry.'.
+		/// 'You are viewing an entry.'.
 		/// </summary>
 		public static string ViewEntryDesc
 		{

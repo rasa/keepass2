@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows.Forms;
 
@@ -128,6 +129,97 @@ namespace KeePass.Forms
 		}
 	} */
 
+	[Flags]
+	public enum LvfFlags
+	{
+		None = 0,
+
+		Print = 0x1,
+		Export = 0x2,
+		Filter = 0x4,
+
+		StandardTheme = 0x8
+	}
+
+	[Flags]
+	public enum LvfiFlags
+	{
+		None = 0,
+		Sensitive = 0x1
+	}
+
+	public sealed class LvfItem
+	{
+		private readonly ListViewItem m_lvi;
+		public ListViewItem ListViewItem
+		{
+			get { return m_lvi; }
+		}
+
+		private readonly LvfSubItem[] m_vSubItems;
+		public LvfSubItem[] SubItems
+		{
+			get { return m_vSubItems; }
+		}
+
+		// LvfItem takes ownership of the ListViewItem; the caller must not
+		// modify it anymore
+		public LvfItem(ListViewItem lvi)
+		{
+			if(lvi == null) throw new ArgumentNullException("lvi");
+
+			m_lvi = lvi;
+
+			int c = lvi.SubItems.Count;
+			m_vSubItems = new LvfSubItem[c];
+			for(int i = 0; i < c; ++i)
+				m_vSubItems[i] = new LvfSubItem(lvi, i);
+		}
+
+		internal void UpdateListViewItem(bool bHideSensitive)
+		{
+			Debug.Assert(m_lvi.ListView == null); // Performance
+
+			int c = m_lvi.SubItems.Count;
+			if(c != m_vSubItems.Length) { Debug.Assert(false); return; }
+
+			for(int i = 0; i < c; ++i)
+			{
+				LvfSubItem si = m_vSubItems[i];
+
+				string str;
+				if(bHideSensitive && ((si.Flags & LvfiFlags.Sensitive) != LvfiFlags.None))
+					str = PwDefs.HiddenPassword;
+				else str = si.Text;
+
+				m_lvi.SubItems[i].Text = str;
+			}
+		}
+	}
+
+	public sealed class LvfSubItem
+	{
+		private LvfiFlags m_fl = LvfiFlags.None;
+		public LvfiFlags Flags
+		{
+			get { return m_fl; }
+			set { m_fl = value; }
+		}
+
+		private readonly string m_strText;
+		public string Text
+		{
+			get { return m_strText; }
+		}
+
+		public LvfSubItem(ListViewItem lvi, int iSubItem)
+		{
+			if(lvi == null) throw new ArgumentNullException("lvi");
+
+			m_strText = (lvi.SubItems[iSubItem].Text ?? string.Empty);
+		}
+	}
+
 	public enum PwEditMode
 	{
 		Invalid = 0,
@@ -147,12 +239,20 @@ namespace KeePass.Forms
 	}
 
 	[Flags]
+	public enum SlfFlags
+	{
+		None = 0,
+		Sensitive = 0x1,
+		ElevationRequired = 0x2
+	}
+
+	[Flags]
 	public enum FileEventFlags
 	{
 		None = 0,
-		Exiting = 1,
-		Locking = 2,
-		Ecas = 4
+		Exiting = 0x1,
+		Locking = 0x2,
+		Ecas = 0x4
 	}
 
 	public sealed class FileCreatedEventArgs : EventArgs

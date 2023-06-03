@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -137,6 +137,24 @@ namespace KeePassLib.Cryptography.KeyDerivation
 			}
 
 			p.SetUInt64(strName, uLow);
+		}
+
+		internal ulong Test(KdfParameters p)
+		{
+			if(p == null) throw new ArgumentNullException("p");
+
+			Random r = CryptoRandom.NewWeakRandom();
+
+			byte[] pbMsg = new byte[32];
+			r.NextBytes(pbMsg);
+
+			Randomize(p);
+
+			Stopwatch sw = Stopwatch.StartNew();
+			Transform(pbMsg, p);
+			sw.Stop();
+
+			return (ulong)sw.ElapsedMilliseconds;
 		}
 	}
 }

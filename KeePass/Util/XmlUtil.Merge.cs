@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -61,6 +61,8 @@ namespace KeePass.Util
 
 	internal sealed class XmNodeOptions
 	{
+		internal const string AttribNodeMode = "MergeNodeMode";
+
 		private XmNodeMode m_nm = XmNodeMode.OpenOrCreate;
 		public XmNodeMode NodeMode
 		{
@@ -95,7 +97,7 @@ namespace KeePass.Util
 		{
 			if(xe == null) { Debug.Assert(false); return; }
 
-			string str = xe.GetAttribute("MergeNodeMode");
+			string str = xe.GetAttribute(AttribNodeMode);
 			if(!string.IsNullOrEmpty(str))
 			{
 				switch(str)
@@ -525,7 +527,7 @@ namespace KeePass.Util
 			return xeBase;
 		}
 
-		private static XmNodeOptions GetNodeOptions(XmlElement xe, string strXPath,
+		internal static XmNodeOptions GetNodeOptions(XmlElement xe, string strXPath,
 			XmContext ctx)
 		{
 			XmNodeOptions o = new XmNodeOptions();

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -989,7 +989,10 @@ namespace KeePassLib.Cryptography
 
 				string strIns = new string(ch, c);
 				str = str.Insert(x, strIns);
-				ps = ps.Insert(x, strIns);
+				if((r.Next() & 1) == 0)
+					ps = ps.Insert(x, ("ABC" + strIns + "XY").ToCharArray(),
+						3, strIns.Length);
+				else ps = ps.Insert(x, strIns);
 
 				if(ps.IsProtected != bProt)
 					throw new SecurityException("ProtectedString-11");

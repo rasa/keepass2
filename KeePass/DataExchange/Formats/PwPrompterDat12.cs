@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ namespace KeePass.DataExchange.Formats
 			dlg.InitEx(KPRes.Password, KPRes.Import + ": " + this.FormatName,
 				KPRes.PasswordPrompt, Properties.Resources.B48x48_KGPG_Key2,
 				string.Empty, null);
+			dlg.FlagsEx |= SlfFlags.Sensitive;
 			if(UIUtil.ShowDialogNotValue(dlg, DialogResult.OK)) return;
 			string strPassword = dlg.ResultString;
 			UIUtil.DestroyForm(dlg);

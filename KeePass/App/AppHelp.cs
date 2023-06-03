@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
+using KeePass.App.Configuration;
 using KeePass.Util;
 using KeePass.Util.Spr;
 
@@ -205,8 +206,10 @@ namespace KeePass.App
 
 		private static bool ShowHelpOverride(string strTopic, string strSection)
 		{
-			string strUrl = Program.Config.Application.HelpUrl;
+			AceApplication aceApp = Program.Config.Application;
+			string strUrl = aceApp.HelpUrl;
 			if(string.IsNullOrEmpty(strUrl)) return false;
+			if(!AppConfigEx.IsOptionEnforced(aceApp, "HelpUrl")) return false;
 
 			string strRel = GetRelativeUrl(strTopic, strSection);
 

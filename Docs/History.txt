@@ -1,3 +1,175 @@
+2023-06-03: 2.54
+- Triggers, global URL overrides, password generator profiles
+  and a few more settings are now stored in the enforced
+  configuration file
+- Added dialog 'Enforce Options (All Users)' (menu 'Tools' ->
+  'Advanced Tools' -> 'Enforce Options'), which facilitates
+  storing certain options in the enforced configuration file
+- Export confirmation dialog banners now have a yellow-orange
+  background
+- In export confirmation dialogs, the text of the 'OK' button
+  is now changed to 'Confirm Export'
+- In report dialogs, passwords (and other sensitive data) are
+  now hidden using asterisks by default (if hiding is activated
+  in the main window); the hiding can be toggled using the new
+  '***' button in the toolbar
+- The 'Print' command in most report dialogs now requires the
+  'Print' application policy flag, and the master key must be
+  entered if the 'Print - No Key Repeat' application policy
+  flag is deactivated
+- The 'Export' command in most report dialogs now requires the
+  'Export' application policy flag, and the master key must be
+  entered
+- Single line edit dialogs now support hiding the value using
+  asterisks
+- On Unix-like systems, commands that require elevation now
+  have a shield icon (like on Windows)
+- TrlUtil: added 'Move Selected Unused Text to Dialog Control'
+  command
+
+- Improved process memory protection of secure edit controls
+- The content mode of the configuration elements
+  '/Configuration/Application/TriggerSystem',
+  '/Configuration/Integration/UrlSchemeOverrides' and
+  '/Configuration/PasswordGenerator/UserProfiles' is now
+  'Replace' by default
+- The built-in override for the 'ssh' URI scheme is now
+  deactivated by default (it can be activated in the 'URL
+  Overrides' dialog)
+- When opening the password generator dialog without a derived
+  profile, the '(Automatically generated passwords for new
+  entries)' profile is now selected by default, if profiles are
+  enabled (otherwise the default profile is used)
+- Improved UI update performance in the password generator
+  dialog
+- Improved and renamed dialog banner styles
+- The separator line of light dialog banners is gray now
+- Improved serialization/deserialization of custom
+  configuration settings (used by plugins)
+- Improved reporting of unknown database header fields
+- On Unix-like systems, the clipboard workarounds are now
+  disabled by default (they are not needed anymore on most
+  systems)
+- Improved clipboard clearing on Unix-like systems
+- Improved starting of an elevated process on Unix-like systems
+- TrlUtil: improved keyboard shortcut assignment and toolbar
+  construction
+- Installer: the desktop shortcut is now created for all users
+  (if the option 'Create a desktop shortcut' is activated)
+- Installer: removed the Quick Launch shortcut option
+- Upgraded installer
+- Various UI text improvements
+- Various code optimizations
+- Minor other improvements
+
+- In report dialogs, the 'Print' and 'Export' commands now
+  always use the actual data (in previous versions, asterisks
+  were printed/exported when the application policy flag
+  'Unhide Passwords' was turned off)
+- The icon of the custom algorithm options button in the
+  password generator dialog is not cut off anymore
+
+2023-02-08: 2.53.1
+- When testing a KDF ('Test' button in the database settings
+  dialog), KeePass now spawns a child process that performs the
+  KDF computation (which allows to cancel the test more cleanly
+  in the case of excessive parameters; security is unaffected,
+  because dummy data is used for the test)
+- Removed the 'Export - No Key Repeat' application policy flag;
+  KeePass now always asks for the current master key when
+  trying to export data
+- Minor other improvements
+
+2023-01-09: 2.53
+- For each entry listed on the 'History' tab page of the entry
+  dialog, the fields modified with respect to the previous
+  entry are displayed
+- Added 'Compare' button on the 'History' tab page of the entry
+  dialog; when two (not necessarily consecutive) history
+  entries are selected, clicking the button shows a detailed
+  comparison (with values, etc.)
+- When editing an entry, the history entry list of the entry
+  dialog now contains an entry called 'Dialog (unsaved)', which
+  represents all data entered in the current dialog (other tab
+  pages)
+- When editing an entry, the history entry list of the entry
+  dialog now contains an entry called 'Current (TIME)', which
+  is the entry that is currently stored in the database
+  (without any changes made in the current dialog)
+- Added 'History' command in the 'Find' main menu; it lists all
+  entry modifications (sorted by time)
+- Added filter box in most report dialogs (last modified
+  entries, history, large entries, similar password clusters,
+  password quality, history entry comparison, database file
+  search, ...)
+- Added 'Print' button in most report dialogs
+- Added 'Export' button in most report dialogs; supported
+  formats are CSV and HTML
+- Added {EDGE} placeholder, which is replaced by the executable
+  path of the new (Chromium-based) Microsoft Edge, if installed
+- Added URL override suggestion for Microsoft Edge in private
+  mode in the URL override suggestions drop-down list of the
+  entry dialog
+- Added optional built-in global URL overrides for opening
+  HTTP/HTTPS URLs with Microsoft Edge in private mode
+- When trying to rearrange entries while automatic sorting is
+  activated, KeePass now asks whether to deactivate automatic
+  sorting
+- Added access keys in the tags button drop-down menu of the
+  entry/group dialogs
+- Added access keys in the 'View' -> 'Sort By' menu
+- Added access keys in the entry templates menu
+- Added access keys in the 'Perform Auto-Type' menu (which is
+  displayed if the 'Show additional auto-type menu commands'
+  option is turned on)
+- Added {HMACOTP} and {TIMEOTP} in the 'Perform Auto-Type' menu
+- Added keyboard shortcut Ctrl+T for the 'Copy Time-Based OTP'
+  entry data command
+- Added keyboard shortcut Ctrl+Shift+T for the 'Show Time-Based
+  OTP' entry data command
+- Enhanced Password Depot XML import module to support the new
+  format (added support for the new node names, group icons,
+  recycle bin, tags, favorites, auto-type delay conversion,
+  history, enhanced icon mapping, enhanced date/time parsing,
+  ...)
+- Added border for headings in HTML exports/printouts
+- Added support for running KeePass in FIPS mode
+
+- History entries listed on the 'History' tab page of the entry
+  dialog are now sorted from newest to oldest
+- The icons in the list on the 'History' tab page of the entry
+  dialog now indicate the type of the entry
+- History entry controls of the entry dialog are now disabled
+  when creating a new entry
+- The history entry 'Restore' button is now disabled when any
+  change has been made in the current dialog
+- The 'Password modified' time is now updated immediately when
+  deleting a history entry
+- Improved URL override suggestion for Microsoft Edge in the
+  URL override suggestions drop-down list of the entry dialog
+  (changed from 'microsoft-edge:{URL}' to 'cmd://{EDGE}
+  "{URL}"')
+- Improved optional built-in global URL overrides for opening
+  HTTP/HTTPS URLs with Microsoft Edge (changed from
+  'microsoft-edge:{BASE}' to 'cmd://{EDGE} "{BASE}"')
+- Reordered web browser URL overrides alphabetically
+- Improved dynamic menu item access key assignment
+- Improved item separation in the entry details view
+- In most places, groups in a group path are now separated by
+  right arrows instead of hyphens
+- Improved last modification time comparison for plugin data
+  dictionaries
+- Unified generation of common HTML parts
+- The 'Copy Initial Password' command in the 'Tools' menu of
+  the entry dialog now requires the 'Copy' application policy
+  flag
+- Various UI text improvements
+- Various code optimizations
+- Minor other improvements
+
+- The history entry 'Restore' button now always works as
+  expected
+
 2022-09-09: 2.52
 - Added 'Copy Initial Password' command in the tools menu of
   the entry dialog; it copies (to the clipboard) the password

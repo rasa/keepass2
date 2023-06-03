@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -699,7 +699,7 @@ namespace KeePass.UI
 
 				if(pe.ParentGroup != null)
 				{
-					string strGroup = pe.ParentGroup.GetFullPath(" - ", false);
+					string strGroup = pe.ParentGroup.GetFullPath(true, false);
 					if(strGroup != lvg.Header)
 					{
 						lvg = new ListViewGroup(strGroup, HorizontalAlignment.Left);
@@ -810,7 +810,7 @@ namespace KeePass.UI
 
 				if(pe.ParentGroup != null)
 				{
-					string strGroup = pe.ParentGroup.GetFullPath(" - ", true);
+					string strGroup = pe.ParentGroup.GetFullPath(true, true);
 					if(strGroup != lvg.Header)
 					{
 						lvg = new ListViewGroup(strGroup, HorizontalAlignment.Left);
@@ -957,7 +957,7 @@ namespace KeePass.UI
 
 			if(bIncludeAllFiles)
 			{
-				if(sb.Length > 0) sb.Append(@"|");
+				if(sb.Length > 0) sb.Append('|');
 				sb.Append(KPRes.AllFiles);
 				sb.Append(@" (*.*)|*.*");
 			}
@@ -1047,12 +1047,9 @@ namespace KeePass.UI
 			if(!string.IsNullOrEmpty(strTitle))
 				sfd.Title = strTitle;
 
-			if(strContext != null)
-			{
-				if((strContext == AppDefs.FileDialogContext.Database) &&
-					(Program.Config.Defaults.FileSaveAsDirectory.Length > 0))
-					sfd.InitialDirectory = Program.Config.Defaults.FileSaveAsDirectory;
-			}
+			if((strContext == AppDefs.FileDialogContext.Database) &&
+				(Program.Config.Defaults.FileSaveAsDirectory.Length != 0))
+				sfd.InitialDirectory = Program.Config.Defaults.FileSaveAsDirectory;
 
 			return sfd;
 		}
@@ -1364,6 +1361,15 @@ namespace KeePass.UI
 
 			try
 			{
+				if(NativeLib.IsUnix())
+				{
+					btn.FlatStyle = FlatStyle.Standard;
+					btn.TextImageRelation = TextImageRelation.ImageBeforeText;
+					btn.Image = (bSetShield ? GetShieldBitmap(
+						DpiUtil.ScaleIntX(15), DpiUtil.ScaleIntY(15)) : null);
+					return;
+				}
+
 				if(btn.FlatStyle != FlatStyle.System)
 				{
 					Debug.Assert(false);
@@ -1401,9 +1407,9 @@ namespace KeePass.UI
 		// }
 
 		public static void ConfigureTbButton(ToolStripItem tb, string strText,
-			string strTooltip)
+			string strToolTip)
 		{
-			ConfigureTbButton(tb, strText, strTooltip, null);
+			ConfigureTbButton(tb, strText, strToolTip, null);
 		}
 
 		public static void ConfigureTbButton(ToolStripItem tb, string strText,
@@ -2003,6 +2009,32 @@ namespace KeePass.UI
 			catch(Exception) { Debug.Assert(false); return false; }
 
 			return true;
+		}
+
+		internal static int[] GetDisplayIndices(ListView lv)
+		{
+			if(lv == null) { Debug.Assert(false); return MemUtil.EmptyArray<int>(); }
+
+			int c = lv.Columns.Count;
+			int[] v = new int[c];
+			bool[] vDI = new bool[c];
+
+			for(int i = 0; i < c; ++i)
+			{
+				int di = lv.Columns[i].DisplayIndex;
+				if((di < 0) || (di >= c)) { Debug.Assert(false); break; }
+
+				v[i] = di;
+				vDI[di] = true;
+			}
+
+			if(Array.IndexOf<bool>(vDI, false) >= 0)
+			{
+				Debug.Assert(false); // Invalid display indices
+				for(int i = 0; i < c; ++i) v[i] = i;
+			}
+
+			return v;
 		}
 
 		public static void SetDisplayIndices(ListView lv, int[] v)
@@ -3727,18 +3759,19 @@ namespace KeePass.UI
 		internal static int GetEntryIconIndex(PwDatabase pd, PwEntry pe,
 			DateTime dtNow)
 		{
+			Debug.Assert(pd != null);
 			if(pe == null) { Debug.Assert(false); return (int)PwIcon.Key; }
 
 			if(pe.Expires && (pe.ExpiryTime <= dtNow))
 				return (int)PwIcon.Expired;
 
-			if(pe.CustomIconUuid == PwUuid.Zero)
+			if(pe.CustomIconUuid.Equals(PwUuid.Zero))
 				return (int)pe.IconId;
 
 			int i = -1;
 			if(pd != null) i = pd.GetCustomIconIndex(pe.CustomIconUuid);
-			else { Debug.Assert(false); }
 			if(i >= 0) return ((int)PwIcon.Count + i);
+
 			Debug.Assert(false);
 			return (int)pe.IconId;
 		}
@@ -3873,6 +3906,76 @@ namespace KeePass.UI
 				if(cmb.DropDownWidth != w) cmb.DropDownWidth = w;
 			}
 			catch(Exception) { Debug.Assert(false); }
+		}
+
+		private static Dictionary<ulong, Bitmap> g_dShields = null;
+		private static Bitmap GetShieldBitmap(int w, int h)
+		{
+			if(w <= 0) { Debug.Assert(w == 0); w = GetSmallIconSize().Width; }
+			if(h <= 0) { Debug.Assert(h == 0); h = GetSmallIconSize().Height; }
+
+			if(g_dShields == null) g_dShields = new Dictionary<ulong, Bitmap>();
+
+			ulong k = ((ulong)(uint)w << 32) | (uint)h;
+			Bitmap bmp;
+			if(g_dShields.TryGetValue(k, out bmp)) return bmp;
+
+			try
+			{
+				if(!NativeLib.IsUnix())
+				{
+					IntPtr hIcon = IntPtr.Zero;
+					if(NativeMethods.LoadIconWithScaleDown(IntPtr.Zero,
+						NativeMethods.MakeIntResource(NativeMethods.IDI_SHIELD),
+						w, h, ref hIcon) >= 0)
+					{
+						if(hIcon != IntPtr.Zero)
+						{
+							using(Icon ico = Icon.FromHandle(hIcon))
+							{
+								bmp = IconToBitmap(ico, w, h);
+							}
+
+							if(!NativeMethods.DestroyIcon(hIcon)) { Debug.Assert(false); }
+						}
+						else { Debug.Assert(false); }
+					}
+					else { Debug.Assert(false); }
+				}
+			}
+			catch(Exception) { Debug.Assert(false); }
+
+			if(bmp == null) bmp = IconToBitmap(SystemIcons.Shield, w, h);
+
+			g_dShields[k] = bmp;
+			return bmp;
+		}
+
+		internal static Bitmap AddShieldOverlay(Image imgBase)
+		{
+			if(imgBase == null) { Debug.Assert(false); return null; }
+
+			int w = imgBase.Width, h = imgBase.Height;
+
+			Bitmap bmp = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+			using(Graphics g = Graphics.FromImage(bmp))
+			{
+				g.Clear(Color.Transparent);
+				g.DrawImage(imgBase, 0, 0, w, h);
+
+				if((w >= 2) && (h >= 2))
+				{
+					int wHalf = w >> 1, hHalf = h >> 1;
+
+					Bitmap bmpShield = GetShieldBitmap(wHalf, hHalf);
+					if(bmpShield != null)
+						g.DrawImage(bmpShield, wHalf, hHalf, wHalf, hHalf);
+					else { Debug.Assert(false); }
+				}
+				else { Debug.Assert(false); }
+			}
+
+			return bmp;
 		}
 	}
 }

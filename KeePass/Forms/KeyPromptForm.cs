@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -148,6 +148,21 @@ namespace KeePass.Forms
 			// in order to avoid a Caps Lock warning tooltip bug;
 			// https://sourceforge.net/p/keepass/bugs/1807/
 			Debug.Assert((m_tbPassword.TabIndex >= 2) && !m_tbPassword.Focused);
+
+			Debug.Assert(m_btnOK.Image == null);
+			if(m_strCustomTitle == KeyUtil.GetReAskKeyTitle(KPRes.Export))
+			{
+				string str = KPRes.ConfirmExport;
+				Rectangle r = m_btnOK.Bounds;
+				int wReq = TextRenderer.MeasureText(str, m_btnOK.Font).Width +
+					UIUtil.GetSmallIconSize().Width;
+
+				if(wReq > r.Width)
+					m_btnOK.SetBounds(r.X - (wReq - r.Width), r.Y, wReq, r.Height,
+						BoundsSpecified.X | BoundsSpecified.Width);
+
+				m_btnOK.Text = str;
+			}
 
 			GlobalWindowManager.AddWindow(this);
 			// if(m_bRedirectActivation) Program.MainForm.RedirectActivationPush(this);

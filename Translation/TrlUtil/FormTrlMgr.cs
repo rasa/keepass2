@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -78,6 +78,7 @@ namespace TrlUtil
 			AddForm(l, new LanguageForm());
 			AddForm(l, new ListViewForm());
 			AddForm(l, new KeePass.Forms.MainForm());
+			AddForm(l, new OptionsEnfForm());
 			AddForm(l, new OptionsForm());
 			AddForm(l, new OtpGeneratorForm());
 			AddForm(l, new PluginsForm());

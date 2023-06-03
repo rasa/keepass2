@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -191,6 +191,8 @@ namespace KeePass.Native
 		internal const int MA_ACTIVATEANDEAT = 2;
 		internal const int MA_NOACTIVATE = 3;
 		internal const int MA_NOACTIVATEANDEAT = 4;
+
+		internal const int IDI_SHIELD = 32518;
 
 		internal const int BCM_SETSHIELD = 0x160C;
 

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2022 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -286,7 +286,7 @@ namespace KeePass.Forms
 
 			m_tbSelected.EnableProtection(bHide);
 
-			string strHiddenChar = new string(SecureTextBoxEx.PasswordCharEx, 1);
+			string strHiddenChar = SecureTextBoxEx.GetPasswordCharString(1);
 
 			bool bHideBtns = bHide;
 			bHideBtns |= !Program.Config.UI.Hiding.UnhideButtonAlsoUnhidesSource;
