@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,11 +19,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Windows.Forms;
 
 using KeePass.Forms;
 using KeePass.Resources;
@@ -47,11 +46,6 @@ namespace KeePass.DataExchange.Formats
 
 		public override bool ImportAppendsToRootGroupOnly { get { return true; } }
 
-		public override Image SmallIcon
-		{
-			get { return Properties.Resources.B16x16_Imp_PwPrompter; }
-		}
-
 		public override void Import(PwDatabase pwStorage, Stream sInput,
 			IStatusLogger slLogger)
 		{
@@ -59,6 +53,7 @@ namespace KeePass.DataExchange.Formats
 			dlg.InitEx(KPRes.Password, KPRes.Import + ": " + this.FormatName,
 				KPRes.PasswordPrompt, Properties.Resources.B48x48_KGPG_Key2,
 				string.Empty, null);
+			dlg.FlagsEx |= SlfFlags.Sensitive;
 			if(UIUtil.ShowDialogNotValue(dlg, DialogResult.OK)) return;
 			string strPassword = dlg.ResultString;
 			UIUtil.DestroyForm(dlg);

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ using KeePass.Resources;
 
 using KeePassLib;
 using KeePassLib.Security;
+using KeePassLib.Utility;
 
 namespace KeePass.Forms
 {
@@ -48,13 +49,13 @@ namespace KeePass.Forms
 		public TanWizardForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
 		{
-			Debug.Assert(m_pwDatabase != null); if(m_pwDatabase == null) throw new InvalidOperationException();
-			Debug.Assert(m_pgStorage != null); if(m_pgStorage == null) throw new InvalidOperationException();
+			if(m_pwDatabase == null) { Debug.Assert(false); throw new InvalidOperationException(); }
+			if(m_pgStorage == null) { Debug.Assert(false); throw new InvalidOperationException(); }
 
 			GlobalWindowManager.AddWindow(this);
 
@@ -67,14 +68,23 @@ namespace KeePass.Forms
 
 			Debug.Assert(!m_lblToGroup.AutoSize); // For RTL support
 			if(!string.IsNullOrEmpty(m_pgStorage.Name))
-				m_lblToGroup.Text += ": " + m_pgStorage.Name + ".";
+				m_lblToGroup.Text += ": " + StrUtil.EncodeMenuText(
+					m_pgStorage.Name) + ".";
 			else
 				m_lblToGroup.Text += ".";
 
 			m_tbTanChars.Text = Program.Config.Defaults.TanCharacters;
 
+			AccessibilityEx.SetContext(m_numTANsIndex, m_cbNumberTans);
+
 			EnableControlsEx();
-			UIUtil.SetFocus(m_tbTANs, this);
+		}
+
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
+		{
+			Program.Config.Defaults.TanCharacters = m_tbTanChars.Text;
+
+			GlobalWindowManager.RemoveWindow(this);
 		}
 
 		private void OnBtnOK(object sender, EventArgs e)
@@ -84,11 +94,6 @@ namespace KeePass.Forms
 
 		private void OnBtnCancel(object sender, EventArgs e)
 		{
-		}
-
-		private void CleanUpEx()
-		{
-			Program.Config.Defaults.TanCharacters = m_tbTanChars.Text;
 		}
 
 		private void EnableControlsEx()
@@ -147,16 +152,6 @@ namespace KeePass.Forms
 		private void OnNumberTANsCheckedChanged(object sender, EventArgs e)
 		{
 			EnableControlsEx();
-		}
-
-		private void OnFormClosed(object sender, FormClosedEventArgs e)
-		{
-			GlobalWindowManager.RemoveWindow(this);
-		}
-
-		private void OnFormClosing(object sender, FormClosingEventArgs e)
-		{
-			CleanUpEx();
 		}
 	}
 }

@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ namespace KeePass.Forms
 		public EcasTriggerForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -89,22 +89,25 @@ namespace KeePass.Forms
 			m_cbInitiallyOn.Checked = m_trigger.InitiallyOn;
 			m_cbTurnOffAfterAction.Checked = m_trigger.TurnOffAfterAction;
 
+			AccessibilityEx.SetName(m_btnEventMoveUp, KPRes.MoveUp);
+			AccessibilityEx.SetName(m_btnEventMoveDown, KPRes.MoveDown);
+			AccessibilityEx.SetName(m_btnConditionMoveUp, KPRes.MoveUp);
+			AccessibilityEx.SetName(m_btnConditionMoveDown, KPRes.MoveDown);
+			AccessibilityEx.SetName(m_btnActionMoveUp, KPRes.MoveUp);
+			AccessibilityEx.SetName(m_btnActionMoveDown, KPRes.MoveDown);
+
 			UpdateListsEx(false);
 			EnableControlsEx();
 			UIUtil.SetFocus(m_tbName, this);
 		}
 
-		private void CleanUpEx()
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
 		{
 			// Detach event handlers
 			m_lvEvents.SmallImageList = null;
 			m_lvConditions.SmallImageList = null;
 			m_lvActions.SmallImageList = null;
-		}
 
-		private void OnFormClosed(object sender, FormClosedEventArgs e)
-		{
-			CleanUpEx();
 			GlobalWindowManager.RemoveWindow(this);
 		}
 
@@ -128,13 +131,13 @@ namespace KeePass.Forms
 		private void OnBtnPrev(object sender, EventArgs e)
 		{
 			if(m_tabMain.SelectedIndex > 0)
-				m_tabMain.SelectedIndex = (m_tabMain.SelectedIndex - 1);
+				--m_tabMain.SelectedIndex;
 		}
 
 		private void OnBtnNext(object sender, EventArgs e)
 		{
 			if(m_tabMain.SelectedIndex < (m_tabMain.TabCount - 1))
-				m_tabMain.SelectedIndex = (m_tabMain.SelectedIndex + 1);
+				++m_tabMain.SelectedIndex;
 		}
 
 		private void EnableControlsEx()

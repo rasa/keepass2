@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -17,13 +17,11 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-/* using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 
 using KeePass.Resources;
 using KeePass.Util;
@@ -44,25 +42,19 @@ namespace KeePass.DataExchange.Formats
 		public override string DefaultExtension { get { return "json"; } }
 		public override string ApplicationGroup { get { return KPRes.PasswordManagers; } }
 
-		public override Image SmallIcon
-		{
-			get { return KeePass.Properties.Resources.B16x16_Imp_Keeper; }
-		}
-
 		public override void Import(PwDatabase pwStorage, Stream sInput,
 			IStatusLogger slLogger)
 		{
 			using(StreamReader sr = new StreamReader(sInput, StrUtil.Utf8, true))
 			{
 				string str = sr.ReadToEnd();
-				if(!string.IsNullOrEmpty(str))
-				{
-					CharStream cs = new CharStream(str);
-					JsonObject joRoot = new JsonObject(cs);
+				if(string.IsNullOrEmpty(str)) { Debug.Assert(false); return; }
 
-					JsonObject[] v = joRoot.GetValueArray<JsonObject>("records");
-					ImportRecords(v, pwStorage);
-				}
+				CharStream cs = new CharStream(str);
+				JsonObject joRoot = new JsonObject(cs);
+
+				JsonObject[] v = joRoot.GetValueArray<JsonObject>("records");
+				ImportRecords(v, pwStorage);
 			}
 		}
 
@@ -71,8 +63,8 @@ namespace KeePass.DataExchange.Formats
 			if(v == null) { Debug.Assert(false); return; }
 
 			Dictionary<string, PwGroup> dGroups = new Dictionary<string, PwGroup>();
-			string strGroupSep = Guid.NewGuid().ToString();
-			string strBackspCode = Guid.NewGuid().ToString();
+			string strGroupSep = MemUtil.ByteArrayToHexString(Guid.NewGuid().ToByteArray());
+			string strBackspCode = MemUtil.ByteArrayToHexString(Guid.NewGuid().ToByteArray());
 
 			foreach(JsonObject jo in v)
 			{
@@ -100,7 +92,10 @@ namespace KeePass.DataExchange.Formats
 						if(strValue == null) { Debug.Assert(false); continue; }
 
 						if(kvp.Key == "TFC:Keeper")
-							EntryUtil.ImportOtpAuth(pe, strValue);
+						{
+							try { EntryUtil.ImportOtpAuth(pe, strValue, pd); }
+							catch(Exception) { Debug.Assert(false); }
+						}
 						else ImportUtil.AppendToField(pe, kvp.Key, strValue, pd);
 					}
 				}
@@ -136,4 +131,4 @@ namespace KeePass.DataExchange.Formats
 			}
 		}
 	}
-} */
+}

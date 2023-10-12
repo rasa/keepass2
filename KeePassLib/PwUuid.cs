@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -144,12 +144,16 @@ namespace KeePassLib
 			return true;
 		}
 
-		private int m_h = 0;
+		private volatile int m_iHash = 0x693C4762;
 		public override int GetHashCode()
 		{
-			if(m_h == 0)
-				m_h = (int)MemUtil.Hash32(m_pbUuid, 0, m_pbUuid.Length);
-			return m_h;
+			int h = m_iHash;
+			if(h != 0x693C4762) return h;
+
+			h = (int)MemUtil.Hash32(m_pbUuid, 0, m_pbUuid.Length);
+
+			m_iHash = h;
+			return h;
 		}
 
 		public int CompareTo(PwUuid other)
@@ -189,7 +193,7 @@ namespace KeePassLib
 	[Obsolete]
 	public sealed class PwUuidComparable : IComparable<PwUuidComparable>
 	{
-		private byte[] m_pbUuid = new byte[PwUuid.UuidSize];
+		private readonly byte[] m_pbUuid = new byte[PwUuid.UuidSize];
 
 		public PwUuidComparable(PwUuid pwUuid)
 		{

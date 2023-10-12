@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -91,6 +91,14 @@ namespace KeePass.App.Configuration
 				if(value == null) throw new ArgumentNullException("value");
 				m_strUrlOverride = value;
 			}
+		}
+
+		private bool m_bUrlOverride = true; // 'true' for upgrade from < 2.54 to >= 2.54
+		[DefaultValue(true)]
+		public bool UrlOverrideEnabled
+		{
+			get { return m_bUrlOverride; }
+			set { m_bUrlOverride = value; }
 		}
 
 		private AceUrlSchemeOverrides m_vSchemeOverrides = new AceUrlSchemeOverrides();
@@ -323,17 +331,12 @@ namespace KeePass.App.Configuration
 
 	public sealed class AceUrlSchemeOverrides : IDeepCloneable<AceUrlSchemeOverrides>
 	{
-		private List<AceUrlSchemeOverride> m_lBuiltInOverrides =
+		private readonly List<AceUrlSchemeOverride> m_lBuiltInOverrides =
 			new List<AceUrlSchemeOverride>();
 		[XmlIgnore]
 		public List<AceUrlSchemeOverride> BuiltInOverrides
 		{
 			get { return m_lBuiltInOverrides; }
-			set
-			{
-				if(value == null) throw new ArgumentNullException("value");
-				m_lBuiltInOverrides = value;
-			}
 		}
 
 		public ulong BuiltInOverridesEnabled
@@ -357,29 +360,14 @@ namespace KeePass.App.Configuration
 
 		public AceUrlSchemeOverrides()
 		{
-			MakeBuiltInList();
-		}
-
-		private void MakeBuiltInList()
-		{
-			m_lBuiltInOverrides.Clear();
-
-			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(true, "ssh",
-				"cmd://SSH.exe -l \"{USERNAME}\" {BASE:RMVSCM}", 0x1000000));
-			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "ssh",
-				"cmd://PuTTY.exe -ssh {USERNAME}@{BASE:RMVSCM}", 0x1));
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "http",
-				"cmd://{INTERNETEXPLORER} \"{BASE}\"", 0x2));
+				"cmd://{EDGE} \"{BASE}\"", 0x4000)); // "microsoft-edge:{BASE}"
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "https",
-				"cmd://{INTERNETEXPLORER} \"{BASE}\"", 0x4));
+				"cmd://{EDGE} \"{BASE}\"", 0x8000)); // "microsoft-edge:{BASE}"
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "http",
-				"cmd://{INTERNETEXPLORER} -private \"{BASE}\"", 0x10000));
+				"cmd://{EDGE} --inprivate \"{BASE}\"", 0x2000000));
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "https",
-				"cmd://{INTERNETEXPLORER} -private \"{BASE}\"", 0x20000));
-			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "http",
-				"microsoft-edge:{BASE}", 0x4000));
-			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "https",
-				"microsoft-edge:{BASE}", 0x8000));
+				"cmd://{EDGE} --inprivate \"{BASE}\"", 0x4000000));
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "http",
 				"cmd://{FIREFOX} \"{BASE}\"", 0x8));
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "https",
@@ -399,6 +387,14 @@ namespace KeePass.App.Configuration
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "https",
 				"cmd://{GOOGLECHROME} --incognito \"{BASE}\"", 0x80000));
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "http",
+				"cmd://{INTERNETEXPLORER} \"{BASE}\"", 0x2));
+			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "https",
+				"cmd://{INTERNETEXPLORER} \"{BASE}\"", 0x4));
+			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "http",
+				"cmd://{INTERNETEXPLORER} -private \"{BASE}\"", 0x10000));
+			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "https",
+				"cmd://{INTERNETEXPLORER} -private \"{BASE}\"", 0x20000));
+			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "http",
 				"cmd://{OPERA} \"{BASE}\"", 0x40));
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "https",
 				"cmd://{OPERA} \"{BASE}\"", 0x80));
@@ -414,13 +410,17 @@ namespace KeePass.App.Configuration
 				"cmd://\"{APPDIR}\\KeePass.exe\" \"{BASE:RMVSCM}\" -pw-enc:\"{PASSWORD_ENC}\"", 0x1000));
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "kdbx",
 				"cmd://mono \"{APPDIR}/KeePass.exe\" \"{BASE:RMVSCM}\" -pw-enc:\"{PASSWORD_ENC}\"", 0x2000));
-			// Free: 0x2000000
+			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "ssh",
+				"cmd://SSH.exe -l \"{USERNAME}\" {BASE:RMVSCM}", 0x1000000));
+			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "ssh",
+				"cmd://PuTTY.exe -ssh {USERNAME}@{BASE:RMVSCM}", 0x1));
+			// Free: 0x8000000
 
 #if DEBUG
 			ulong u = 0;
 			foreach(AceUrlSchemeOverride o in m_lBuiltInOverrides)
 			{
-				Debug.Assert(o.IsBuiltIn);
+				Debug.Assert(!o.Enabled && o.IsBuiltIn);
 				ulong f = o.BuiltInFlagID;
 				Debug.Assert((f != 0) && ((f & (f - 1)) == 0)); // Check power of 2
 				u += f;
@@ -563,7 +563,7 @@ namespace KeePass.App.Configuration
 			}
 		}
 
-		private ulong m_uBuiltInFlagID = 0;
+		private readonly ulong m_uBuiltInFlagID = 0;
 		[XmlIgnore]
 		internal ulong BuiltInFlagID
 		{
@@ -581,19 +581,13 @@ namespace KeePass.App.Configuration
 		}
 
 		public AceUrlSchemeOverride(bool bEnable, string strScheme,
-			string strUrlOverride)
+			string strUrlOverride) :
+			this(bEnable, strScheme, strUrlOverride, 0)
 		{
-			Init(bEnable, strScheme, strUrlOverride, 0);
 		}
 
 		internal AceUrlSchemeOverride(bool bEnable, string strScheme,
 			string strUrlOverride, ulong uBuiltInFlagID)
-		{
-			Init(bEnable, strScheme, strUrlOverride, uBuiltInFlagID);
-		}
-
-		private void Init(bool bEnable, string strScheme, string strUrlOverride,
-			ulong uBuiltInFlagID)
 		{
 			if(strScheme == null) throw new ArgumentNullException("strScheme");
 			if(strUrlOverride == null) throw new ArgumentNullException("strUrlOverride");

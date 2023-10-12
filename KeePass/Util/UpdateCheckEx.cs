@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ namespace KeePass.Util
 
 	public static class UpdateCheckEx
 	{
-		private static Dictionary<string, string> g_dFileSigKeys =
+		private static readonly Dictionary<string, string> g_dFileSigKeys =
 			new Dictionary<string, string>();
 
 		private static readonly string CompMain = PwDefs.ShortProductName;

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -49,7 +49,17 @@ namespace KeePass.Forms
 		private PwUuid m_pwCustomIconID = PwUuid.Zero;
 		private StringDictionaryEx m_sdCustomData = null;
 
-		private ExpiryControlGroup m_cgExpiry = new ExpiryControlGroup();
+		private readonly ExpiryControlGroup m_cgExpiry = new ExpiryControlGroup();
+
+		private GroupFormTab m_gftInit = GroupFormTab.None;
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[DefaultValue(GroupFormTab.None)]
+		internal GroupFormTab InitialTab
+		{
+			// get { return m_gftInit; } // Internal, uncalled
+			set { m_gftInit = value; }
+		}
 
 		[Obsolete]
 		public void InitEx(PwGroup pg, ImageList ilClientIcons, PwDatabase pwDatabase)
@@ -69,13 +79,13 @@ namespace KeePass.Forms
 		public GroupForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
 		{
-			Debug.Assert(m_pwGroup != null); if(m_pwGroup == null) throw new InvalidOperationException();
-			Debug.Assert(m_pwDatabase != null); if(m_pwDatabase == null) throw new InvalidOperationException();
+			if(m_pwGroup == null) { Debug.Assert(false); throw new InvalidOperationException(); }
+			if(m_pwDatabase == null) { Debug.Assert(false); throw new InvalidOperationException(); }
 
 			GlobalWindowManager.AddWindow(this);
 
@@ -87,7 +97,10 @@ namespace KeePass.Forms
 			this.Text = strTitle;
 
 			UIUtil.ConfigureToolTip(m_ttRect);
-			m_ttRect.SetToolTip(m_btnIcon, KPRes.SelectIcon);
+			UIUtil.SetToolTip(m_ttRect, m_btnIcon, KPRes.SelectIcon, true);
+			UIUtil.SetToolTip(m_ttRect, m_btnAutoTypeEdit, KPRes.ConfigureKeystrokeSeq, true);
+
+			AccessibilityEx.SetContext(m_tbDefaultAutoTypeSeq, m_rbAutoTypeOverride);
 
 			m_tbName.Text = m_pwGroup.Name;
 
@@ -150,7 +163,6 @@ namespace KeePass.Forms
 			UIUtil.StrDictListInit(m_lvCustomData);
 			UIUtil.StrDictListUpdate(m_lvCustomData, m_sdCustomData, false);
 
-			CustomizeForScreenReader();
 			EnableControlsEx();
 
 			ThreadPool.QueueUserWorkItem(delegate(object state)
@@ -166,14 +178,24 @@ namespace KeePass.Forms
 			});
 
 			UIUtil.SetFocus(m_tbName, this);
+
+			switch(m_gftInit)
+			{
+				case GroupFormTab.Properties:
+					m_tabMain.SelectedTab = m_tabProperties; break;
+				case GroupFormTab.AutoType:
+					m_tabMain.SelectedTab = m_tabAutoType; break;
+				case GroupFormTab.CustomData:
+					m_tabMain.SelectedTab = m_tabCustomData; break;
+				default: break;
+			}
 		}
 
-		private void CustomizeForScreenReader()
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
 		{
-			if(!Program.Config.UI.OptimizeForScreenReader) return;
+			m_cgExpiry.Release();
 
-			m_btnIcon.Text = KPRes.PickIcon;
-			m_btnAutoTypeEdit.Text = KPRes.ConfigureAutoType;
+			GlobalWindowManager.RemoveWindow(this);
 		}
 
 		private void EnableControlsEx()
@@ -210,11 +232,6 @@ namespace KeePass.Forms
 
 		private void OnBtnCancel(object sender, EventArgs e)
 		{
-		}
-
-		private void CleanUpEx()
-		{
-			m_cgExpiry.Release();
 		}
 
 		private void OnBtnIcon(object sender, EventArgs e)
@@ -259,12 +276,6 @@ namespace KeePass.Forms
 
 			UIUtil.DestroyForm(dlg);
 			EnableControlsEx();
-		}
-
-		private void OnFormClosed(object sender, FormClosedEventArgs e)
-		{
-			CleanUpEx();
-			GlobalWindowManager.RemoveWindow(this);
 		}
 
 		private void OnCustomDataSelectedIndexChanged(object sender, EventArgs e)

@@ -35,8 +35,7 @@
             the returned string is <c>My File.kdb</c>.
             </summary>
             <param name="strPath">Full path of a file.</param>
-            <returns>File name of the specified file. The return value is
-            an empty string (<c>""</c>) if the input parameter is <c>null</c>.</returns>
+            <returns>File name of the specified file.</returns>
         </member>
         <member name="M:KeePassLib.Utility.UrlUtil.StripExtension(System.String)">
             <summary>
@@ -315,11 +314,8 @@
         </member>
         <member name="M:KeePassLib.PwDefs.IsStandardField(System.String)">
             <summary>
-            Check if a name is a standard field name.
+            Check whether a name is a standard field name.
             </summary>
-            <param name="strFieldName">Input field name.</param>
-            <returns>Returns <c>true</c>, if the field name is a standard
-            field name (title, user name, password, ...), otherwise <c>false</c>.</returns>
         </member>
         <member name="M:KeePassLib.PwDefs.IsTanEntry(KeePassLib.PwEntry)">
             <summary>
@@ -371,7 +367,7 @@
             <param name="strKey">Key to validate.</param>
             <param name="t">Type of the validation to perform.</param>
             <returns>Returns <c>null</c>, if the validation is successful.
-            If there's a problem with the key, the returned string describes
+            If there is a problem with the key, the returned string describes
             the problem.</returns>
         </member>
         <member name="P:KeePassLib.Keys.KeyValidator.Name">
@@ -386,20 +382,19 @@
         </member>
         <member name="T:KeePassLib.Collections.ProtectedStringDictionary">
             <summary>
-            A list of <c>ProtectedString</c> objects (dictionary).
+            A dictionary of <c>ProtectedString</c> objects.
             </summary>
         </member>
         <member name="M:KeePassLib.Collections.ProtectedStringDictionary.#ctor">
             <summary>
-            Construct a new list of protected strings.
+            Construct a new dictionary of protected strings.
             </summary>
         </member>
         <member name="M:KeePassLib.Collections.ProtectedStringDictionary.CloneDeep">
             <summary>
-            Clone the current <c>ProtectedStringList</c> object, including all
-            stored protected strings.
+            Deeply clone the object.
             </summary>
-            <returns>New <c>ProtectedStringList</c> object.</returns>
+            <returns>Cloned object.</returns>
         </member>
         <member name="M:KeePassLib.Collections.ProtectedStringDictionary.Get(System.String)">
             <summary>
@@ -409,8 +404,8 @@
             <returns>Protected string. If the string identified by
             <paramref name="strName"/> cannot be found, the function
             returns <c>null</c>.</returns>
-            <exception cref="T:System.ArgumentNullException">Thrown if the input parameter
-            is <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the input
+            parameter is <c>null</c>.</exception>
         </member>
         <member name="M:KeePassLib.Collections.ProtectedStringDictionary.GetSafe(System.String)">
             <summary>
@@ -458,26 +453,26 @@
         </member>
         <member name="M:KeePassLib.Collections.ProtectedStringDictionary.Set(System.String,KeePassLib.Security.ProtectedString)">
             <summary>
-            Set a string.
+            Set a protected string.
             </summary>
-            <param name="strField">Identifier of the string field to modify.</param>
+            <param name="strName">Identifier of the string to set.</param>
             <param name="psNewValue">New value. This parameter must not be <c>null</c>.</param>
-            <exception cref="T:System.ArgumentNullException">Thrown if one of the input
+            <exception cref="T:System.ArgumentNullException">Thrown if any of the input
             parameters is <c>null</c>.</exception>
         </member>
         <member name="M:KeePassLib.Collections.ProtectedStringDictionary.Remove(System.String)">
             <summary>
-            Delete a string.
+            Remove a protected string.
             </summary>
-            <param name="strField">Name of the string field to delete.</param>
-            <returns>Returns <c>true</c> if the field has been successfully
-            removed, otherwise the return value is <c>false</c>.</returns>
+            <param name="strName">Identifier of the string to remove.</param>
+            <returns>Returns <c>true</c> if the object has been successfully
+            removed, otherwise <c>false</c>.</returns>
             <exception cref="T:System.ArgumentNullException">Thrown if the input
             parameter is <c>null</c>.</exception>
         </member>
         <member name="P:KeePassLib.Collections.ProtectedStringDictionary.UCount">
             <summary>
-            Get the number of strings in this entry.
+            Get the number of items.
             </summary>
         </member>
         <member name="T:KeePassLib.Resources.KLRes">
@@ -513,6 +508,12 @@
             <summary>
             Look up a localized string similar to
             'The data is too large to be encrypted/decrypted securely using {PARAM}.'.
+            </summary>
+        </member>
+        <member name="P:KeePassLib.Resources.KLRes.EntryLower">
+            <summary>
+            Look up a localized string similar to
+            'entry'.
             </summary>
         </member>
         <member name="P:KeePassLib.Resources.KLRes.ErrorInClipboard">
@@ -620,7 +621,7 @@
         <member name="P:KeePassLib.Resources.KLRes.FileVersionUnsupported">
             <summary>
             Look up a localized string similar to
-            'The file version is unsupported.'.
+            'The file format version is unsupported.'.
             </summary>
         </member>
         <member name="P:KeePassLib.Resources.KLRes.FinalKeyCreationFailed">
@@ -639,6 +640,12 @@
             <summary>
             Look up a localized string similar to
             'General'.
+            </summary>
+        </member>
+        <member name="P:KeePassLib.Resources.KLRes.GroupLower">
+            <summary>
+            Look up a localized string similar to
+            'group'.
             </summary>
         </member>
         <member name="P:KeePassLib.Resources.KLRes.InvalidCompositeKey">
@@ -752,7 +759,7 @@
         <member name="P:KeePassLib.Resources.KLRes.UnknownHeaderId">
             <summary>
             Look up a localized string similar to
-            'Unknown header ID!'.
+            'Unknown header ID'.
             </summary>
         </member>
         <member name="P:KeePassLib.Resources.KLRes.UnknownKdf">
@@ -879,7 +886,7 @@
             Normalize new line characters in a string. Input strings may
             contain mixed new line character sequences from all commonly
             used operating systems (i.e. \r\n from Windows, \n from Unix
-            and \r from Mac OS.
+            and \r from MacOS.
             </summary>
             <param name="str">String with mixed new line characters.</param>
             <param name="bWindows">If <c>true</c>, new line characters
@@ -926,7 +933,7 @@
         </member>
         <member name="M:KeePassLib.Cryptography.KeyDerivation.KdfEngine.Randomize(KeePassLib.Cryptography.KeyDerivation.KdfParameters)">
             <summary>
-            Generate random seeds and store them in <paramref name="p" />.
+            Generate random seeds/salts and store them in <paramref name="p" />.
             </summary>
         </member>
         <member name="M:KeePassLib.Utility.MonoWorkarounds.ExchangeFormShownRaised(System.Windows.Forms.Form,System.Boolean)">
@@ -1022,6 +1029,12 @@
         <member name="M:KeePassLib.Utility.TimeUtil.ParseUSTextDate(System.String,System.DateTimeKind)">
             <summary>
             Parse a US textual date string, like e.g. "January 02, 2012".
+            </summary>
+        </member>
+        <member name="M:KeePassLib.Utility.TimeUtil.EqualsFloor(System.DateTime,System.DateTime)">
+            <summary>
+            Check equality of two times with precision 1 s, floor-rounded.
+            Ticks finer than 1 s are ignored.
             </summary>
         </member>
         <member name="F:KeePassLib.Serialization.IOCredSaveMode.NoSave">
@@ -1438,19 +1451,17 @@
         </member>
         <member name="M:KeePassLib.PwGroup.GetFullPath">
             <summary>
-            Get the full path of a group.
+            Get the full path of the group.
             </summary>
-            <returns>Full path of the group.</returns>
         </member>
         <member name="M:KeePassLib.PwGroup.GetFullPath(System.String,System.Boolean)">
             <summary>
-            Get the full path of a group.
+            Get the full path of the group.
             </summary>
             <param name="strSeparator">String that separates the group
             names.</param>
             <param name="bIncludeTopMostGroup">Specifies whether the returned
             path starts with the topmost group.</param>
-            <returns>Full path of the group.</returns>
         </member>
         <member name="M:KeePassLib.PwGroup.CreateNewItemUuids(System.Boolean,System.Boolean,System.Boolean)">
             <summary>
@@ -1718,11 +1729,11 @@
         <member name="P:KeePassLib.Keys.KeyProvider.Exclusive">
             <summary>
             Property indicating whether the provider is exclusive.
-            If the provider is exclusive, KeePass doesn't allow other
+            If the provider is exclusive, KeePass does not allow other
             key sources (master password, Windows user account, ...)
             to be combined with the provider.
             Key providers typically should return <c>false</c>
-            (to allow non-exclusive use), i.e. don't override this
+            (to allow non-exclusive use), i.e. do not override this
             property.
             </summary>
         </member>
@@ -1756,8 +1767,8 @@
         <member name="T:KeePassLib.Cryptography.Cipher.ChaCha20Cipher">
             <summary>
             Implementation of the ChaCha20 cipher with a 96-bit nonce,
-            as specified in RFC 7539.
-            https://tools.ietf.org/html/rfc7539
+            as specified in RFC 8439 (7539).
+            https://datatracker.ietf.org/doc/html/rfc8439
             </summary>
         </member>
         <member name="M:KeePassLib.Cryptography.Cipher.ChaCha20Cipher.#ctor(System.Byte[],System.Byte[],System.Boolean)">
@@ -1766,7 +1777,7 @@
             </summary>
             <param name="pbKey32">Key (32 bytes).</param>
             <param name="pbIV12">Nonce (12 bytes).</param>
-            <param name="bLargeCounter">If <c>false</c>, the RFC 7539 version
+            <param name="bLargeCounter">If <c>false</c>, the RFC 8439 version
             of ChaCha20 is used. In this case, only 256 GB of data can be
             encrypted securely (because the block counter is a 32-bit variable);
             an attempt to encrypt more data throws an exception.
@@ -1779,7 +1790,7 @@
             and the first 4 bytes must be 0.
             If the IV was generated randomly, a 12-byte IV and a large counter
             can be used to securely encrypt more than 256 GB of data (but note
-            this is incompatible with RFC 7539 and the original specification).</param>
+            this is incompatible with RFC 8439 and the original specification).</param>
         </member>
         <member name="T:KeePassLib.Collections.PwObjectList`1">
             <summary>
@@ -1861,8 +1872,8 @@
             <summary>
             Transform a key.
             </summary>
-            <param name="pBuf256">Source and destination buffer.</param>
-            <param name="pKey256">Key to use in the transformation.</param>
+            <param name="pbBuf256">Source and destination buffer.</param>
+            <param name="pbKey256">Key to use for the transformation.</param>
             <param name="uRounds">Number of transformation rounds.</param>
             <returns>Returns <c>true</c>, if the key was transformed successfully.</returns>
         </member>
@@ -1876,8 +1887,7 @@
         </member>
         <member name="P:KeePassLib.Native.NativeLib.AllowNative">
             <summary>
-            If this property is set to <c>true</c>, the native library is used.
-            If it is <c>false</c>, all calls to functions in this class will fail.
+            If <c>true</c>, the native library is used.
             </summary>
         </member>
         <member name="M:KeePassLib.Utility.GfxUtil.ScaleImage(System.Drawing.Image,System.Int32,System.Int32,KeePassLib.ScaleTransformFlags)">
@@ -1993,7 +2003,7 @@
         </member>
         <member name="M:KeePassLib.Utility.MemUtil.Hash32(System.Byte[],System.Int32,System.Int32)">
             <summary>
-            Fast hash that can be used e.g. for hash tables.
+            Fast 32-bit hash (e.g. for hash tables).
             The algorithm might change in the future; do not store
             the hashes for later use.
             </summary>
@@ -2150,6 +2160,14 @@
             <summary>
             Closes the currently open database. No confirmation message
             is shown before closing. Unsaved changes will be lost.
+            </summary>
+        </member>
+        <member name="M:KeePassLib.PwDatabase.LoadHeader(KeePassLib.Serialization.IOConnectionInfo)">
+            <summary>
+            Load only the unencrypted header of a database file.
+            In the returned database object, any data that is not stored
+            in the unencrypted header is set to its default value.
+            Intended primarily for plugins.
             </summary>
         </member>
         <member name="M:KeePassLib.PwDatabase.GetCustomIconIndex(KeePassLib.PwUuid)">
@@ -2652,19 +2670,6 @@
             <param name="bSetTimes">If <c>true</c>, the creation, last modification
             and last access times will be set to the current system time.</param>
         </member>
-        <member name="M:KeePassLib.PwEntry.#ctor(KeePassLib.PwGroup,System.Boolean,System.Boolean)">
-            <summary>
-            Construct a new, empty password entry. Member variables will be initialized
-            to their default values.
-            </summary>
-            <param name="pwParentGroup">Reference to the containing group, this
-            parameter may be <c>null</c> and set later manually.</param>
-            <param name="bCreateNewUuid">If <c>true</c>, a new UUID will be created
-            for this entry. If <c>false</c>, the UUID is zero and you must set it
-            manually later.</param>
-            <param name="bSetTimes">If <c>true</c>, the creation, last modification
-            and last access times will be set to the current system time.</param>
-        </member>
         <member name="M:KeePassLib.PwEntry.CloneDeep">
             <summary>
             Clone the current entry. The returned entry is an exact value copy
@@ -3096,24 +3101,23 @@
         </member>
         <member name="T:KeePassLib.Collections.ProtectedBinaryDictionary">
             <summary>
-            A list of <c>ProtectedBinary</c> objects (dictionary).
+            A dictionary of <c>ProtectedBinary</c> objects.
             </summary>
         </member>
         <member name="M:KeePassLib.Collections.ProtectedBinaryDictionary.#ctor">
             <summary>
-            Construct a new list of protected binaries.
+            Construct a new dictionary of protected binaries.
             </summary>
         </member>
         <member name="M:KeePassLib.Collections.ProtectedBinaryDictionary.CloneDeep">
             <summary>
-            Clone the current <c>ProtectedBinaryList</c> object, including all
-            stored protected strings.
+            Deeply clone the object.
             </summary>
-            <returns>New <c>ProtectedBinaryList</c> object.</returns>
+            <returns>Cloned object.</returns>
         </member>
         <member name="M:KeePassLib.Collections.ProtectedBinaryDictionary.Get(System.String)">
             <summary>
-            Get one of the stored binaries.
+            Get one of the protected binaries.
             </summary>
             <param name="strName">Binary identifier.</param>
             <returns>Protected binary. If the binary identified by
@@ -3124,26 +3128,26 @@
         </member>
         <member name="M:KeePassLib.Collections.ProtectedBinaryDictionary.Set(System.String,KeePassLib.Security.ProtectedBinary)">
             <summary>
-            Set a binary object.
+            Set a protected binary.
             </summary>
-            <param name="strField">Identifier of the binary field to modify.</param>
+            <param name="strName">Identifier of the binary to set.</param>
             <param name="pbNewValue">New value. This parameter must not be <c>null</c>.</param>
             <exception cref="T:System.ArgumentNullException">Thrown if any of the input
             parameters is <c>null</c>.</exception>
         </member>
         <member name="M:KeePassLib.Collections.ProtectedBinaryDictionary.Remove(System.String)">
             <summary>
-            Remove a binary object.
+            Remove a protected binary.
             </summary>
-            <param name="strField">Identifier of the binary field to remove.</param>
+            <param name="strName">Identifier of the binary to remove.</param>
             <returns>Returns <c>true</c> if the object has been successfully
             removed, otherwise <c>false</c>.</returns>
-            <exception cref="T:System.ArgumentNullException">Thrown if the input parameter
-            is <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the input
+            parameter is <c>null</c>.</exception>
         </member>
         <member name="P:KeePassLib.Collections.ProtectedBinaryDictionary.UCount">
             <summary>
-            Get the number of binaries in this entry.
+            Get the number of items.
             </summary>
         </member>
     </members>

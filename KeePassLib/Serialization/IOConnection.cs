@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ namespace KeePassLib.Serialization
 #if !KeePassLibSD
 	internal sealed class IOWebClient : WebClient
 	{
-		private IOConnectionInfo m_ioc;
+		private readonly IOConnectionInfo m_ioc;
 
 		public IOWebClient(IOConnectionInfo ioc) : base()
 		{
@@ -126,7 +126,7 @@ namespace KeePassLib.Serialization
 		public override IAsyncResult BeginWrite(byte[] buffer, int offset,
 			int count, AsyncCallback callback, object state)
 		{
-			return BeginWrite(buffer, offset, count, callback, state);
+			return m_s.BeginWrite(buffer, offset, count, callback, state);
 		}
 #endif
 

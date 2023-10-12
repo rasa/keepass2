@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -162,11 +162,10 @@ namespace KeePass.Util
 		{
 			if(strData == null) { Debug.Assert(false); return false; }
 
-			bool bUni = (obForceUni.HasValue ? obForceUni.Value :
-				(Marshal.SystemDefaultCharSize >= 2));
+			bool bUni = (obForceUni ?? (Marshal.SystemDefaultCharSize >= 2));
 
-			uint uFmt = (ouFormat.HasValue ? ouFormat.Value : (bUni ?
-				NativeMethods.CF_UNICODETEXT : NativeMethods.CF_TEXT));
+			uint uFmt = (ouFormat ?? (bUni ? NativeMethods.CF_UNICODETEXT :
+				NativeMethods.CF_TEXT));
 			Encoding enc = (bUni ? (new UnicodeEncoding(false, false)) : Encoding.Default);
 
 			byte[] pb = enc.GetBytes(strData);

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ namespace KeePass.Util
 
 	public static class SendInputEx
 	{
-		private static CriticalSectionEx g_csSending = new CriticalSectionEx();
+		private static readonly CriticalSectionEx g_csSending = new CriticalSectionEx();
 
 		private static int g_cCurSending = 0;
 		public static bool IsSending
@@ -168,9 +168,7 @@ namespace KeePass.Util
 			string strError = KPRes.AutoTypeSequenceInvalid;
 
 			Keys kCurKbMods = Keys.None;
-
-			List<Keys> lMods = new List<Keys>();
-			lMods.Add(Keys.None);
+			List<Keys> lMods = new List<Keys> { Keys.None };
 
 			while(true)
 			{
@@ -516,7 +514,7 @@ namespace KeePass.Util
 				uDefaultDelay = (uint)iDefOvr;
 			}
 
-			bool bFirstInput = true;
+			bool bFirstInput = true, bCancel = false;
 			foreach(SiEvent si in l)
 			{
 				// Also delay key modifiers, as a workaround for applications
@@ -564,7 +562,7 @@ namespace KeePass.Util
 						break;
 
 					case SiEventType.AppActivate:
-						AppActivate(si);
+						if(!AppActivate(si, siEngine)) bCancel = true;
 						break;
 
 					case SiEventType.Beep:
@@ -583,20 +581,31 @@ namespace KeePass.Util
 					if(uDefaultDelay < 100)
 						siEngine.Delay(uDefaultDelay);
 				}
+
+				if(bCancel) break;
 			}
 		}
 
-		private static void AppActivate(SiEvent si)
+		private static bool AppActivate(SiEvent si, ISiEngine siEngine)
 		{
 			try
 			{
-				if(string.IsNullOrEmpty(si.Text)) return;
+				if(string.IsNullOrEmpty(si.Text)) return true;
 
 				IntPtr h = NativeMethods.FindWindow(si.Text);
 				if(h != IntPtr.Zero)
-					NativeMethods.EnsureForegroundWindow(h);
+				{
+					if(NativeMethods.EnsureForegroundWindow(h))
+					{
+						siEngine.UpdateExpectedFocus();
+						return true;
+					}
+					Debug.Assert(false);
+				}
 			}
 			catch(Exception) { Debug.Assert(false); }
+
+			return false;
 		}
 
 		private static void Beep(SiEvent si)

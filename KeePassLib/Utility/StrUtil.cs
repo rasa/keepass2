@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -350,12 +350,7 @@ namespace KeePassLib.Utility
 		/// <returns>String, HTML-encoded.</returns>
 		public static string StringToHtml(string str)
 		{
-			return StringToHtml(str, false);
-		}
-
-		internal static string StringToHtml(string str, bool bNbsp)
-		{
-			Debug.Assert(str != null); if(str == null) throw new ArgumentNullException("str");
+			if(str == null) { Debug.Assert(false); return string.Empty; }
 
 			str = str.Replace(@"&", @"&amp;"); // Must be first
 			str = str.Replace(@"<", @"&lt;");
@@ -363,7 +358,7 @@ namespace KeePassLib.Utility
 			str = str.Replace("\"", @"&quot;");
 			str = str.Replace("\'", @"&#39;");
 
-			if(bNbsp) str = str.Replace(" ", @"&nbsp;"); // Before <br />
+			// if(bNbsp) str = str.Replace(" ", @"&nbsp;"); // Before <br />
 
 			str = NormalizeNewLines(str, false);
 			str = str.Replace("\n", @"<br />" + MessageService.NewLine);
@@ -373,13 +368,13 @@ namespace KeePassLib.Utility
 
 		public static string XmlToString(string str)
 		{
-			Debug.Assert(str != null); if(str == null) throw new ArgumentNullException("str");
+			if(str == null) { Debug.Assert(false); return string.Empty; }
 
-			str = str.Replace(@"&amp;", @"&");
 			str = str.Replace(@"&lt;", @"<");
 			str = str.Replace(@"&gt;", @">");
 			str = str.Replace(@"&quot;", "\"");
 			str = str.Replace(@"&#39;", "\'");
+			str = str.Replace(@"&amp;", @"&"); // Must be last
 
 			return str;
 		}
@@ -387,9 +382,9 @@ namespace KeePassLib.Utility
 		public static string ReplaceCaseInsensitive(string strString, string strFind,
 			string strNew)
 		{
-			Debug.Assert(strString != null); if(strString == null) return strString;
-			Debug.Assert(strFind != null); if(strFind == null) return strString;
-			Debug.Assert(strNew != null); if(strNew == null) return strString;
+			if(strString == null) { Debug.Assert(false); return string.Empty; }
+			if(strFind == null) { Debug.Assert(false); return strString; }
+			if(strNew == null) { Debug.Assert(false); return strString; }
 
 			string str = strString;
 
@@ -503,27 +498,27 @@ namespace KeePassLib.Utility
 			if(bEmptyIfTransparent && (color.A != 255))
 				return string.Empty;
 
-			StringBuilder sb = new StringBuilder();
-			byte bt;
+			uint r = color.R, g = color.G, b = color.B, u;
 
-			sb.Append('#');
+			char[] v = new char[7];
+			v[0] = '#';
 
-			bt = (byte)(color.R >> 4);
-			if(bt < 10) sb.Append((char)('0' + bt)); else sb.Append((char)('A' - 10 + bt));
-			bt = (byte)(color.R & 0x0F);
-			if(bt < 10) sb.Append((char)('0' + bt)); else sb.Append((char)('A' - 10 + bt));
+			u = r >> 4;
+			v[1] = (char)((u < 10) ? ('0' + u) : ('A' - 10 + u));
+			u = r & 0x0F;
+			v[2] = (char)((u < 10) ? ('0' + u) : ('A' - 10 + u));
 
-			bt = (byte)(color.G >> 4);
-			if(bt < 10) sb.Append((char)('0' + bt)); else sb.Append((char)('A' - 10 + bt));
-			bt = (byte)(color.G & 0x0F);
-			if(bt < 10) sb.Append((char)('0' + bt)); else sb.Append((char)('A' - 10 + bt));
+			u = g >> 4;
+			v[3] = (char)((u < 10) ? ('0' + u) : ('A' - 10 + u));
+			u = g & 0x0F;
+			v[4] = (char)((u < 10) ? ('0' + u) : ('A' - 10 + u));
 
-			bt = (byte)(color.B >> 4);
-			if(bt < 10) sb.Append((char)('0' + bt)); else sb.Append((char)('A' - 10 + bt));
-			bt = (byte)(color.B & 0x0F);
-			if(bt < 10) sb.Append((char)('0' + bt)); else sb.Append((char)('A' - 10 + bt));
+			u = b >> 4;
+			v[5] = (char)((u < 10) ? ('0' + u) : ('A' - 10 + u));
+			u = b & 0x0F;
+			v[6] = (char)((u < 10) ? ('0' + u) : ('A' - 10 + u));
 
-			return sb.ToString();
+			return new string(v);
 		}
 
 		/// <summary>
@@ -736,9 +731,10 @@ namespace KeePassLib.Utility
 			return (strText.Substring(0, cchMax - 3) + "...");
 		}
 
-		private static readonly char[] g_vDots = new char[] { '.', '\u2026' };
-		private static readonly char[] g_vDotsWS = new char[] { '.', '\u2026',
-			' ', '\t', '\r', '\n' };
+		private static readonly char[] g_vDots = new char[] {
+			'.', '\u2026', '\u3002' };
+		private static readonly char[] g_vDotsWS = new char[] {
+			'.', '\u2026', '\u3002', ' ', '\t', '\r', '\n' };
 		internal static string TrimDots(string strText, bool bTrimWhiteSpace)
 		{
 			if(strText == null) { Debug.Assert(false); return string.Empty; }
@@ -969,22 +965,33 @@ namespace KeePassLib.Utility
 			if(strMenuText == null) throw new ArgumentNullException("strMenuText");
 
 			string str = strMenuText;
+			int iOffset = 0;
+			bool bHasAmp = false;
 
-			for(char ch = 'A'; ch <= 'Z'; ++ch)
+			// Remove keys of the form "(&X)"
+			while(iOffset < str.Length)
 			{
-				string strEnhAcc = @"(&" + ch.ToString() + ")";
-				if(str.IndexOf(strEnhAcc) >= 0)
+				int i = str.IndexOf('&', iOffset);
+				if(i < iOffset) break;
+
+				if((i >= 1) && (str[i - 1] == '(') && ((i + 2) < str.Length) &&
+					(str[i + 2] == ')'))
 				{
-					str = str.Replace(" " + strEnhAcc, string.Empty);
-					str = str.Replace(strEnhAcc, string.Empty);
+					if((i >= 2) && char.IsWhiteSpace(str[i - 2]))
+						str = str.Remove(i - 2, 5);
+					else str = str.Remove(i - 1, 4);
+
+					continue;
 				}
+
+				iOffset = i + 1;
+				bHasAmp = true;
 			}
 
-			str = str.Replace(@"&", string.Empty);
-
-			return str;
+			return (bHasAmp ? str.Replace(@"&", string.Empty) : str);
 		}
 
+		[Obsolete] // Use AccessKeyManagerEx, if possible
 		public static string AddAccelerator(string strMenuText,
 			List<char> lAvailKeys)
 		{
@@ -1145,7 +1152,7 @@ namespace KeePassLib.Utility
 		/// Normalize new line characters in a string. Input strings may
 		/// contain mixed new line character sequences from all commonly
 		/// used operating systems (i.e. \r\n from Windows, \n from Unix
-		/// and \r from Mac OS.
+		/// and \r from MacOS.
 		/// </summary>
 		/// <param name="str">String with mixed new line characters.</param>
 		/// <param name="bWindows">If <c>true</c>, new line characters
@@ -1266,23 +1273,23 @@ namespace KeePassLib.Utility
 			const ulong uGB = uMB * uKB;
 			const ulong uTB = uGB * uKB;
 
-			if(uBytes == 0) return "0 KB";
+			if(uBytes == 0UL) return "0 KB";
 			if(uBytes <= uKB) return "1 KB";
-			if(uBytes <= uMB) return (((uBytes - 1UL) / uKB) + 1UL).ToString() + " KB";
-			if(uBytes <= uGB) return (((uBytes - 1UL) / uMB) + 1UL).ToString() + " MB";
-			if(uBytes <= uTB) return (((uBytes - 1UL) / uGB) + 1UL).ToString() + " GB";
+			if(uBytes < uMB) return ((((uBytes - 1UL) / uKB) + 1UL).ToString() + " KB");
+			if(uBytes < uGB) return ((((uBytes - 1UL) / uMB) + 1UL).ToString() + " MB");
+			if(uBytes < uTB) return ((((uBytes - 1UL) / uGB) + 1UL).ToString() + " GB");
 
-			return (((uBytes - 1UL) / uTB) + 1UL).ToString() + " TB";
+			return ((((uBytes - 1UL) / uTB) + 1UL).ToString() + " TB");
 		}
 
 		public static string FormatDataSizeKB(ulong uBytes)
 		{
 			const ulong uKB = 1024;
 
-			if(uBytes == 0) return "0 KB";
+			if(uBytes == 0UL) return "0 KB";
 			if(uBytes <= uKB) return "1 KB";
 			
-			return (((uBytes - 1UL) / uKB) + 1UL).ToString() + " KB";
+			return ((((uBytes - 1UL) / uKB) + 1UL).ToString() + " KB");
 		}
 
 		private static readonly char[] m_vVersionSep = new char[] { '.', ',' };
@@ -1417,7 +1424,7 @@ namespace KeePassLib.Utility
 		public static int[] DeserializeIntArray(string strSerialized)
 		{
 			if(strSerialized == null) throw new ArgumentNullException("strSerialized");
-			if(strSerialized.Length == 0) return new int[0];
+			if(strSerialized.Length == 0) return MemUtil.EmptyArray<int>();
 
 			string[] vParts = strSerialized.Split(' ');
 			int[] v = new int[vParts.Length];
@@ -1990,6 +1997,107 @@ namespace KeePassLib.Utility
 			}
 
 			return sb.ToString();
+		}
+
+		// Escape a string value (not an identifier) for CSS.
+		// https://www.w3.org/TR/CSS22/syndata.html#characters
+		// https://www.w3.org/TR/CSS22/syndata.html#strings
+		internal static string CssEscapeString(string str)
+		{
+			if(str == null) { Debug.Assert(false); return string.Empty; }
+
+			int cc = str.Length;
+			if(cc == 0) return string.Empty;
+
+			StringBuilder sb = new StringBuilder();
+
+			for(int i = 0; i < cc; ++i)
+			{
+				char ch = str[i];
+				switch(ch)
+				{
+					case '\"': sb.Append("\\\""); break;
+					case '\'': sb.Append("\\\'"); break;
+					case '\\': sb.Append("\\\\"); break;
+					case '\n': sb.Append("\\A "); break; // Space terminates hex value
+					case '\r': sb.Append("\\D "); break;
+					default: sb.Append(ch); break;
+				}
+			}
+
+			return sb.ToString();
+		}
+
+		internal static List<KeyValuePair<int, UnicodeCategory>> GetCategoryGroups(
+			string str)
+		{
+			List<KeyValuePair<int, UnicodeCategory>> l =
+				new List<KeyValuePair<int, UnicodeCategory>>();
+			if(str == null) { Debug.Assert(false); return l; }
+			if(str.Length == 0) return l;
+
+			int iStart = 0;
+			UnicodeCategory ucStart = UnicodeCategory.UppercaseLetter;
+
+			for(int i = 0; i < str.Length; ++i)
+			{
+				UnicodeCategory uc = char.GetUnicodeCategory(str[i]);
+
+				if((uc != ucStart) && (i != 0))
+				{
+					l.Add(new KeyValuePair<int, UnicodeCategory>(iStart, ucStart));
+					iStart = i;
+				}
+
+				ucStart = uc;
+			}
+
+			l.Add(new KeyValuePair<int, UnicodeCategory>(iStart, ucStart));
+
+			return l;
+		}
+
+		internal static string CommandToText(string strCommand)
+		{
+			if(strCommand == null) { Debug.Assert(false); return string.Empty; }
+			if(strCommand.Length == 0) return string.Empty;
+
+			return TrimDots(RemoveAccelerator(strCommand), true);
+		}
+
+		internal static bool Equals(char[] vA, char[] vB, bool bIgnoreNewLineEnc)
+		{
+			if(!bIgnoreNewLineEnc) return MemUtil.ArrayHelperExOfChar.Equals(vA, vB);
+			if(object.ReferenceEquals(vA, vB)) return true;
+			if((vA == null) || (vB == null)) return false;
+
+			int cA = vA.Length, cB = vB.Length;
+			int iA = 0, iB = 0;
+
+			while(iA < cA)
+			{
+				if(iB >= cB) return false;
+
+				char chA = vA[iA], chB = vB[iB];
+
+				if(chA == '\r')
+				{
+					if(((iA + 1) < cA) && (vA[iA + 1] == '\n')) ++iA;
+					chA = '\n';
+				}
+				if(chB == '\r')
+				{
+					if(((iB + 1) < cB) && (vB[iB + 1] == '\n')) ++iB;
+					chB = '\n';
+				}
+
+				if(chA != chB) return false;
+
+				++iA;
+				++iB;
+			}
+
+			return (iB == cB);
 		}
 	}
 }

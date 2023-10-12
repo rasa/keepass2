@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ using System.Text;
 using System.Windows.Forms;
 
 using KeePass.App;
+using KeePass.App.Configuration;
 using KeePass.Plugins;
 using KeePass.Resources;
 using KeePass.UI;
@@ -54,7 +55,7 @@ namespace KeePass.Forms
 		public PluginsForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -67,18 +68,6 @@ namespace KeePass.Forms
 				Properties.Resources.B48x48_BlockDevice, KPRes.Plugins,
 				KPRes.PluginsDesc);
 			this.Icon = AppIcons.Default;
-
-			Debug.Assert(!m_lblCacheSize.AutoSize); // For RTL support
-			m_lblCacheSize.Text += " " + StrUtil.FormatDataSize(
-				PlgxCache.GetUsedCacheSize()) + ".";
-
-			m_cbCacheDeleteOld.Checked = Program.Config.Application.Start.PluginCacheDeleteOld;
-
-			if(string.IsNullOrEmpty(PluginManager.UserDirectory))
-			{
-				Debug.Assert(false);
-				m_btnOpenFolder.Enabled = false;
-			}
 
 			m_lvPlugins.Columns.Add(KPRes.Plugin);
 			m_lvPlugins.Columns.Add(KPRes.Version);
@@ -95,22 +84,43 @@ namespace KeePass.Forms
 
 			UpdatePluginsList();
 			if(m_lvPlugins.Items.Count > 0)
-			{
 				m_lvPlugins.Items[0].Selected = true;
-				UIUtil.SetFocus(m_lvPlugins, this);
-			}
 
 			UpdatePluginDescription();
+
+			Debug.Assert(!m_lblCacheSize.AutoSize); // For RTL support
+			m_lblCacheSize.Text += " " + StrUtil.FormatDataSize(
+				PlgxCache.GetUsedCacheSize()) + ".";
+
+			AceStartUp aceStart = Program.Config.Application.Start;
+
+			m_cbCacheDeleteOld.Checked = aceStart.PluginCacheDeleteOld;
+			if(AppConfigEx.IsOptionEnforced(aceStart, "PluginCacheDeleteOld"))
+				m_cbCacheDeleteOld.Enabled = false;
+
+			if(AppConfigEx.IsOptionEnforced(aceStart, "PluginCacheClearOnce"))
+				m_btnClearCache.Enabled = false;
+
+			if(string.IsNullOrEmpty(PluginManager.UserDirectory))
+			{
+				Debug.Assert(false);
+				m_btnOpenFolder.Enabled = false;
+			}
 		}
 
-		private void CleanUpEx()
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
 		{
+			Program.Config.Application.Start.PluginCacheDeleteOld =
+				m_cbCacheDeleteOld.Checked;
+
 			if(m_ilIcons != null)
 			{
 				m_lvPlugins.SmallImageList = null; // Detach event handlers
 				m_ilIcons.Dispose();
 				m_ilIcons = null;
 			}
+
+			GlobalWindowManager.RemoveWindow(this);
 		}
 
 		private void UpdatePluginsList()
@@ -183,23 +193,11 @@ namespace KeePass.Forms
 			UpdatePluginDescription();
 		}
 
-		private void OnFormClosed(object sender, FormClosedEventArgs e)
-		{
-			CleanUpEx();
-			GlobalWindowManager.RemoveWindow(this);
-		}
-
 		private void OnBtnClearCache(object sender, EventArgs e)
 		{
 			Program.Config.Application.Start.PluginCacheClearOnce = true;
 
 			MessageService.ShowInfo(KPRes.PluginCacheClearInfo);
-		}
-
-		private void OnFormClosing(object sender, FormClosingEventArgs e)
-		{
-			Program.Config.Application.Start.PluginCacheDeleteOld =
-				m_cbCacheDeleteOld.Checked;
 		}
 
 		private void OnBtnGetMore(object sender, EventArgs e)

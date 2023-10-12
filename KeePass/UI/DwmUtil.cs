@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -192,8 +192,7 @@ namespace KeePass.UI
 					}
 
 					// *After* drawing the gradient (otherwise border bug)
-					g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-					g.SmoothingMode = SmoothingMode.HighQuality;
+					GfxUtil.SetHighQuality(g);
 
 					RectangleF rSource = new RectangleF(0.0f, 0.0f,
 						img.Width, img.Height);

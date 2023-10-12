@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -64,11 +64,11 @@ namespace KeePass.Util.Spr
 		public static event EventHandler<SprEventArgs> FilterCompilePre;
 		public static event EventHandler<SprEventArgs> FilterCompile;
 
-		private static List<string> m_lFilterPlh = new List<string>();
+		private static readonly List<string> g_lFilterPlh = new List<string>();
 		// See the events above
 		public static List<string> FilterPlaceholderHints
 		{
-			get { return m_lFilterPlh; }
+			get { return g_lFilterPlh; }
 		}
 
 		[Obsolete]
@@ -122,7 +122,7 @@ namespace KeePass.Util.Spr
 			}
 
 			if((ctx.Flags & SprCompileFlags.Comments) != SprCompileFlags.None)
-				str = RemoveComments(str);
+				str = RemoveComments(str, null, null);
 
 			// The following realizes {T-CONV:/Text/Raw/}, which should be
 			// one of the first transformations (except comments)
@@ -276,7 +276,7 @@ namespace KeePass.Util.Spr
 					string strValue = (de.Value as string);
 					if(strValue == null) { Debug.Assert(false); strValue = string.Empty; }
 
-					str = Fill(str, @"%" + strKey + @"%", strValue, ctx, uRecursionLevel);
+					str = Fill(str, "%" + strKey + "%", strValue, ctx, uRecursionLevel);
 				}
 			}
 
@@ -502,20 +502,46 @@ namespace KeePass.Util.Spr
 			return str;
 		}
 
-		private const string StrRemStart = @"{C:";
-		private const string StrRemEnd = @"}";
-		private static string RemoveComments(string strSeq)
+		internal static string RemoveComments(string strSeq, List<string> lComments,
+			SprContext ctxComments)
 		{
+			if(strSeq == null) { Debug.Assert(false); return string.Empty; }
+
+			const string strStartP = @"{C:";
 			string str = strSeq;
+			int iOffsetP = 0;
 
-			while(true)
+			while(iOffsetP < str.Length)
 			{
-				int iStart = str.IndexOf(StrRemStart, SprEngine.ScMethod);
-				if(iStart < 0) break;
-				int iEnd = str.IndexOf(StrRemEnd, iStart + 1, SprEngine.ScMethod);
-				if(iEnd <= iStart) break;
+				int iStartP = str.IndexOf(strStartP, iOffsetP, SprEngine.ScMethod);
+				if(iStartP < 0) break;
 
-				str = (str.Substring(0, iStart) + str.Substring(iEnd + StrRemEnd.Length));
+				int iStartC = iStartP + strStartP.Length, cBraces = 1;
+
+				for(int iEndP = iStartC; iEndP < str.Length; ++iEndP)
+				{
+					char ch = str[iEndP];
+					if(ch == '{') ++cBraces;
+					else if(ch == '}')
+					{
+						if(--cBraces == 0)
+						{
+							if(lComments != null)
+							{
+								string strC = str.Substring(iStartC, iEndP - iStartC);
+								if(ctxComments != null)
+									strC = Compile(strC, ctxComments);
+								lComments.Add(strC);
+							}
+
+							str = str.Remove(iStartP, iEndP - iStartP + 1);
+							break;
+						}
+					}
+				}
+
+				if(cBraces != 0) break; // Malformed input; avoid infinite loop
+				iOffsetP = iStartP;
 			}
 
 			return str;
@@ -600,8 +626,8 @@ namespace KeePass.Util.Spr
 			if(strRef[1] != '@') return null;
 			if(strRef[3] != ':') return null;
 
-			chScan = char.ToUpper(strRef[2]);
-			chWanted = char.ToUpper(strRef[0]);
+			chScan = char.ToUpperInvariant(strRef[2]);
+			chWanted = char.ToUpperInvariant(strRef[0]);
 
 			SearchParameters sp = SearchParameters.None;
 			sp.SearchString = strRef.Substring(4);
@@ -762,7 +788,7 @@ namespace KeePass.Util.Spr
 				try
 				{
 					string strNew = lParams[0];
-					string strCmd = lParams[1].ToLower();
+					string strCmd = lParams[1].ToLowerInvariant();
 
 					if((strCmd == "u") || (strCmd == "upper"))
 						strNew = strNew.ToUpper();
@@ -958,7 +984,7 @@ namespace KeePass.Util.Spr
 			return str;
 		}
 
-		private static Dictionary<string, string> SplitParams(string str)
+		internal static Dictionary<string, string> SplitParams(string str)
 		{
 			Dictionary<string, string> d = new Dictionary<string, string>();
 			if(string.IsNullOrEmpty(str)) return d;
@@ -974,7 +1000,7 @@ namespace KeePass.Util.Spr
 				string[] vKvp = strOption.Split(vSplitKvp);
 				if(vKvp.Length != 2) continue;
 
-				string strKey = (vKvp[0] ?? string.Empty).Trim().ToLower();
+				string strKey = (vKvp[0] ?? string.Empty).Trim().ToLowerInvariant();
 				string strValue = (vKvp[1] ?? string.Empty).Trim();
 
 				d[strKey] = strValue;
@@ -983,13 +1009,13 @@ namespace KeePass.Util.Spr
 			return d;
 		}
 
-		private static string GetParam(Dictionary<string, string> d,
+		internal static string GetParam(Dictionary<string, string> d,
 			string strName, string strDefaultValue)
 		{
 			if(d == null) { Debug.Assert(false); return strDefaultValue; }
 			if(strName == null) { Debug.Assert(false); return strDefaultValue; }
 
-			Debug.Assert(strName == strName.ToLower());
+			Debug.Assert(strName == strName.ToLowerInvariant());
 
 			string strValue;
 			if(d.TryGetValue(strName, out strValue)) return strValue;

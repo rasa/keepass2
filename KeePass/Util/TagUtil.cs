@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ namespace KeePass.Util
 
 				sb.Append(KPRes.Group);
 				sb.Append(": ");
-				sb.Append(kvp.Key.GetFullPath(" \u2192 ", true));
+				sb.Append(kvp.Key.GetFullPath(true, true));
 				sb.AppendLine(".");
 
 				sb.Append(KPRes.Tags);
@@ -118,14 +118,12 @@ namespace KeePass.Util
 			PwGroup pgParent, PwGroup pgTagsSource)
 		{
 			if((btn == null) || (tb == null)) { Debug.Assert(false); return; }
+			Debug.Assert(tt != null);
 
 			Image img = UIUtil.CreateDropDownImage(Properties.Resources.B16x16_KNotes);
 			UIUtil.SetButtonImage(btn, img, true);
 
-			if(tt != null) tt.SetToolTip(btn, KPRes.TagsAddRemove);
-
-			if(Program.Config.UI.OptimizeForScreenReader)
-				btn.Text = KPRes.TagsAddRemove;
+			UIUtil.SetToolTip(tt, btn, KPRes.TagsAddRemove, true);
 
 			CustomContextMenuStripEx ctx = null;
 			Font fItalic = null;
@@ -167,6 +165,8 @@ namespace KeePass.Util
 				}
 				else
 				{
+					AccessKeyManagerEx ak = new AccessKeyManagerEx();
+
 					for(int i = 0; i < lAll.Count; ++i)
 					{
 						string strTag = lAll[i]; // Used in Click handler
@@ -177,7 +177,7 @@ namespace KeePass.Util
 						if(bInh) strSuffix = " (" + KPRes.Inherited + ")";
 
 						ToolStripMenuItem tsmi = new ToolStripMenuItem(
-							StrUtil.EncodeMenuText(strTag + strSuffix));
+							ak.CreateText(strTag + strSuffix, true));
 						UIUtil.SetChecked(tsmi, bHasTag);
 
 						if(bInh) tsmi.Font = fItalic;

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -34,10 +34,10 @@ namespace KeePassLib.Utility
 {
 	public sealed class MessageServiceEventArgs : EventArgs
 	{
-		private string m_strTitle = string.Empty;
-		private string m_strText = string.Empty;
-		private MessageBoxButtons m_msgButtons = MessageBoxButtons.OK;
-		private MessageBoxIcon m_msgIcon = MessageBoxIcon.None;
+		private readonly string m_strTitle = string.Empty;
+		private readonly string m_strText = string.Empty;
+		private readonly MessageBoxButtons m_msgButtons = MessageBoxButtons.OK;
+		private readonly MessageBoxIcon m_msgIcon = MessageBoxIcon.None;
 
 		public string Title { get { return m_strTitle; } }
 		public string Text { get { return m_strText; } }
@@ -86,7 +86,7 @@ namespace KeePassLib.Utility
 		public static string NewParagraph
 		{
 #if !KeePassLibSD
-			get { return Environment.NewLine + Environment.NewLine; }
+			get { return (Environment.NewLine + Environment.NewLine); }
 #else
 			get { return "\r\n\r\n"; }
 #endif

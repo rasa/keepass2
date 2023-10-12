@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -50,13 +50,13 @@ namespace KeePass.Forms
 		private bool m_bURtfWithHighChar = false;
 
 		private uint m_uBlockEvents = 0;
-		private Stack<KeyValuePair<int, int>> m_lSelections =
+		private readonly Stack<KeyValuePair<int, int>> m_stSelections =
 			new Stack<KeyValuePair<int, int>>();
 		private BinaryDataClass m_bdc = BinaryDataClass.Unknown;
 		private bool m_bNewLinesWin = true;
 
 		private string m_strInitialFormRect = string.Empty;
-		private RichTextBoxContextMenu m_ctxText = new RichTextBoxContextMenu();
+		private readonly RichTextBoxContextMenu m_ctxText = new RichTextBoxContextMenu();
 
 		/// <summary>
 		/// Get the edited, new data. This property is non-<c>null</c> only
@@ -85,7 +85,8 @@ namespace KeePass.Forms
 		public DataEditorForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+
+			GlobalWindowManager.InitializeForm(this);
 			Program.Translation.ApplyTo("KeePass.Forms.DataEditorForm.m_menuMain", m_menuMain.Items);
 		}
 
@@ -157,13 +158,15 @@ namespace KeePass.Forms
 				string.Empty : " ") + KPRes.Search);
 			UIUtil.SetCueBanner(m_tbFind, strSearchTr);
 
+			UIUtil.SetToolTip(m_tbFontCombo, KPRes.Font, true);
+			UIUtil.SetToolTip(m_tbFontSizeCombo, KPRes.Size, true);
+
 			UIUtil.EnableAutoCompletion(m_tbFontCombo, true);
 			UIUtil.EnableAutoCompletion(m_tbFontSizeCombo, true);
 
-			m_rtbText.Dock = DockStyle.Fill;
+			m_rtbText.WordWrap = Program.Config.UI.DataEditorWordWrap;
 			m_ctxText.Attach(m_rtbText, this);
 			m_tssStatusMain.Text = KPRes.Ready;
-			m_rtbText.WordWrap = Program.Config.UI.DataEditorWordWrap;
 
 			InitFormattingToolBar();
 
@@ -219,14 +222,10 @@ namespace KeePass.Forms
 					m_tbFontCombo.Items.Add(ff.Name);
 			}
 
-			m_tbFontCombo.ToolTipText = KPRes.Font;
-
 			int[] vSizes = new int[] { 8, 9, 10, 11, 12, 14, 16, 18, 20,
 				22, 24, 26, 28, 36, 48, 72 };
 			foreach(int nSize in vSizes)
 				m_tbFontSizeCombo.Items.Add(nSize.ToString());
-
-			m_tbFontSizeCombo.ToolTipText = KPRes.Size;
 		}
 
 		private void UpdateUIState(bool bSetModified, bool bFocusText)
@@ -283,13 +282,13 @@ namespace KeePass.Forms
 		{
 			if(bSelect)
 			{
-				m_lSelections.Push(new KeyValuePair<int, int>(m_rtbText.SelectionStart,
-					m_rtbText.SelectionLength));
+				m_stSelections.Push(new KeyValuePair<int, int>(
+					m_rtbText.SelectionStart, m_rtbText.SelectionLength));
 				m_rtbText.SelectAll();
 			}
 			else
 			{
-				KeyValuePair<int, int> kvp = m_lSelections.Pop();
+				KeyValuePair<int, int> kvp = m_stSelections.Pop();
 				m_rtbText.Select(kvp.Key, kvp.Value);
 			}
 		}
@@ -363,7 +362,10 @@ namespace KeePass.Forms
 			string strRect = UIUtil.GetWindowScreenRect(this);
 			if(strRect != m_strInitialFormRect) // Don't overwrite ""
 				Program.Config.UI.DataEditorRect = strRect;
+		}
 
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
+		{
 			m_ctxText.Detach();
 			GlobalWindowManager.RemoveWindow(this);
 		}
@@ -403,21 +405,14 @@ namespace KeePass.Forms
 			UpdateUIState(false, false);
 		}
 
-		private static bool ShowColorDialog(Color clrCurrent, out Color clrSelected)
-		{
-			Color? clrNew = UIUtil.ShowColorDialog(clrCurrent);
-			clrSelected = clrNew.GetValueOrDefault(clrCurrent);
-			return clrNew.HasValue;
-		}
-
 		private void OnColorForegroundClicked(object sender, EventArgs e)
 		{
 			if((m_uBlockEvents > 0) || (m_bdc != BinaryDataClass.RichText)) return;
 
-			Color clr;
-			if(ShowColorDialog(m_rtbText.SelectionColor, out clr))
+			Color? oclr = UIUtil.ShowColorDialog(m_rtbText.SelectionColor);
+			if(oclr.HasValue)
 			{
-				m_rtbText.SelectionColor = clr;
+				m_rtbText.SelectionColor = oclr.Value;
 				UpdateUIState(true, true);
 			}
 		}
@@ -426,10 +421,10 @@ namespace KeePass.Forms
 		{
 			if((m_uBlockEvents > 0) || (m_bdc != BinaryDataClass.RichText)) return;
 
-			Color clr;
-			if(ShowColorDialog(m_rtbText.SelectionBackColor, out clr))
+			Color? oclr = UIUtil.ShowColorDialog(m_rtbText.SelectionBackColor);
+			if(oclr.HasValue)
 			{
-				m_rtbText.SelectionBackColor = clr;
+				m_rtbText.SelectionBackColor = oclr.Value;
 				UpdateUIState(true, true);
 			}
 		}
@@ -583,8 +578,7 @@ namespace KeePass.Forms
 
 			if(dlg.ShowDialog() == DialogResult.OK)
 			{
-				Program.Config.UI.DataEditorFont = new AceFont(dlg.Font);
-				Program.Config.UI.DataEditorFont.OverrideUIDefault = true;
+				Program.Config.UI.DataEditorFont = new AceFont(dlg.Font, true);
 
 				if(m_bdc == BinaryDataClass.Text)
 				{

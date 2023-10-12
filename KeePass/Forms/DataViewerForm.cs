@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ namespace KeePass.Forms
 		private bool m_bDataExpanded = false;
 
 		private string m_strInitialFormRect = string.Empty;
-		private RichTextBoxContextMenu m_ctxText = new RichTextBoxContextMenu();
+		private readonly RichTextBoxContextMenu m_ctxText = new RichTextBoxContextMenu();
 
 		private Image m_img = null;
 		private Image m_imgResized = null;
@@ -90,7 +90,14 @@ namespace KeePass.Forms
 		public DataViewerForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+
+			// GlobalWindowManager.InitializeForm checks docked controls
+			m_rtbText.Dock = DockStyle.Fill;
+			m_pnlImageViewer.Dock = DockStyle.Fill;
+			m_picBox.Dock = DockStyle.Fill;
+			m_webBrowser.Dock = DockStyle.Fill;
+
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -115,10 +122,6 @@ namespace KeePass.Forms
 
 			m_tssStatusMain.Text = KPRes.Ready;
 			m_ctxText.Attach(m_rtbText, this);
-			m_rtbText.Dock = DockStyle.Fill;
-			m_webBrowser.Dock = DockStyle.Fill;
-			m_pnlImageViewer.Dock = DockStyle.Fill;
-			m_picBox.Dock = DockStyle.Fill;
 
 			m_tslEncoding.Text = KPRes.Encoding + ":";
 
@@ -221,7 +224,8 @@ namespace KeePass.Forms
 			return string.Empty;
 		}
 
-		private void SetRtbData(string strData, bool bRtf, bool bFixedFont)
+		private void SetRtbData(string strData, bool bRtf, bool bFixedFont,
+			bool bLinkify)
 		{
 			if(strData == null) { Debug.Assert(false); strData = string.Empty; }
 
@@ -231,19 +235,22 @@ namespace KeePass.Forms
 			else FontUtil.AssignDefault(m_rtbText);
 
 			if(bRtf) m_rtbText.Rtf = StrUtil.RtfFix(strData);
-			else
-			{
-				m_rtbText.Text = strData;
+			else m_rtbText.Text = strData;
 
+			if(bLinkify) UIUtil.RtfLinkifyUrls(m_rtbText);
+
+			if(!bRtf)
+			{
 				Font f = (bFixedFont ? FontUtil.MonoFont : FontUtil.DefaultFont);
 				if(f != null)
 				{
 					m_rtbText.SelectAll();
 					m_rtbText.SelectionFont = f;
-					m_rtbText.Select(0, 0);
 				}
 				else { Debug.Assert(false); }
 			}
+
+			m_rtbText.Select(0, 0);
 		}
 
 		private void UpdateHexView()
@@ -299,7 +306,7 @@ namespace KeePass.Forms
 
 			if(cbData < m_pbData.Length) sb.AppendLine(m_strDataExpand);
 
-			SetRtbData(sb.ToString(), false, true);
+			SetRtbData(sb.ToString(), false, true, false);
 
 			if(cbData < m_pbData.Length) LinkifyExpandLink();
 		}
@@ -319,7 +326,7 @@ namespace KeePass.Forms
 				strData = strData.Substring(0, ccInvMax) + MessageService.NewLine +
 					m_strDataExpand + MessageService.NewLine;
 
-			SetRtbData(strData, bRtf, false);
+			SetRtbData(strData, bRtf, false, true);
 
 			if(bShorten) LinkifyExpandLink();
 		}
@@ -655,7 +662,7 @@ namespace KeePass.Forms
 				if(!str.EndsWith("%")) continue;
 				str = str.Substring(0, str.Length - 1);
 
-				int zItem = 0;
+				int zItem;
 				if(!int.TryParse(str, out zItem)) { Debug.Assert(false); continue; }
 
 				int d = Math.Abs(z - zItem);
@@ -663,30 +670,6 @@ namespace KeePass.Forms
 			}
 
 			return iBest;
-		}
-	}
-
-	public sealed class DvfContextEventArgs : CancellableOperationEventArgs
-	{
-		private DataViewerForm m_form;
-		public DataViewerForm Form { get { return m_form; } }
-
-		private byte[] m_pbData;
-		public byte[] Data { get { return m_pbData; } }
-
-		private string m_strDataDesc;
-		public string DataDescription { get { return m_strDataDesc; } }
-
-		private ToolStripComboBox m_tscViewers;
-		public ToolStripComboBox ViewersComboBox { get { return m_tscViewers; } }
-
-		public DvfContextEventArgs(DataViewerForm form, byte[] pbData,
-			string strDataDesc, ToolStripComboBox cbViewers)
-		{
-			m_form = form;
-			m_pbData = pbData;
-			m_strDataDesc = strDataDesc;
-			m_tscViewers = cbViewers;
 		}
 	}
 }

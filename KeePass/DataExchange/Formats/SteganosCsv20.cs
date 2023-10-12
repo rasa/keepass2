@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Text;
 
@@ -32,7 +31,7 @@ using KeePassLib.Utility;
 
 namespace KeePass.DataExchange.Formats
 {
-	// 20.0.7+
+	// 20.0.7-22.3.1+
 	internal sealed class SteganosCsv20 : FileFormatProvider
 	{
 		public override bool SupportsImport { get { return true; } }
@@ -41,11 +40,6 @@ namespace KeePass.DataExchange.Formats
 		public override string FormatName { get { return "Steganos Password Manager CSV"; } }
 		public override string DefaultExtension { get { return "csv"; } }
 		public override string ApplicationGroup { get { return KPRes.PasswordManagers; } }
-
-		public override Image SmallIcon
-		{
-			get { return KeePass.Properties.Resources.B16x16_Imp_Steganos20; }
-		}
 
 		public override void Import(PwDatabase pwStorage, Stream sInput,
 			IStatusLogger slLogger)
@@ -56,7 +50,7 @@ namespace KeePass.DataExchange.Formats
 
 			CsvOptions opt = new CsvOptions();
 			opt.BackslashIsEscape = false;
-			opt.TextQualifier = char.MinValue;
+			// opt.TextQualifier = char.MinValue; // For 20.0.7, not 22.3.1
 			opt.TrimFields = true;
 
 			CsvStreamReaderEx csv = new CsvStreamReaderEx(strData, opt);
@@ -68,41 +62,43 @@ namespace KeePass.DataExchange.Formats
 			string strMapEMail = Guid.NewGuid().ToString();
 
 			Dictionary<string, string> dMaps = new Dictionary<string, string>(
-				StrUtil.CaseIgnoreComparer);
-			dMaps["title"] = PwDefs.TitleField;
-			dMaps["type"] = strMapIgnore;
-			dMaps["username_field"] = strMapIgnore;
-			dMaps["username"] = PwDefs.UserNameField;
-			dMaps["password_field"] = strMapIgnore;
-			dMaps["password"] = PwDefs.PasswordField;
-			dMaps["url"] = PwDefs.UrlField;
-			dMaps["category"] = strMapGroup;
-			dMaps["note"] = PwDefs.NotesField;
-			dMaps["autofill"] = strMapIgnore;
-			dMaps["autofillenabled"] = strMapIgnore;
-			dMaps["last_password_change"] = strMapIgnore;
-			dMaps["lastmodified"] = strMapLastMod;
-			dMaps["iban"] = PwDefs.UserNameField;
-			dMaps["bic"] = "BIC";
-			dMaps["banking_pin"] = PwDefs.PasswordField;
-			dMaps["card_number"] = PwDefs.UserNameField;
-			dMaps["card_holder"] = "Card Holder";
-			dMaps["card_pin"] = PwDefs.PasswordField;
-			dMaps["card_verification_code"] = "Verification Code";
-			dMaps["valid_from"] = "Valid From";
-			dMaps["valid_thru"] = "Valid To";
-			dMaps["name"] = PwDefs.UserNameField;
-			dMaps["firstname"] = PwDefs.UserNameField;
-			dMaps["street"] = PwDefs.NotesField;
-			dMaps["houseno"] = PwDefs.NotesField;
-			dMaps["zip"] = PwDefs.NotesField;
-			dMaps["city"] = PwDefs.NotesField;
-			dMaps["mobile_phone"] = PwDefs.NotesField;
-			dMaps["phone"] = PwDefs.NotesField;
-			dMaps["email"] = strMapEMail;
-			dMaps["birthday"] = "Birthday";
-			dMaps["tags"] = strMapTags;
-			dMaps["keyword"] = strMapTags;
+				StrUtil.CaseIgnoreComparer)
+			{
+				{ "title", PwDefs.TitleField },
+				{ "type", strMapIgnore },
+				{ "username_field", strMapIgnore },
+				{ "username", PwDefs.UserNameField },
+				{ "password_field", strMapIgnore },
+				{ "password", PwDefs.PasswordField },
+				{ "url", PwDefs.UrlField },
+				{ "category", strMapGroup },
+				{ "note", PwDefs.NotesField },
+				{ "autofill", strMapIgnore },
+				{ "autofillenabled", strMapIgnore },
+				{ "last_password_change", strMapIgnore },
+				{ "lastmodified", strMapLastMod },
+				{ "iban", PwDefs.UserNameField },
+				{ "bic", "BIC" },
+				{ "banking_pin", PwDefs.PasswordField },
+				{ "card_number", PwDefs.UserNameField },
+				{ "card_holder", "Card Holder" },
+				{ "card_pin", PwDefs.PasswordField },
+				{ "card_verification_code", "Verification Code" },
+				{ "valid_from", "Valid From" },
+				{ "valid_thru", "Valid To" },
+				{ "name", PwDefs.UserNameField },
+				{ "firstname", PwDefs.UserNameField },
+				{ "street", PwDefs.NotesField },
+				{ "houseno", PwDefs.NotesField },
+				{ "zip", PwDefs.NotesField },
+				{ "city", PwDefs.NotesField },
+				{ "mobile_phone", PwDefs.NotesField },
+				{ "phone", PwDefs.NotesField },
+				{ "email", strMapEMail },
+				{ "birthday", "Birthday" },
+				{ "tags", strMapTags },
+				{ "keyword", strMapTags }
+			};
 
 			string[] vNames = csv.ReadLine();
 			if((vNames == null) || (vNames.Length == 0)) { Debug.Assert(false); return; }
@@ -114,7 +110,7 @@ namespace KeePass.DataExchange.Formats
 				if(string.IsNullOrEmpty(str)) { Debug.Assert(false); str = strMapIgnore; }
 				else
 				{
-					string strMapped = null;
+					string strMapped;
 					dMaps.TryGetValue(str, out strMapped);
 
 					if(string.IsNullOrEmpty(strMapped))

@@ -226,6 +226,9 @@
     <Compile Include="..\KeePassLib\Native\ClipboardU.cs">
       <Link>KeePassLib\Native\ClipboardU.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Native\NativeBufferEx.cs">
+      <Link>KeePassLib\Native\NativeBufferEx.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Native\NativeLib.cs">
       <Link>KeePassLib\Native\NativeLib.cs</Link>
     </Compile>
@@ -395,9 +398,12 @@
     <Compile Include="App\Configuration\AceTrayIcon.cs" />
     <Compile Include="App\Configuration\AceUI.cs" />
     <Compile Include="App\Configuration\AppConfigEx.cs" />
+    <Compile Include="App\Configuration\AppConfigEx.Sections.cs" />
     <Compile Include="App\Configuration\AppConfigSerializer.cs" />
+    <Compile Include="App\Configuration\AppEnforcedConfig.cs" />
     <Compile Include="DataExchange\CsvStreamReader.cs" />
     <Compile Include="DataExchange\CsvStreamReaderEx.cs" />
+    <Compile Include="DataExchange\CsvStreamWriter.cs" />
     <Compile Include="DataExchange\CsvTableEntryReader.cs" />
     <Compile Include="DataExchange\CsvTableObjectReader.cs" />
     <Compile Include="DataExchange\ExportUtil.cs" />
@@ -416,6 +422,7 @@
     <Compile Include="DataExchange\Formats\GenericCsv.cs" />
     <Compile Include="DataExchange\Formats\HandySafeProXml12.cs" />
     <Compile Include="DataExchange\Formats\HandySafeTxt512.cs" />
+    <Compile Include="DataExchange\Formats\KasperskyPwMgrTxt90.cs" />
     <Compile Include="DataExchange\Formats\KasperskyPwMgrXml50.cs" />
     <Compile Include="DataExchange\Formats\KeePassCsv1x.cs" />
     <Compile Include="DataExchange\Formats\KeePassHtml2x.cs" />
@@ -426,6 +433,7 @@
     <Compile Include="DataExchange\Formats\KeePassXml2x.cs" />
     <Compile Include="DataExchange\Formats\KeePassXXml041.cs" />
     <Compile Include="DataExchange\Formats\KeeperJson16.cs" />
+    <Compile Include="DataExchange\Formats\KeyFolderXml1.cs" />
     <Compile Include="DataExchange\Formats\LastPassCsv2.cs" />
     <Compile Include="DataExchange\Formats\MozillaBookmarksHtml100.cs" />
     <Compile Include="DataExchange\Formats\MozillaBookmarksJson100.cs" />
@@ -433,6 +441,7 @@
     <Compile Include="DataExchange\Formats\NetworkPwMgrCsv4.cs" />
     <Compile Include="DataExchange\Formats\NortonIdSafeCsv2013.cs" />
     <Compile Include="DataExchange\Formats\NPasswordNpw102.cs" />
+    <Compile Include="DataExchange\Formats\OnePw1Pux8.cs" />
     <Compile Include="DataExchange\Formats\OnePwProCsv599.cs" />
     <Compile Include="DataExchange\Formats\PassKeeper12.cs" />
     <Compile Include="DataExchange\Formats\PinsTxt450.cs" />
@@ -486,6 +495,19 @@
     <Compile Include="Forms\AboutForm.Designer.cs">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\OptionsEnfForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\OptionsEnfForm.Designer.cs">
+      <DependentUpon>OptionsEnfForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\OtpGeneratorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\OtpGeneratorForm.Designer.cs">
+      <DependentUpon>OtpGeneratorForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\_Accessories.cs" />
     <Compile Include="Forms\AutoTypeCtxForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -805,9 +827,14 @@
     <Compile Include="Plugins\PlgxPlugin.cs" />
     <Compile Include="Resources\KPRes.cs" />
     <Compile Include="Resources\KPRes.Generated.cs" />
+    <Compile Include="UI\AccessibilityEx.cs" />
+    <Compile Include="UI\AccessKeyManagerEx.cs" />
     <Compile Include="UI\AsyncPwListUpdate.cs" />
     <Compile Include="UI\BackgroundForm.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\ColorButtonEx.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\ColorMenuItem.cs">
       <SubType>Component</SubType>
@@ -843,7 +870,9 @@
     <Compile Include="UI\ExpiryControlGroup.cs" />
     <Compile Include="UI\FileDialogsEx.cs" />
     <Compile Include="UI\FileIcons.cs" />
+    <Compile Include="UI\FontControlGroup.cs" />
     <Compile Include="UI\FontUtil.cs" />
+    <Compile Include="UI\FormDataExchange.cs" />
     <Compile Include="UI\GlobalWindowManager.cs" />
     <Compile Include="UI\IconColorizer.cs" />
     <Compile Include="UI\IGwmWindow.cs" />
@@ -863,6 +892,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\ProtectedDialog.cs" />
+    <Compile Include="UI\PwGeneratorMenu.cs" />
     <Compile Include="UI\PwInputControlGroup.cs" />
     <Compile Include="UI\RichTextBuilder.cs" />
     <Compile Include="UI\RtlAwareResizeScope.cs" />
@@ -873,6 +903,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\StatusUtil.cs" />
+    <Compile Include="UI\SuspendLayoutScope.cs" />
     <Compile Include="UI\TabControlEx.cs">
     </Compile>
     <Compile Include="UI\TaskbarList.cs" />
@@ -889,6 +920,7 @@
     </Compile>
     <Compile Include="Util\Archive\ImageArchive.cs" />
     <Compile Include="Util\Archive\XspArchive.cs" />
+    <Compile Include="Util\Archive\ZipArchiveEx.cs" />
     <Compile Include="Util\AutoTypeCtx.cs" />
     <Compile Include="Util\BinaryDataClassifier.cs" />
     <Compile Include="Util\BinaryDataUtil.cs" />
@@ -1031,9 +1063,15 @@
       <SubType>Designer</SubType>
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\OptionsEnfForm.resx">
+      <DependentUpon>OptionsEnfForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\OptionsForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>OptionsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\OtpGeneratorForm.resx">
+      <DependentUpon>OtpGeneratorForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\PluginsForm.resx">
       <SubType>Designer</SubType>
@@ -1140,6 +1178,7 @@
     <Compile Include="Ecas\IEcasParameterized.cs" />
     <Compile Include="Util\CriticalSectionEx.cs" />
     <Compile Include="Util\CustomResourceManager.cs" />
+    <Compile Include="Util\DiffUtil.cs" />
     <Compile Include="Util\EmergencySheet.cs" />
     <Compile Include="Util\EntryMenu.cs" />
     <Compile Include="Util\EntryTemplates.cs" />
@@ -1308,18 +1347,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="KeePass.ico" />
-    <None Include="Resources\Images\B16x16_Imp_Keeper.png" />
-    <None Include="Resources\Images\B16x16_Imp_TrueKey.png" />
-    <None Include="Resources\Images\B16x16_Imp_Steganos20.png" />
-    <None Include="Resources\Images\B16x16_Imp_Bitwarden.png" />
-    <None Include="Resources\Images\B16x16_Imp_Chrome.png" />
+    <None Include="Resources\Nuvola\B16x16_Services.png" />
     <None Include="Resources\Images\B48x35_WritingHand.png" />
     <None Include="Resources\Icons\KeePass.ico" />
-    <None Include="Resources\Images\B16x16_Imp_Enpass.png" />
-    <None Include="Resources\Images\B16x16_Imp_MSecure.png" />
-    <None Include="Resources\Images\B16x16_Imp_PwSaver.png" />
     <None Include="Resources\Nuvola\B16x16_Folder.png" />
-    <None Include="Resources\Images\B16x16_Imp_NPassword.png" />
     <None Include="Resources\Nuvola_Derived\B16x16_Folder_New_Ex.png" />
     <None Include="Resources\Nuvola_Derived\B16x16_TextAlignRight.png" />
     <None Include="Resources\Nuvola_Derived\B16x16_TextAlignLeft.png" />
@@ -1333,35 +1364,16 @@
     <None Include="Resources\Images\B16x16_Transparent.png" />
     <None Include="Resources\Images\B19x07_3BlackDots.png" />
     <None Include="Resources\Images\B16x16_MenuCheck.png" />
-    <None Include="Resources\Images\B16x16_Imp_VisKeeper.png" />
-    <None Include="Resources\Images\B16x16_Imp_Dashlane.png" />
-    <None Include="Resources\Images\B16x16_Imp_NortonIdSafe.png" />
     <None Include="Resources\Data\MostPopularPasswords.txt.gz" />
     <None Include="Resources\Nuvola_Derived\B16x16_EditCopyUrl.png" />
     <None Include="Resources\Nuvola\B16x16_KTouch.png" />
     <None Include="Resources\Nuvola_Derived\B16x16_Folder_2.png" />
-    <None Include="Resources\Images\B16x16_Imp_NetworkPwMgr.png" />
-    <None Include="Resources\Images\B16x16_Imp_TurboPws.png" />
-    <None Include="Resources\Images\B16x16_Imp_SafeWallet.png" />
-    <None Include="Resources\Images\B16x16_Imp_LastPass.png" />
-    <None Include="Resources\Images\B16x16_Imp_DesktopKnox.png" />
     <None Include="Resources\Nuvola_Derived\B16x16_Key_New.png" />
     <None Include="Resources\Nuvola_Derived\B16x16_EditCopyLink.png" />
-    <None Include="Resources\Images\B16x16_Imp_KasperskyPwMgr.png" />
-    <None Include="Resources\Images\B16x16_Imp_StickyPw.png" />
-    <None Include="Resources\Images\B16x16_Imp_PwsPlus.png" />
     <None Include="Resources\Nuvola\B16x16_KaboodleLoop.png" />
     <None Include="Resources\Images\B16x16_MenuRadio.png" />
-    <None Include="Resources\Images\B16x16_Imp_DataVault.png" />
-    <None Include="Resources\Images\B16x16_Imp_Revelation.png" />
-    <None Include="Resources\Images\B16x16_Imp_PwPrompter.png" />
-    <None Include="Resources\Images\B16x16_WinFavs.png" />
     <None Include="Resources\Nuvola\B16x16_KNotes.png" />
     <None Include="Resources\Nuvola\B48x48_View_Detailed.png" />
-    <None Include="Resources\Images\B16x16_Imp_HandySafePro.png" />
-    <None Include="Resources\Images\B16x16_Imp_ZdnPwPro.png" />
-    <None Include="Resources\Images\B16x16_Imp_HandySafe.png" />
-    <None Include="Resources\Images\B16x16_Imp_KeePassX.png" />
     <None Include="Resources\Icons\LockOverlay.ico" />
     <None Include="Resources\Nuvola\B16x16_Redo.png" />
     <None Include="Resources\Nuvola\B16x16_Color_Fill.png" />
@@ -1370,32 +1382,14 @@
     <None Include="Resources\Images\B16x16_FontUnderline.png" />
     <None Include="Resources\Images\B16x16_FontItalic.png" />
     <None Include="Resources\Images\B16x16_FontBold.png" />
-    <None Include="Resources\Images\B16x16_Imp_FlexWallet.png" />
-    <None Include="Resources\Images\B16x16_Imp_OnePwPro.png" />
     <None Include="Resources\Nuvola\B48x48_Make_KDevelop.png" />
     <None Include="Resources\Nuvola\B16x16_Make_KDevelop.png" />
-    <None Include="Resources\Images\B16x16_Imp_PassKeeper.png" />
-    <None Include="Resources\Images\B16x16_Imp_PwMem2008.png" />
     <None Include="Resources\Nuvola\B16x16_Folder_Outbox.png" />
-    <None Include="Resources\Images\B16x16_Imp_RoboForm.png" />
-    <None Include="Resources\Images\B16x16_Imp_SplashID.png" />
-    <None Include="Resources\Images\B16x16_Imp_PwTresor.png" />
     <None Include="Resources\Nuvola_Derived\B16x16_File_Close.png" />
     <None Include="Resources\Nuvola_Derived\B16x16_File_SaveAll.png" />
     <None Include="Resources\Nuvola_Derived\B16x16_File_SaveAll_Disabled.png" />
-    <None Include="Resources\Images\B16x16_Imp_Steganos.png" />
-    <None Include="Resources\Images\B16x16_Imp_Whisper32.png" />
     <None Include="KeePass.pfx" />
     <None Include="Resources\Nuvola\B16x16_Folder_Inbox.png" />
-    <None Include="Resources\Images\B16x16_Imp_Security.png" />
-    <None Include="Resources\Images\B16x16_Imp_PwSafe.png" />
-    <None Include="Resources\Images\B16x16_Imp_PwDepot.png" />
-    <None Include="Resources\Images\B16x16_Imp_PwAgent.png" />
-    <None Include="Resources\Images\B16x16_Imp_PVault.png" />
-    <None Include="Resources\Images\B16x16_Imp_PINs.png" />
-    <None Include="Resources\Images\B16x16_Imp_CWallet.png" />
-    <None Include="Resources\Images\B16x16_Imp_AnyPw.png" />
-    <None Include="Resources\Images\B16x16_Imp_AmP.png" />
     <None Include="Resources\Nuvola\B48x48_Run.png" />
     <None Include="Resources\Nuvola\B16x16_WWW.png" />
     <None Include="Resources\Nuvola\B48x48_WWW.png" />
@@ -1461,6 +1455,6 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>"$(FrameworkSDKDir)bin\sgen.exe" /assembly:"$(TargetPath)" /force /nologo /compiler:/keycontainer:VS_KEY_27A70973F3FC3787 /compiler:/delaysign-</PostBuildEvent>
+    <PostBuildEvent>"$(FrameworkSDKDir)bin\sgen.exe" /assembly:"$(TargetPath)" /force /nologo /compiler:/keycontainer:VS_KEY_8C26407DBC890166 /compiler:/delaysign-</PostBuildEvent>
   </PropertyGroup>
 </Project>

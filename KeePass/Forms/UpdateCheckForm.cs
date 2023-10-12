@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ namespace KeePass.Forms
 		public UpdateCheckForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -75,15 +75,16 @@ namespace KeePass.Forms
 			m_lvInfo.Columns.Add(KPRes.Installed);
 			m_lvInfo.Columns.Add(KPRes.Available);
 
-			List<Image> lImages = new List<Image>();
-			lImages.Add(Properties.Resources.B16x16_Help);
-			lImages.Add(Properties.Resources.B16x16_Apply);
-			lImages.Add(Properties.Resources.B16x16_Redo);
-			lImages.Add(Properties.Resources.B16x16_History);
-			lImages.Add(Properties.Resources.B16x16_Error);
+			List<Image> lImages = new List<Image>
+			{
+				Properties.Resources.B16x16_Help,
+				Properties.Resources.B16x16_Apply,
+				Properties.Resources.B16x16_Redo,
+				Properties.Resources.B16x16_History,
+				Properties.Resources.B16x16_Error
+			};
 			m_ilIcons = UIUtil.BuildImageListUnscaled(lImages,
 				DpiUtil.ScaleIntX(16), DpiUtil.ScaleIntY(16));
-
 			m_lvInfo.SmallImageList = m_ilIcons;
 
 			string strCat = string.Empty;
@@ -140,7 +141,7 @@ namespace KeePass.Forms
 			UIUtil.ResizeColumns(m_lvInfo, new int[] { 2, 2, 1, 1 }, true);
 		}
 
-		private void CleanUpEx()
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
 		{
 			if(m_ilIcons != null)
 			{
@@ -148,11 +149,7 @@ namespace KeePass.Forms
 				m_ilIcons.Dispose();
 				m_ilIcons = null;
 			}
-		}
 
-		private void OnFormClosed(object sender, FormClosedEventArgs e)
-		{
-			CleanUpEx();
 			GlobalWindowManager.RemoveWindow(this);
 		}
 

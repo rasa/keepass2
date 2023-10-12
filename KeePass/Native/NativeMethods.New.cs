@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -60,9 +60,7 @@ namespace KeePass.Native
 				int cb = (cc + 2) * cbChar;
 				p = Marshal.AllocCoTaskMem(cb);
 				if(p == IntPtr.Zero) { Debug.Assert(false); return string.Empty; }
-
-				byte[] pbZero = new byte[cb];
-				Marshal.Copy(pbZero, 0, p, cb);
+				MemUtil.ZeroMemory(p, cb);
 
 				int ccReal = GetWindowText(hWnd, p, cc + 1);
 				if(ccReal <= 0) { Debug.Assert(false); return string.Empty; }
@@ -82,6 +80,42 @@ namespace KeePass.Native
 			finally { if(p != IntPtr.Zero) Marshal.FreeCoTaskMem(p); }
 
 			return (bTrim ? strWindow.Trim() : strWindow);
+		}
+
+		internal static char[] GetWindowTextV(IntPtr hWnd, bool bZeroBuffer)
+		{
+			if(hWnd == IntPtr.Zero) { Debug.Assert(false); return MemUtil.EmptyArray<char>(); }
+
+			int cc = GetWindowTextLength(hWnd);
+			if(cc <= 0) return MemUtil.EmptyArray<char>();
+
+			int cb = (cc + 2) * Marshal.SystemDefaultCharSize;
+
+			char[] v;
+			IntPtr p = IntPtr.Zero;
+			try
+			{
+				p = Marshal.AllocCoTaskMem(cb);
+				if(p == IntPtr.Zero) { Debug.Assert(false); return MemUtil.EmptyArray<char>(); }
+				MemUtil.ZeroMemory(p, cb);
+
+				int ccReal = GetWindowText(hWnd, p, cc + 1);
+				if(ccReal <= 0) { Debug.Assert(false); return MemUtil.EmptyArray<char>(); }
+
+				v = new char[ccReal];
+				Marshal.Copy(p, v, 0, ccReal);
+				Debug.Assert(Array.IndexOf(v, '\0') < 0);
+			}
+			finally
+			{
+				if(p != IntPtr.Zero)
+				{
+					if(bZeroBuffer) MemUtil.ZeroMemory(p, cb);
+					Marshal.FreeCoTaskMem(p);
+				}
+			}
+
+			return v;
 		}
 
 		/* internal static string GetWindowClassName(IntPtr hWnd)
@@ -387,7 +421,7 @@ namespace KeePass.Native
 			try
 			{
 				SCROLLINFO si = new SCROLLINFO();
-				si.cbSize = (uint)Marshal.SizeOf(si);
+				si.cbSize = (uint)Marshal.SizeOf(typeof(SCROLLINFO));
 				si.fMask = (uint)ScrollInfoMask.SIF_POS;
 
 				if(GetScrollInfo(hWnd, (int)ScrollBarDirection.SB_VERT, ref si))
@@ -414,7 +448,7 @@ namespace KeePass.Native
 			try
 			{
 				SCROLLINFO si = new SCROLLINFO();
-				si.cbSize = (uint)Marshal.SizeOf(si);
+				si.cbSize = (uint)Marshal.SizeOf(typeof(SCROLLINFO));
 				si.fMask = (uint)ScrollInfoMask.SIF_POS;
 				si.nPos = y;
 
@@ -561,7 +595,7 @@ namespace KeePass.Native
 				throw new ArgumentOutOfRangeException("uIndex");
 
 			LVGROUP g = new LVGROUP();
-			g.cbSize = (uint)Marshal.SizeOf(g);
+			g.cbSize = (uint)Marshal.SizeOf(typeof(LVGROUP));
 
 			g.mask = (LVGF_STATE | LVGF_GROUPID);
 			g.stateMask = uStateMask;
@@ -579,7 +613,7 @@ namespace KeePass.Native
 			if(lv == null) throw new ArgumentNullException("lv");
 
 			LVGROUP g = new LVGROUP();
-			g.cbSize = (uint)Marshal.SizeOf(g);
+			g.cbSize = (uint)Marshal.SizeOf(typeof(LVGROUP));
 
 			g.mask = LVGF_STATE;
 			g.stateMask = uStateMask;
@@ -594,7 +628,7 @@ namespace KeePass.Native
 			if(lv == null) { Debug.Assert(false); return 0; }
 
 			LVGROUP g = new LVGROUP();
-			g.cbSize = (uint)Marshal.SizeOf(g);
+			g.cbSize = (uint)Marshal.SizeOf(typeof(LVGROUP));
 			g.AssertSize();
 
 			g.mask = NativeMethods.LVGF_GROUPID;
@@ -614,7 +648,7 @@ namespace KeePass.Native
 			if(lv == null) { Debug.Assert(false); return; }
 
 			LVGROUP g = new LVGROUP();
-			g.cbSize = (uint)Marshal.SizeOf(g);
+			g.cbSize = (uint)Marshal.SizeOf(typeof(LVGROUP));
 			g.AssertSize();
 
 			g.mask = LVGF_TASK;
@@ -636,7 +670,7 @@ namespace KeePass.Native
 			if(!WinUtil.IsAtLeastWindowsVista) return;
 
 			LVGROUP g = new LVGROUP();
-			g.cbSize = (uint)Marshal.SizeOf(g);
+			g.cbSize = (uint)Marshal.SizeOf(typeof(LVGROUP));
 			g.AssertSize();
 
 			if(strTask != null)
@@ -682,41 +716,40 @@ namespace KeePass.Native
 			strAnsi = null;
 			strUni = null;
 
-			const uint cbZ = 12; // Minimal number of terminating zeros
-			const uint uBufSize = 64 + cbZ;
-			IntPtr pBuf = Marshal.AllocCoTaskMem((int)uBufSize);
-			byte[] pbZero = new byte[uBufSize];
-			Marshal.Copy(pbZero, 0, pBuf, pbZero.Length);
+			const uint cbZ = 12; // Minimal number of terminating zero bytes
+
+			uint cb = 64 + cbZ;
+			IntPtr p = Marshal.AllocCoTaskMem((int)cb);
+			MemUtil.ZeroMemory(p, (long)cb);
 
 			try
 			{
-				uint uReqSize = uBufSize - cbZ;
-				bool bSuccess = GetUserObjectInformation(hDesk, 2, pBuf,
-					uBufSize - cbZ, ref uReqSize);
-				if(uReqSize > (uBufSize - cbZ))
+				uint cbReq = cb - cbZ;
+				bool bSuccess = GetUserObjectInformation(hDesk, 2, p, cbReq, ref cbReq);
+				if(cbReq > (cb - cbZ))
 				{
-					Marshal.FreeCoTaskMem(pBuf);
-					pBuf = Marshal.AllocCoTaskMem((int)(uReqSize + cbZ));
-					pbZero = new byte[uReqSize + cbZ];
-					Marshal.Copy(pbZero, 0, pBuf, pbZero.Length);
+					Marshal.FreeCoTaskMem(p);
 
-					bSuccess = GetUserObjectInformation(hDesk, 2, pBuf,
-						uReqSize, ref uReqSize);
-					Debug.Assert((uReqSize + cbZ) == (uint)pbZero.Length);
+					cb = cbReq + cbZ;
+					p = Marshal.AllocCoTaskMem((int)cb);
+					MemUtil.ZeroMemory(p, (long)cb);
+
+					bSuccess = GetUserObjectInformation(hDesk, 2, p, cbReq, ref cbReq);
+					Debug.Assert((cbReq + cbZ) == cb);
 				}
 
 				if(bSuccess)
 				{
-					try { strAnsi = Marshal.PtrToStringAnsi(pBuf).Trim(); }
+					try { strAnsi = Marshal.PtrToStringAnsi(p).Trim(); }
 					catch(Exception) { }
 
-					try { strUni = Marshal.PtrToStringUni(pBuf).Trim(); }
+					try { strUni = Marshal.PtrToStringUni(p).Trim(); }
 					catch(Exception) { }
 
 					return true;
 				}
 			}
-			finally { Marshal.FreeCoTaskMem(pBuf); }
+			finally { Marshal.FreeCoTaskMem(p); }
 
 			Debug.Assert(false);
 			return false;
@@ -875,6 +908,11 @@ namespace KeePass.Native
 			finally { if(pState != IntPtr.Zero) Marshal.FreeHGlobal(pState); }
 
 			return null;
+		}
+
+		internal static IntPtr MakeIntResource(int i)
+		{
+			return new IntPtr(i & 0xFFFF);
 		}
 	}
 }

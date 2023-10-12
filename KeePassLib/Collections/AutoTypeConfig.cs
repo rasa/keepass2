@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ namespace KeePassLib.Collections
 		private AutoTypeObfuscationOptions m_atooObfuscation =
 			AutoTypeObfuscationOptions.None;
 		private string m_strDefaultSequence = string.Empty;
-		private List<AutoTypeAssociation> m_lWindowAssocs =
+		private readonly List<AutoTypeAssociation> m_lWindowAssocs =
 			new List<AutoTypeAssociation>();
 
 		/// <summary>

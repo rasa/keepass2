@@ -13,13 +13,13 @@
 #define MyAppHelpName "KeePass.chm"
 #define MyAppId "KeePassPasswordSafe2"
 
-#define KeeVersionStr "2.48.1"
-#define KeeVersionStrWithMinor "2.48.1"
-#define KeeVersionStrWithMinorPath "2.48.1"
-#define KeeVersionWin "2.48.1.0"
-#define KeeVersionWinShort "2.48.1"
+#define KeeVersionStr "2.55"
+#define KeeVersionStrWithMinor "2.55"
+#define KeeVersionStrWithMinorPath "2.55"
+#define KeeVersionWin "2.55.0.0"
+#define KeeVersionWinShort "2.55"
 
-#define KeeDevPeriod "2003-2021"
+#define KeeDevPeriod "2003-2023"
 
 [Setup]
 AppName={#MyAppName}
@@ -56,8 +56,9 @@ VersionInfoVersion={#KeeVersionWin}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} {#KeeVersionStr} Setup
 VersionInfoCopyright=Copyright © {#KeeDevPeriod} {#MyAppPublisher}
-WizardImageFile=compiler:WizModernImage-IS.bmp
-WizardSmallImageFile=compiler:WizModernSmallImage-IS.bmp
+SetupIconFile=compiler:SetupClassicIcon.ico
+; WizardImageFile=compiler:WizClassicImage-IS.bmp
+; WizardSmallImageFile=compiler:WizClassicSmallImage-IS.bmp
 WizardStyle=classic
 DisableDirPage=auto
 AlwaysShowDirOnReadyPage=yes
@@ -156,7 +157,7 @@ fr.MyCompNGen=Optimiser les performances de KeePass
 fr.MyCompPreLoad=Optimiser les performances de démarrage de KeePass
 fr.MyStatusNGen=En cours d'optimisation des performances de KeePass...
 fr.MyStatusPreLoad=En cours d'optimisation des performances de démarrage de KeePass...
-fr.MyOptPlgPage=Ouvre la page des greffons (plugins) sur la toile
+fr.MyOptPlgPage=Ouvre la page des greffons (plug-ins) sur la toile
 
 ; hu.MyCompCore=KeePass nélkülözhetetlen fájlok
 ; hu.MyCompHelp=Használati utasítás
@@ -238,10 +239,20 @@ ru.MyStatusNGen=Оптимизация производительности KeeP
 ru.MyStatusPreLoad=Оптимизация скорости запуска KeePass...
 ru.MyOptPlgPage=Открыть веб-страницу плагинов
 
+sl.MyCompCore=Datoteke jedra KeePassa
+sl.MyCompHelp=Navodila za uporabo
+sl.MyCompNtvLib=Izvorna podporna knjižnica
+sl.MyCompXSL=XSL slogovne datoteke za datoteke KDBX XML
+sl.MyCompNGen=Optimizirajte delovanja KeePassa
+sl.MyCompPreLoad=Optimizirajte delovanje zagona KeePassa
+sl.MyStatusNGen=Optimizacija delovanja KeePassa...
+sl.MyStatusPreLoad=Optimizacija zagonskega delovanja KeePassa...
+sl.MyOptPlgPage=Odpri spletno stran vtičnikov
+
 [Tasks]
 Name: FileAssoc; Description: {cm:AssocFileExtension,{#MyAppNameShort},.kdbx}
 Name: DesktopIcon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}; Flags: unchecked
-Name: QuickLaunchIcon; Description: {cm:CreateQuickLaunchIcon}; GroupDescription: {cm:AdditionalIcons}; Flags: unchecked
+; Name: QuickLaunchIcon; Description: {cm:CreateQuickLaunchIcon}; GroupDescription: {cm:AdditionalIcons}; Flags: unchecked
 
 [Components]
 Name: Core; Description: "{cm:MyCompCore}"; Flags: fixed; Types: full compact custom
@@ -296,8 +307,8 @@ Root: HKCR; Subkey: kdbxfile\shell\open\command; ValueType: string; ValueData: "
 ; Name: {group}\Help; Filename: {app}\{#MyAppHelpName}; Components: UserDoc
 ; Name: {group}\{cm:UninstallProgram,{#MyAppName}}; Filename: {uninstallexe}
 Name: {autoprograms}\{#MyAppNameShortEx}; Filename: {app}\{#MyAppExeName}
-Name: {userdesktop}\{#MyAppNameShortEx}; Filename: {app}\{#MyAppExeName}; Tasks: DesktopIcon; Check: MyDesktopCheck
-Name: {userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppNameShortEx}; Filename: {app}\{#MyAppExeName}; Tasks: QuickLaunchIcon; Check: MyAppDataCheck
+Name: {autodesktop}\{#MyAppNameShortEx}; Filename: {app}\{#MyAppExeName}; Tasks: DesktopIcon
+; Name: {userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppNameShortEx}; Filename: {app}\{#MyAppExeName}; Tasks: QuickLaunchIcon; Check: MyAppDataCheck
 
 [Run]
 ; Filename: {app}\KeePass.exe; Parameters: -RegisterFileExt; Components: FileAssoc
@@ -327,7 +338,9 @@ Name: {group}\Help.lnk; Type: files
 Name: {group}\{cm:UninstallProgram,{#MyAppName}}.lnk; Type: files
 Name: {group}; Type: dirifempty
 Name: {userdesktop}\{#MyAppName}.lnk; Type: files; Check: MyDesktopCheck
+Name: {userdesktop}\{#MyAppNameShortEx}.lnk; Type: files; Check: MyDesktopCheck
 Name: {userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}.lnk; Type: files; Check: MyAppDataCheck
+Name: {userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppNameShortEx}.lnk; Type: files; Check: MyAppDataCheck
 
 ; [UninstallDelete]
 ; Type: files; Name: {app}\{#MyAppUrlName}

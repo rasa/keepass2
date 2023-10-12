@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -140,7 +140,7 @@ namespace KeePass.UI
 			if(lblQualityPrompt == null) throw new ArgumentNullException("lblQualityPrompt");
 			if(pbQuality == null) throw new ArgumentNullException("pbQuality");
 			if(lblQualityInfo == null) throw new ArgumentNullException("lblQualityInfo");
-			// ttHint may be null
+			Debug.Assert(ttHint != null);
 			if(fParent == null) throw new ArgumentNullException("fParent");
 
 			Release();
@@ -223,9 +223,16 @@ namespace KeePass.UI
 				m_tbRepeat.Text = string.Empty;
 
 			byte[] pbRepeat = m_tbRepeat.TextEx.ReadUtf8();
-			if(!MemUtil.ArraysEqual(pbUtf8, pbRepeat) && !bAutoRepeat)
+			string strTip = KPRes.PasswordRepeatHint;
+			if(MemUtil.ArraysEqual(pbUtf8, pbRepeat) || bAutoRepeat)
+				m_tbRepeat.ResetBackColor();
+			else
+			{
 				m_tbRepeat.BackColor = AppDefs.ColorEditError;
-			else m_tbRepeat.ResetBackColor();
+				strTip += MessageService.NewLine + KPRes.ValidationFailed +
+					"! " + KPRes.PasswordRepeatFailed;
+			}
+			UIUtil.SetToolTip(m_ttHint, m_tbRepeat, strTip, true);
 
 			bool bRepeatEnable = (m_bEnabled && !bAutoRepeat);
 			m_lblRepeat.Enabled = bRepeatEnable;
@@ -421,7 +428,7 @@ namespace KeePass.UI
 			return Convert.ToBase64String(pbHash);
 		}
 
-		private List<string> m_lUqiTasks = new List<string>();
+		private readonly List<string> m_lUqiTasks = new List<string>();
 		private readonly object m_oUqiTasksSync = new object();
 		private void UpdateQualityInfo(char[] v)
 		{
@@ -505,24 +512,18 @@ namespace KeePass.UI
 			{
 				bool bUnknown = (m_bSprVar && !m_pbQuality.Enabled);
 
-				string strBits = KPRes.BitsEx.Replace(@"{PARAM}",
-					(bUnknown ? "?" : uBits.ToString()));
-				m_pbQuality.ProgressText = (bUnknown ? string.Empty : strBits);
+				m_pbQuality.ProgressText = (bUnknown ? string.Empty :
+					KPRes.BitsEx.Replace(@"{PARAM}", uBits.ToString()));
 
-				int iPos = (int)((100 * uBits) / (256 / 2));
-				if(iPos < 0) iPos = 0;
-				else if(iPos > 100) iPos = 100;
-				m_pbQuality.Value = iPos;
+				int iPct = (int)((100 * uBits) / 128);
+				iPct = Math.Min(Math.Max(iPct, 0), 100);
+				m_pbQuality.Value = iPct;
 
 				string strLength = (bUnknown ? "?" : uLength.ToString());
-
 				string strInfo = strLength + " " + KPRes.CharsAbbr;
-				if(Program.Config.UI.OptimizeForScreenReader)
-					strInfo = strBits + ", " + strInfo;
 				UIUtil.SetText(m_lblQualityInfo, strInfo);
-				if(m_ttHint != null)
-					m_ttHint.SetToolTip(m_lblQualityInfo, KPRes.PasswordLength +
-						": " + strLength + " " + KPRes.CharsStc);
+				UIUtil.SetToolTip(m_ttHint, m_lblQualityInfo, KPRes.PasswordLength +
+					": " + strLength + " " + KPRes.CharsStc, true);
 			}
 			catch(Exception) { Debug.Assert(false); }
 		}
@@ -545,7 +546,7 @@ namespace KeePass.UI
 				MonoWorkarounds.IsRequired(100001));
 
 			// Too much spacing between the dots when using the default font
-			// cb.Text = new string(SecureTextBoxEx.PasswordCharEx, 3);
+			// cb.Text = SecureTextBoxEx.GetPasswordCharString(3);
 			cb.Text = string.Empty;
 
 			Image img = Properties.Resources.B19x07_3BlackDots;
@@ -563,7 +564,8 @@ namespace KeePass.UI
 			Debug.Assert(cb.ImageAlign == ContentAlignment.MiddleCenter);
 
 			if(tt != null)
-				tt.SetToolTip(cb, KPRes.TogglePasswordAsterisks);
+				UIUtil.SetToolTip(tt, cb, KPRes.TogglePasswordAsterisks, false);
+			AccessibilityEx.SetName(cb, KPRes.TogglePasswordAsterisks); // Even if tt is null
 		}
 	}
 }

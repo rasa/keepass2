@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ using System.Text;
 using System.Windows.Forms;
 
 using KeePass.App;
+using KeePass.DataExchange.Formats;
 using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util.Archive;
@@ -75,7 +76,7 @@ namespace KeePass.Util
 
 			if(b)
 			{
-				bool bPrintKF = (bKeyFile ? dlg.ResultVerificationChecked : false);
+				bool bPrintKF = (bKeyFile && dlg.ResultVerificationChecked);
 				Print(pd, true, bPrintKF);
 			}
 		}
@@ -143,30 +144,9 @@ namespace KeePass.Util
 				return (bRtl ? StrUtil.EnsureLtrPath(str) : str);
 			};
 
-			StringBuilder sb = new StringBuilder();
-			sb.AppendLine("<!DOCTYPE html>");
-
-			sb.Append("<html xmlns=\"http://www.w3.org/1999/xhtml\"");
-			string strLang = Program.Translation.Properties.Iso6391Code;
-			if(string.IsNullOrEmpty(strLang)) strLang = "en";
-			strLang = h(strLang);
-			sb.Append(" xml:lang=\"" + strLang + "\" lang=\"" + strLang + "\"");
-			if(bRtl) sb.Append(" dir=\"rtl\"");
-			sb.AppendLine(">");
-
-			sb.AppendLine("<head>");
-			sb.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />");
-			sb.AppendLine("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />");
-			sb.AppendLine("<meta http-equiv=\"expires\" content=\"0\" />");
-			sb.AppendLine("<meta http-equiv=\"cache-control\" content=\"no-cache\" />");
-			sb.AppendLine("<meta http-equiv=\"pragma\" content=\"no-cache\" />");
-
-			sb.Append("<title>");
-			sb.Append(h(strName + " - " + strDocKind));
-			sb.AppendLine("</title>");
-
-			sb.AppendLine("<style type=\"text/css\">");
-			sb.AppendLine("/* <![CDATA[ */");
+			StringBuilder sb = KeePassHtml2x.HtmlPart1ToHead(bRtl, strName +
+				" - " + strDocKind);
+			KeePassHtml2x.HtmlPart2ToStyle(sb);
 
 			string strFont = "\"Arial\", \"Tahoma\", \"Verdana\", sans-serif;";
 			// https://sourceforge.net/p/keepass/discussion/329220/thread/f98dece5/
@@ -304,9 +284,7 @@ namespace KeePass.Util
 			sb.AppendLine("\tfont-size: 12pt;");
 			sb.AppendLine("}");
 
-			sb.AppendLine("/* ]]> */");
-			sb.AppendLine("</style>");
-			sb.AppendLine("</head><body>");
+			KeePassHtml2x.HtmlPart3ToBody(sb);
 
 			ImageArchive ia = new ImageArchive();
 			ia.Load(Properties.Resources.Images_App_HighRes);
@@ -315,8 +293,7 @@ namespace KeePass.Util
 			sb.AppendLine("<td style=\"text-align: " + strLogLeft + ";\">");
 			Debug.Assert(Properties.Resources.B16x16_KeePass != null); // Name ref.
 			sb.AppendLine("<img src=\"" + GfxUtil.ImageToDataUri(ia.GetForObject(
-				"KeePass")) + "\" width=\"48\" height=\"48\" alt=\"" +
-				h(PwDefs.ShortProductName) + "\" /></td>");
+				"KeePass")) + "\" width=\"48\" height=\"48\" alt=\"\" /></td>");
 			sb.AppendLine("<td style=\"text-align: center;\">");
 			sb.AppendLine("<h1>" + h(PwDefs.ShortProductName) + "</h1>");
 			sb.AppendLine("<h2>" + h(strDocKind) + "</h2>");
@@ -324,8 +301,7 @@ namespace KeePass.Util
 			sb.AppendLine("<td style=\"text-align: " + strLogRight + ";\">");
 			Debug.Assert(Properties.Resources.B16x16_KOrganizer != null); // Name ref.
 			sb.AppendLine("<img src=\"" + GfxUtil.ImageToDataUri(ia.GetForObject(
-				"KOrganizer")) + "\" width=\"48\" height=\"48\" alt=\"" +
-				h(strDocKind) + "\" /></td>");
+				"KOrganizer")) + "\" width=\"48\" height=\"48\" alt=\"\" /></td>");
 			sb.AppendLine("</tr></table>");
 
 			sb.AppendLine("<p style=\"text-align: " + strLogRight + ";\">" +
@@ -361,7 +337,7 @@ namespace KeePass.Util
 				GenerateKfb(sb, pd, strDbFile, strKeyFile,
 					h, ne, ltrPath, strFillInit, strFillInitEx, strFillEnd, strFill);
 
-			sb.AppendLine("</body></html>");
+			KeePassHtml2x.HtmlPart4ToEnd(sb);
 
 			string strDoc = sb.ToString();
 #if DEBUG
@@ -496,7 +472,7 @@ namespace KeePass.Util
 			strContent = StrUtil.NormalizeNewLines(strContent, false);
 			strContent = strContent.Replace("\n", strNlCode); // Prevent <br />
 
-			strContent = StrUtil.StringToHtml(strContent, false);
+			strContent = StrUtil.StringToHtml(strContent);
 
 			strContent = strContent.Replace(strNlCode, MessageService.NewLine);
 
@@ -521,7 +497,7 @@ namespace KeePass.Util
 			sb.AppendLine("<ul class=\"withspc\">");
 			sb.AppendLine("<li>" + h(KPRes.KeyFileFromBackup) + ":");
 			sb.AppendLine("<ul class=\"withspc\">");
-			sb.AppendLine("<li><p>" + Beautify(h(KPRes.KeyFileFromBackupF)) + "</p></li>");
+			sb.AppendLine("<li><p>" + Beautify(h(KPRes.KeyFileFromBackupF2)) + "</p></li>");
 			sb.AppendLine("<li><p>" + h(KPRes.KeyFileFromBackupT) + "</p></li>");
 			sb.AppendLine("</ul></li>");
 			sb.AppendLine("<li>" + h(KPRes.LatestVersionWeb) + ": <a href=\"" +

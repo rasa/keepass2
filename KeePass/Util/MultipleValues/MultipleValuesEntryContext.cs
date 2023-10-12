@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -192,8 +192,8 @@ namespace KeePass.Util.MultipleValues
 							{
 								this.MultiStringProt[kvp.Key] = true;
 								if(bProtM)
-									m_peM.Strings.Set(kvp.Key, m_peM.Strings.Get(
-										kvp.Key).WithProtection(false)); // May be set to cue above
+									m_peM.Strings.EnableProtection(kvp.Key,
+										false); // May be set to cue above
 							}
 						}
 					}

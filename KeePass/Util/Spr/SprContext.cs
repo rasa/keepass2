@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
+using System.Text;
 
 using KeePassLib;
 using KeePassLib.Interfaces;
@@ -147,25 +147,19 @@ namespace KeePass.Util.Spr
 
 		public SprContext() { }
 
-		public SprContext(PwEntry pe, PwDatabase pd, SprCompileFlags fl)
+		public SprContext(PwEntry pe, PwDatabase pd, SprCompileFlags fl) :
+			this(pe, pd, fl, false, false)
 		{
-			Init(pe, pd, false, false, fl);
 		}
 
 		public SprContext(PwEntry pe, PwDatabase pd, SprCompileFlags fl,
 			bool bEncodeAsAutoTypeSequence, bool bEncodeForCommandLine)
 		{
-			Init(pe, pd, bEncodeAsAutoTypeSequence, bEncodeForCommandLine, fl);
-		}
-
-		private void Init(PwEntry pe, PwDatabase pd, bool bAT, bool bCmd,
-			SprCompileFlags fl)
-		{
 			m_pe = pe;
 			m_pd = pd;
-			m_bMakeAT = bAT;
-			m_bMakeCmd = bCmd;
 			m_flags = fl;
+			m_bMakeAT = bEncodeAsAutoTypeSequence;
+			m_bMakeCmd = bEncodeForCommandLine;
 		}
 
 		public SprContext Clone()
@@ -193,7 +187,7 @@ namespace KeePass.Util.Spr
 
 	public sealed class SprEventArgs : EventArgs
 	{
-		private string m_str = string.Empty;
+		private string m_str;
 		public string Text
 		{
 			get { return m_str; }
@@ -204,13 +198,16 @@ namespace KeePass.Util.Spr
 			}
 		}
 
-		private SprContext m_ctx = null;
+		private readonly SprContext m_ctx;
 		public SprContext Context
 		{
 			get { return m_ctx; }
 		}
 
-		public SprEventArgs() { }
+		public SprEventArgs() :
+			this(string.Empty, null)
+		{
+		}
 
 		public SprEventArgs(string strText, SprContext ctx)
 		{

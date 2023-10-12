@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ namespace KeePass.Forms
 		public AutoTypeCtxForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -97,29 +97,12 @@ namespace KeePass.Forms
 			m_strInitialColWidths = UIUtil.GetColumnWidths(m_lvItems);
 
 			ProcessResize();
-			this.BringToFront();
-			this.Activate();
+			BringToFront();
+			Activate();
 			UIUtil.SetFocus(m_lvItems, this, true);
 		}
 
-		private void RecreateEntryList()
-		{
-			long lFlags = Program.Config.UI.AutoTypeCtxFlags;
-
-			if(!m_bCanShowPasswords)
-				lFlags &= ~(long)AceAutoTypeCtxFlags.ColPassword;
-
-			UIUtil.CreateEntryList(m_lvItems, m_lCtxs, (AceAutoTypeCtxFlags)lFlags,
-				m_ilIcons);
-		}
-
 		private void OnFormClosed(object sender, FormClosedEventArgs e)
-		{
-			CleanUpEx();
-			GlobalWindowManager.RemoveWindow(this);
-		}
-
-		private void CleanUpEx()
 		{
 			string strColWidths = UIUtil.GetColumnWidths(m_lvItems);
 			if(strColWidths != m_strInitialColWidths)
@@ -137,6 +120,19 @@ namespace KeePass.Forms
 				m_ilIcons.Dispose();
 				m_ilIcons = null;
 			}
+
+			GlobalWindowManager.RemoveWindow(this);
+		}
+
+		private void RecreateEntryList()
+		{
+			long lFlags = Program.Config.UI.AutoTypeCtxFlags;
+
+			if(!m_bCanShowPasswords)
+				lFlags &= ~(long)AceAutoTypeCtxFlags.ColPassword;
+
+			UIUtil.CreateEntryList(m_lvItems, m_lCtxs, (AceAutoTypeCtxFlags)lFlags,
+				m_ilIcons);
 		}
 
 		private void ProcessResize()

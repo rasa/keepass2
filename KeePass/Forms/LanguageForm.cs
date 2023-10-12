@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ namespace KeePass.Forms
 		public LanguageForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		public bool InitEx()
@@ -100,9 +100,7 @@ namespace KeePass.Forms
 
 			UIUtil.SetExplorerTheme(m_lvLanguages, true);
 
-			List<Image> lImg = new List<Image>();
-			lImg.Add(Properties.Resources.B16x16_Browser);
-
+			List<Image> lImg = new List<Image> { Properties.Resources.B16x16_Browser };
 			m_ilIcons = UIUtil.BuildImageListUnscaled(lImg,
 				DpiUtil.ScaleIntX(16), DpiUtil.ScaleIntY(16));
 			m_lvLanguages.SmallImageList = m_ilIcons;
@@ -125,8 +123,10 @@ namespace KeePass.Forms
 			string strDirU = AceApplication.GetLanguagesDir(AceDir.User, false);
 
 			List<KeyValuePair<string, KPTranslation>> lTrls =
-				new List<KeyValuePair<string, KPTranslation>>();
-			lTrls.Add(new KeyValuePair<string, KPTranslation>(string.Empty, trlEng));
+				new List<KeyValuePair<string, KPTranslation>>
+			{
+				new KeyValuePair<string, KPTranslation>(string.Empty, trlEng)
+			};
 			AddTranslations(strDirA, lTrls);
 			if(WinUtil.IsAppX) AddTranslations(strDirU, lTrls);
 			lTrls.Sort(LanguageForm.CompareTrlItems);
@@ -160,7 +160,6 @@ namespace KeePass.Forms
 			}
 
 			UIUtil.ResizeColumns(m_lvLanguages, new int[] { 5, 2, 5, 5, 3 }, true);
-			UIUtil.SetFocus(m_lvLanguages, this);
 		}
 
 		private static void AddTranslations(string strDir,

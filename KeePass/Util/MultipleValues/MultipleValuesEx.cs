@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ namespace KeePass.Util.MultipleValues
 
 		internal static Image CreateMultiImage(Size? osz)
 		{
-			Size sz = (osz.HasValue ? osz.Value : UIUtil.GetSmallIconSize());
+			Size sz = (osz ?? UIUtil.GetSmallIconSize());
 			int w = sz.Width, h = sz.Height;
 
 			Color clrGray = Color.FromArgb(255, 128, 128, 128);

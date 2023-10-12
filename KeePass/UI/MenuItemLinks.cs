@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -114,7 +114,9 @@ namespace KeePass.UI
 
 			VoidDelegate fCopyEnabled = delegate()
 			{
-				if((tsmiBase.Owner != null) && !tsmiBase.Owner.Enabled)
+				// Check (direct) owner state; see ToolStripItem.Enabled
+				ToolStrip tsOwner = tsmiBase.Owner;
+				if((tsOwner != null) && !tsOwner.Enabled)
 				{
 					Debug.Assert(false); // tsmiBase.Enabled unusable
 					return;

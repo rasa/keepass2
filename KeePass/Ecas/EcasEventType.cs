@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,31 +29,31 @@ namespace KeePass.Ecas
 
 	public sealed class EcasEventType : IEcasParameterized
 	{
-		private PwUuid m_type;
+		private readonly PwUuid m_type;
 		public PwUuid Type
 		{
 			get { return m_type; }
 		}
 
-		private string m_strName;
+		private readonly string m_strName;
 		public string Name
 		{
 			get { return m_strName; }
 		}
 
-		private PwIcon m_pwIcon;
+		private readonly PwIcon m_pwIcon;
 		public PwIcon Icon
 		{
 			get { return m_pwIcon; }
 		}
 
-		private EcasParameter[] m_vParams;
+		private readonly EcasParameter[] m_vParams;
 		public EcasParameter[] Parameters
 		{
 			get { return m_vParams; }
 		}
 
-		private EcasEventCompare m_fn;
+		private readonly EcasEventCompare m_fn;
 		public EcasEventCompare CompareMethod
 		{
 			get { return m_fn; }

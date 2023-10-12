@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -96,8 +96,7 @@ namespace KeePassLib.Serialization
 			byte[] pbCipherKey = null;
 			byte[] pbHmacKey64 = null;
 
-			List<Stream> lStreams = new List<Stream>();
-			lStreams.Add(sSource);
+			List<Stream> lStreams = new List<Stream> { sSource };
 
 			HashingStreamEx sHashing = new HashingStreamEx(sSource, false, null);
 			lStreams.Add(sHashing);
@@ -111,6 +110,8 @@ namespace KeePassLib.Serialization
 						encNoBom, KLRes.FileCorrupted);
 					byte[] pbHeader = LoadHeader(br);
 					m_pbHashOfHeader = CryptoUtil.HashSha256(pbHeader);
+
+					if(m_bHeaderOnly) return;
 
 					int cbEncKey, cbEncIV;
 					ICipherEngine iCipher = GetCipher(out cbEncKey, out cbEncIV);
@@ -177,7 +178,11 @@ namespace KeePassLib.Serialization
 						LoadInnerHeader(sXml); // Binary header before XML
 				}
 				else if(fmt == KdbxFormat.PlainXml)
+				{
+					if(m_bHeaderOnly) { Debug.Assert(false); throw new InvalidOperationException(); }
+
 					sXml = sHashing;
+				}
 				else { Debug.Assert(false); throw new ArgumentOutOfRangeException("fmt"); }
 
 				if(fmt == KdbxFormat.Default)
@@ -283,11 +288,21 @@ namespace KeePassLib.Serialization
 			else throw new FormatException(KLRes.FileSigInvalid);
 
 			byte[] pb = br.ReadBytes(4);
-			uint uVersion = MemUtil.BytesToUInt32(pb);
-			if((uVersion & FileVersionCriticalMask) > (FileVersion32 & FileVersionCriticalMask))
+			uint uVer = MemUtil.BytesToUInt32(pb);
+			uint uVerMajor = uVer & FileVersionCriticalMask;
+			uint uVerMinor = uVer & ~FileVersionCriticalMask;
+			const uint uVerMaxMajor = FileVersion32 & FileVersionCriticalMask;
+			const uint uVerMaxMinor = FileVersion32 & ~FileVersionCriticalMask;
+			if(uVerMajor > uVerMaxMajor)
 				throw new FormatException(KLRes.FileVersionUnsupported +
 					MessageService.NewParagraph + KLRes.FileNewVerReq);
-			m_uFileVersion = uVersion;
+			if((uVerMajor == uVerMaxMajor) && (uVerMinor > uVerMaxMinor) &&
+				(g_fConfirmOpenUnkVer != null))
+			{
+				if(!g_fConfirmOpenUnkVer())
+					throw new OperationCanceledException();
+			}
+			m_uFileVersion = uVer;
 
 			while(true)
 			{
@@ -401,7 +416,7 @@ namespace KeePassLib.Serialization
 					Debug.Assert(false);
 					if(m_slLogger != null)
 						m_slLogger.SetText(KLRes.UnknownHeaderId + ": " +
-							kdbID.ToString() + "!", LogStatusType.Warning);
+							btFieldID.ToString() + "!", LogStatusType.Warning);
 					break;
 			}
 

@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,25 +25,25 @@ namespace KeePass.Ecas
 {
 	public sealed class EcasContext
 	{
-		private EcasTriggerSystem m_coll;
+		private readonly EcasTriggerSystem m_coll;
 		public EcasTriggerSystem TriggerSystem
 		{
 			get { return m_coll; }
 		}
 
-		private EcasTrigger m_trigger;
+		private readonly EcasTrigger m_trigger;
 		public EcasTrigger Trigger
 		{
 			get { return m_trigger; }
 		}
 
-		private EcasEvent m_eOccured;
+		private readonly EcasEvent m_eOccured;
 		public EcasEvent Event
 		{
 			get { return m_eOccured; }
 		}
 
-		private EcasPropertyDictionary m_props;
+		private readonly EcasPropertyDictionary m_props;
 		public EcasPropertyDictionary Properties
 		{
 			get { return m_props; }

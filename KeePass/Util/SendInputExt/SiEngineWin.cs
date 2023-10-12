@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ namespace KeePass.Util.SendInputExt
 
 		private SiSendMethod? m_osmEnforced = null;
 
-		private Dictionary<IntPtr, SiWindowInfo> m_dWindowInfos =
+		private readonly Dictionary<IntPtr, SiWindowInfo> m_dWindowInfos =
 			new Dictionary<IntPtr, SiWindowInfo>();
 		private SiWindowInfo m_swiCurrent = new SiWindowInfo(IntPtr.Zero);
 

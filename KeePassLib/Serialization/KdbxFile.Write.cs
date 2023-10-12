@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -90,7 +90,6 @@ namespace KeePassLib.Serialization
 			m_xmlWriter = null;
 
 			PwGroup pgRoot = (pgDataSource ?? m_pwDatabase.RootGroup);
-			UTF8Encoding encNoBom = StrUtil.Utf8;
 			CryptoRandom cr = CryptoRandom.Instance;
 			byte[] pbCipherKey = null;
 			byte[] pbHmacKey64 = null;
@@ -98,8 +97,7 @@ namespace KeePassLib.Serialization
 			m_pbsBinaries = new ProtectedBinarySet(true);
 			m_pbsBinaries.AddFrom(pgRoot);
 
-			List<Stream> lStreams = new List<Stream>();
-			lStreams.Add(sSaveTo);
+			List<Stream> lStreams = new List<Stream> { sSaveTo };
 
 			HashingStreamEx sHashing = new HashingStreamEx(sSaveTo, true, null);
 			lStreams.Add(sHashing);

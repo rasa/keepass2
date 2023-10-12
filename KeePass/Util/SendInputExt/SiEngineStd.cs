@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -34,35 +34,40 @@ namespace KeePass.Util.SendInputExt
 {
 	internal abstract class SiEngineStd : ISiEngine
 	{
-		protected IntPtr TargetHWnd = IntPtr.Zero;
+		protected IntPtr TargetWindowHandle = IntPtr.Zero;
 		protected string TargetWindowTitle = string.Empty;
 
 		protected bool Cancelled = false;
 
-		private Stopwatch m_swLastEvent = new Stopwatch();
+		private readonly Stopwatch m_swLastEvent = new Stopwatch();
 #if DEBUG
-		private List<long> m_lDelaysRec = new List<long>();
+		private readonly List<long> m_lDelaysRec = new List<long>();
 #endif
 
 		public virtual void Init()
 		{
-			try
-			{
-				Debug.Assert(!m_swLastEvent.IsRunning);
+			Debug.Assert(!m_swLastEvent.IsRunning);
 
-				IntPtr hWndTarget;
-				string strTargetTitle;
-				NativeMethods.GetForegroundWindowInfo(out hWndTarget,
-					out strTargetTitle, false);
-				this.TargetHWnd = hWndTarget;
-				this.TargetWindowTitle = (strTargetTitle ?? string.Empty);
-			}
-			catch(Exception) { Debug.Assert(false); }
+			UpdateExpectedFocus();
 		}
 
 		public virtual void Release()
 		{
 			m_swLastEvent.Stop();
+		}
+
+		public void UpdateExpectedFocus()
+		{
+			try
+			{
+				IntPtr hWnd;
+				string strTitle;
+				NativeMethods.GetForegroundWindowInfo(out hWnd, out strTitle, false);
+
+				this.TargetWindowHandle = hWnd;
+				this.TargetWindowTitle = (strTitle ?? string.Empty);
+			}
+			catch(Exception) { Debug.Assert(false); }
 		}
 
 		public abstract void SendKeyImpl(int iVKey, bool? obExtKey, bool? obDown);
@@ -155,7 +160,7 @@ namespace KeePass.Util.SendInputExt
 
 				if(bHasInfo)
 				{
-					if(bChkWndCh && (h != this.TargetHWnd))
+					if(bChkWndCh && (h != this.TargetWindowHandle))
 					{
 						this.Cancelled = true;
 						return false;

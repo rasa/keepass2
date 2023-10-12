@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -93,10 +93,12 @@ namespace KeePass.Plugins
 
 		public static string GetCacheRoot()
 		{
-			if(Program.Config.Application.PluginCachePath.Length > 0)
+			AceApplication aceApp = Program.Config.Application;
+			string strRoot = aceApp.PluginCachePath;
+			if(!string.IsNullOrEmpty(strRoot) && AppConfigEx.IsOptionEnforced(
+				aceApp, "PluginCachePath"))
 			{
-				string strRoot = SprEngine.Compile(Program.Config.Application.PluginCachePath,
-					null);
+				strRoot = SprEngine.Compile(strRoot, null);
 				if(!string.IsNullOrEmpty(strRoot))
 				{
 					if(strRoot.EndsWith(new string(Path.DirectorySeparatorChar, 1)))

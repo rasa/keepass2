@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
 using KeePass.App;
+using KeePass.App.Configuration;
 using KeePass.DataExchange;
 using KeePass.Resources;
 using KeePass.UI;
@@ -46,29 +46,13 @@ namespace KeePass.Forms
 		private ImageList m_ilFormats = null;
 
 		private FileFormatProvider m_fmtCur = null; // Current selection
-
 		private FileFormatProvider m_fmtFinal = null; // Returned as result
-		private string[] m_vFiles = null;
-
-		private sealed class FormatGroupEx
-		{
-			private ListViewGroup m_lvg;
-			public ListViewGroup Group { get { return m_lvg; } }
-
-			private List<ListViewItem> m_lItems = new List<ListViewItem>();
-			public List<ListViewItem> Items { get { return m_lItems; } }
-
-			public FormatGroupEx(string strGroupName)
-			{
-				m_lvg = new ListViewGroup(strGroupName);
-			}
-		}
-
 		public FileFormatProvider ResultFormat
 		{
 			get { return m_fmtFinal; }
 		}
 
+		private string[] m_vFiles = null;
 		public string[] ResultFiles
 		{
 			get { return m_vFiles; }
@@ -81,6 +65,20 @@ namespace KeePass.Forms
 			set { m_piExport = value; }
 		}
 
+		private sealed class FormatGroupEx
+		{
+			private readonly ListViewGroup m_lvg;
+			public ListViewGroup Group { get { return m_lvg; } }
+
+			private readonly List<ListViewItem> m_lItems = new List<ListViewItem>();
+			public List<ListViewItem> Items { get { return m_lItems; } }
+
+			public FormatGroupEx(string strGroupName)
+			{
+				m_lvg = new ListViewGroup(strGroupName);
+			}
+		}
+
 		public void InitEx(bool bExport, PwDatabase pd, PwGroup pg)
 		{
 			m_bExport = bExport;
@@ -91,7 +89,7 @@ namespace KeePass.Forms
 		public ExchangeDataForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -112,6 +110,10 @@ namespace KeePass.Forms
 
 			this.Icon = AppIcons.Default;
 			this.Text = strTitle;
+
+			UIUtil.ConfigureToolTip(m_ttRect);
+			UIUtil.SetToolTip(m_ttRect, m_btnSelFile, StrUtil.TrimDots(
+				KPRes.SelectFile, true), true);
 
 			m_lvFormats.ShowGroups = true;
 
@@ -144,12 +146,21 @@ namespace KeePass.Forms
 				lvi.Group = grp.Group;
 				lvi.Tag = f;
 
-				Image imgSmallIcon = f.SmallIcon;
-				if(imgSmallIcon == null)
-					imgSmallIcon = Properties.Resources.B16x16_Folder_Inbox;
+				img = f.SmallIcon;
+				if(img == null)
+				{
+					string strExt = f.DefaultExtension;
+					if(!string.IsNullOrEmpty(strExt))
+						strExt = UIUtil.GetPrimaryFileTypeExt(strExt);
+					if(!string.IsNullOrEmpty(strExt))
+						img = FileIcons.GetImageForExtension(strExt, null);
+				}
+				if(img == null)
+					img = Properties.Resources.B16x16_Folder_Inbox;
 
-				lvi.ImageIndex = lImages.Count;
-				lImages.Add(imgSmallIcon);
+				int iImage = lImages.IndexOf(img);
+				if(iImage < 0) { iImage = lImages.Count; lImages.Add(img); }
+				lvi.ImageIndex = iImage;
 
 				grp.Items.Add(lvi);
 			}
@@ -185,35 +196,26 @@ namespace KeePass.Forms
 				m_grpExportPost.Enabled = false;
 			}
 
-			m_cbExportMasterKeySpec.Checked = Program.Config.Defaults.ExportMasterKeySpec;
-			m_cbExportParentGroups.Checked = Program.Config.Defaults.ExportParentGroups;
-			m_cbExportPostOpen.Checked = Program.Config.Defaults.ExportPostOpen;
-			m_cbExportPostShow.Checked = Program.Config.Defaults.ExportPostShow;
+			FormDataExchange fdx = new FormDataExchange(this, true, true, false);
+			AceDefaults aceDef = Program.Config.Defaults;
+			fdx.Add(m_cbExportMasterKeySpec, aceDef, "ExportMasterKeySpec");
+			fdx.Add(m_cbExportParentGroups, aceDef, "ExportParentGroups");
+			fdx.Add(m_cbExportPostOpen, aceDef, "ExportPostOpen");
+			fdx.Add(m_cbExportPostShow, aceDef, "ExportPostShow");
 
-			CustomizeForScreenReader();
 			UpdateUIState();
 		}
 
-		private void CleanUpEx()
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
 		{
-			Program.Config.Defaults.ExportMasterKeySpec = m_cbExportMasterKeySpec.Checked;
-			Program.Config.Defaults.ExportParentGroups = m_cbExportParentGroups.Checked;
-			Program.Config.Defaults.ExportPostOpen = m_cbExportPostOpen.Checked;
-			Program.Config.Defaults.ExportPostShow = m_cbExportPostShow.Checked;
-
 			if(m_ilFormats != null)
 			{
 				m_lvFormats.SmallImageList = null; // Detach event handlers
 				m_ilFormats.Dispose();
 				m_ilFormats = null;
 			}
-		}
 
-		private void CustomizeForScreenReader()
-		{
-			if(!Program.Config.UI.OptimizeForScreenReader) return;
-
-			m_btnSelFile.Text = KPRes.SelectFile;
+			GlobalWindowManager.RemoveWindow(this);
 		}
 
 		private void OnLinkFileFormats(object sender, LinkLabelLinkClickedEventArgs e)
@@ -349,7 +351,7 @@ namespace KeePass.Forms
 				// Allow only one file when exporting
 				if(m_bExport && !CheckFilePath(strFiles)) return false;
 			}
-			else vFiles = new string[0];
+			else vFiles = MemUtil.EmptyArray<string>();
 
 			if(m_piExport != null)
 			{
@@ -376,12 +378,6 @@ namespace KeePass.Forms
 		private void OnFormatsSelectedIndexChanged(object sender, EventArgs e)
 		{
 			UpdateUIState();
-		}
-
-		private void OnFormClosed(object sender, FormClosedEventArgs e)
-		{
-			CleanUpEx();
-			GlobalWindowManager.RemoveWindow(this);
 		}
 
 		private void OnImportFileTextChanged(object sender, EventArgs e)

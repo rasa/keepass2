@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ namespace KeePass.Util
 
 			public volatile bool End = false;
 
-			private List<FsxResult> m_lResults = new List<FsxResult>();
+			private readonly List<FsxResult> m_lResults = new List<FsxResult>();
 			private readonly object m_oResultsSync = new object();
 
 			public FsxContext(string strRoot, string strVolumeLabel,
@@ -251,9 +251,9 @@ namespace KeePass.Util
 				int w = lv.ClientSize.Width - UIUtil.GetVScrollBarWidth();
 				int ws = w / 70;
 				lv.Columns.Add(KPRes.File, w / 5);
-				lv.Columns.Add(KPRes.Folder, (int)(((long)w * 2L) / 5L - (ws * 3)));
+				lv.Columns.Add(KPRes.Folder, (int)(((long)w * 3L) / 10L - (ws * 3)));
 				lv.Columns.Add(KPRes.Size, w / 10 + ws, HorizontalAlignment.Right);
-				lv.Columns.Add(KPRes.Type, w / 10 + ws);
+				lv.Columns.Add(KPRes.Type, w / 5 + ws);
 				lv.Columns.Add(KPRes.LastModified, w / 5 + ws);
 			};
 
@@ -290,7 +290,9 @@ namespace KeePass.Util
 				}
 			}
 
-			string strSub = KPRes.ObjectsFound.Replace("{PARAM}", cFiles.ToString()) + ".";
+			// string strSub = KPRes.ObjectsFound.Replace("{PARAM}", cFiles.ToString()) + ".";
+			string strSub = StrUtil.TrimDots(KPRes.Search, true) + ": " +
+				KPRes.FileExtName2 + ".";
 			if(bAborted) strSub += " " + (new OperationCanceledException()).Message;
 
 			ListViewForm dlg = new ListViewForm();
@@ -335,7 +337,7 @@ namespace KeePass.Util
 			else
 			{
 				DriveInfo[] vDrives = DriveInfo.GetDrives();
-				if(vDrives == null) { Debug.Assert(false); vDrives = new DriveInfo[0]; }
+				if(vDrives == null) { Debug.Assert(false); vDrives = MemUtil.EmptyArray<DriveInfo>(); }
 				foreach(DriveInfo di in vDrives)
 				{
 					if(di == null) { Debug.Assert(false); continue; }
@@ -420,7 +422,7 @@ namespace KeePass.Util
 			{
 				string[] vFiles = Directory.GetFiles(strPath, "*",
 					SearchOption.TopDirectoryOnly);
-				if(vFiles == null) { Debug.Assert(false); vFiles = new string[0]; }
+				if(vFiles == null) { Debug.Assert(false); vFiles = MemUtil.EmptyArray<string>(); }
 
 				foreach(string strFile in vFiles)
 				{
@@ -433,7 +435,7 @@ namespace KeePass.Util
 
 				string[] vDirs = Directory.GetDirectories(strPath, "*",
 					SearchOption.TopDirectoryOnly);
-				if(vDirs == null) { Debug.Assert(false); vDirs = new string[0]; }
+				if(vDirs == null) { Debug.Assert(false); vDirs = MemUtil.EmptyArray<string>(); }
 
 				foreach(string strDir in vDirs)
 				{

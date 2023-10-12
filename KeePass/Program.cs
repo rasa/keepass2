@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,12 +30,14 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Resources;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml;
 
 using KeePass.App;
 using KeePass.App.Configuration;
@@ -54,6 +56,7 @@ using KeePassLib;
 using KeePassLib.Cryptography;
 using KeePassLib.Cryptography.Cipher;
 using KeePassLib.Cryptography.PasswordGenerator;
+using KeePassLib.Delegates;
 using KeePassLib.Keys;
 using KeePassLib.Resources;
 using KeePassLib.Security;
@@ -80,7 +83,6 @@ namespace KeePass
 		private static KPTranslation m_kpTranslation = new KPTranslation();
 		private static TempFilesPool m_tempFilesPool = null;
 		private static EcasPool m_ecasPool = null;
-		private static EcasTriggerSystem m_ecasTriggers = null;
 		private static CustomPwGeneratorPool m_pwGenPool = null;
 		private static ColumnProviderPool m_colProvPool = null;
 
@@ -139,7 +141,7 @@ namespace KeePass
 		{
 			get
 			{
-				if(m_appConfig == null) m_appConfig = new AppConfigEx();
+				if(m_appConfig == null) { Debug.Assert(false); m_appConfig = new AppConfigEx(); }
 				return m_appConfig;
 			}
 		}
@@ -196,11 +198,7 @@ namespace KeePass
 
 		public static EcasTriggerSystem TriggerSystem
 		{
-			get
-			{
-				if(m_ecasTriggers == null) m_ecasTriggers = new EcasTriggerSystem();
-				return m_ecasTriggers;
-			}
+			get { return Program.Config.Application.TriggerSystem; }
 		}
 
 		public static CustomPwGeneratorPool PwGeneratorPool
@@ -292,11 +290,24 @@ namespace KeePass
 
 			if(!CommonInit()) { CommonTerminate(); return; }
 
+			KdbxFile.ConfirmOpenUnknownVersion = delegate()
+			{
+				if(!Program.Config.UI.ShowDbOpenUnkVerDialog) return true;
+
+				string strMsg = KPRes.DatabaseOpenUnknownVersionInfo +
+					MessageService.NewParagraph + KPRes.DatabaseOpenUnknownVersionRec +
+					MessageService.NewParagraph + KPRes.DatabaseOpenUnknownVersionQ;
+				// No 'Do not show this dialog again' option;
+				// https://sourceforge.net/p/keepass/discussion/329220/thread/096c122154/
+				return MessageService.AskYesNo(strMsg, PwDefs.ShortProductName,
+					false, MessageBoxIcon.Warning);
+			};
+
 			if(m_appConfig.Application.Start.PluginCacheClearOnce)
 			{
 				PlgxCache.Clear();
 				m_appConfig.Application.Start.PluginCacheClearOnce = false;
-				AppConfigSerializer.Save(Program.Config);
+				AppConfigSerializer.Save();
 			}
 
 			if(m_cmdLineArgs[AppDefs.CommandLineOptions.FileExtRegister] != null)
@@ -325,10 +336,10 @@ namespace KeePass
 			/* if(m_cmdLineArgs[AppDefs.CommandLineOptions.PreLoadRegister] != null)
 			{
 				string strPreLoadPath = WinUtil.GetExecutable().Trim();
-				if(strPreLoadPath.StartsWith("\"") == false)
+				if(!strPreLoadPath.StartsWith("\""))
 					strPreLoadPath = "\"" + strPreLoadPath + "\"";
 				ShellUtil.RegisterPreLoad(AppDefs.PreLoadName, strPreLoadPath,
-					@"--" + AppDefs.CommandLineOptions.PreLoad, true);
+					"--" + AppDefs.CommandLineOptions.PreLoad, true);
 				MainCleanUp();
 				return;
 			}
@@ -350,14 +361,16 @@ namespace KeePass
 			{
 				Program.Config.Integration.UrlOverride = m_cmdLineArgs[
 					AppDefs.CommandLineOptions.ConfigSetUrlOverride];
-				AppConfigSerializer.Save(Program.Config);
+				Program.Config.Integration.UrlOverrideEnabled = true;
+				EnforceAndSave(AceSections.UrlOverride);
 				MainCleanUp();
 				return;
 			}
 			if(m_cmdLineArgs[AppDefs.CommandLineOptions.ConfigClearUrlOverride] != null)
 			{
 				Program.Config.Integration.UrlOverride = string.Empty;
-				AppConfigSerializer.Save(Program.Config);
+				Program.Config.Integration.UrlOverrideEnabled = false;
+				EnforceAndSave(AceSections.UrlOverride);
 				MainCleanUp();
 				return;
 			}
@@ -381,7 +394,7 @@ namespace KeePass
 				Program.Config.Integration.UrlSchemeOverrides.AddCustomOverride(
 					m_cmdLineArgs[AppDefs.CommandLineOptions.Scheme],
 					m_cmdLineArgs[AppDefs.CommandLineOptions.Value], bAct, bAct);
-				AppConfigSerializer.Save(Program.Config);
+				EnforceAndSave(AceSections.UrlSchemeOverrides);
 				MainCleanUp();
 				return;
 			}
@@ -390,7 +403,7 @@ namespace KeePass
 				Program.Config.Integration.UrlSchemeOverrides.RemoveCustomOverride(
 					m_cmdLineArgs[AppDefs.CommandLineOptions.Scheme],
 					m_cmdLineArgs[AppDefs.CommandLineOptions.Value]);
-				AppConfigSerializer.Save(Program.Config);
+				EnforceAndSave(AceSections.UrlSchemeOverrides);
 				MainCleanUp();
 				return;
 			}
@@ -398,10 +411,12 @@ namespace KeePass
 			{
 				Program.Config.Application.LanguageFile = m_cmdLineArgs[
 					AppDefs.CommandLineOptions.ConfigSetLanguageFile];
-				AppConfigSerializer.Save(Program.Config);
+				AppConfigSerializer.Save();
 				MainCleanUp();
 				return;
 			}
+			if(AppEnforcedConfig.SetupAsChild()) { MainCleanUp(); return; }
+			if(KeyUtil.KdfPrcTestAsChild()) { MainCleanUp(); return; }
 			if(m_cmdLineArgs[AppDefs.CommandLineOptions.PlgxCreate] != null)
 			{
 				PlgxPlugin.CreateFromCommandLine();
@@ -442,9 +457,11 @@ namespace KeePass
 #if DEBUG
 			if(m_cmdLineArgs[AppDefs.CommandLineOptions.TestGfx] != null)
 			{
-				List<Image> lImg = new List<Image>();
-				lImg.Add(Properties.Resources.B16x16_Browser);
-				lImg.Add(Properties.Resources.B48x48_Keyboard_Layout);
+				List<Image> lImg = new List<Image>
+				{
+					Properties.Resources.B16x16_Browser,
+					Properties.Resources.B48x48_Keyboard_Layout
+				};
 				ImageArchive aHighRes = new ImageArchive();
 				aHighRes.Load(Properties.Resources.Images_Client_HighRes);
 				lImg.Add(aHighRes.GetForObject("C12_IRKickFlash"));
@@ -598,6 +615,8 @@ namespace KeePass
 			m_rndGlobal = CryptoRandom.NewWeakRandom();
 
 			InitEnvSecurity();
+			// InitEnvWorkarounds();
+			InitAppContext();
 			MonoWorkarounds.Initialize();
 
 			// Do not run as AppX, because of compatibility problems
@@ -614,7 +633,9 @@ namespace KeePass
 			PwDatabase.LocalizedAppName = PwDefs.ShortProductName;
 			KdbxFile.DetermineLanguageId();
 
+			Debug.Assert(m_appConfig == null);
 			m_appConfig = AppConfigSerializer.Load();
+
 			if(m_appConfig.Logging.Enabled)
 				AppLogEx.Open(PwDefs.ShortProductName);
 
@@ -626,13 +647,20 @@ namespace KeePass
 
 			m_appConfig.Apply(AceApplyFlags.All);
 
-			m_ecasTriggers = m_appConfig.Application.TriggerSystem;
-			m_ecasTriggers.SetToInitialState();
+			Program.TriggerSystem.SetToInitialState();
 
-			// InitEnvWorkarounds();
 			LoadTranslation();
-
 			CustomResourceManager.Override(typeof(KeePass.Properties.Resources));
+
+			AppConfigSerializer.CreateBackupIfNecessary();
+
+			AceSections s = AppConfigEx.GetEnabledNonEnforcedSections();
+			if((s != AceSections.None) && !m_appConfig.Meta.PreferUserConfiguration)
+			{
+				if(AppConfigEx.EnforceSections(s, m_appConfig, false, false, null, null))
+					s = AceSections.None;
+			}
+			AppConfigEx.DisableSections(s);
 
 #if KP_DEVSNAP
 			if(!m_bAsmResReg)
@@ -686,6 +714,12 @@ namespace KeePass
 			CommonTerminate();
 		}
 
+		private static void EnforceAndSave(AceSections s)
+		{
+			if(AppConfigEx.EnforceSections(s, Program.Config, false, true, null, null))
+				AppConfigSerializer.Save();
+		}
+
 		private static void ShowFatal(Exception ex)
 		{
 			if(ex == null) { Debug.Assert(false); return; }
@@ -714,6 +748,88 @@ namespace KeePass
 				}
 			}
 			catch(Exception) { Debug.Assert(NativeLib.IsUnix() || !WinUtil.IsAtLeastWindowsVista); }
+		}
+
+		private static void InitAppContext()
+		{
+			try
+			{
+				Type t = typeof(string).Assembly.GetType("System.AppContext", false);
+				if(t == null) return; // Available in .NET >= 4.6
+
+				MethodInfo mi = t.GetMethod("SetSwitch", BindingFlags.Public |
+					BindingFlags.Static);
+				if(mi == null) { Debug.Assert(false); return; }
+
+				GAction<string, bool> f = delegate(string strSwitch, bool bValue)
+				{
+					mi.Invoke(null, new object[] { strSwitch, bValue });
+				};
+
+				f("Switch.System.Drawing.DontSupportPngFramesInIcons", false); // 4.6
+				f("Switch.System.Drawing.Printing.OptimizePrintPreview", true); // 4.6, optional
+				f("Switch.System.IO.Compression.DoNotUseNativeZipLibraryForDecompression", false); // 4.7.2
+				f("Switch.System.IO.Compression.ZipFile.UseBackslash", false); // 4.6.1
+				f("Switch.System.Security.Cryptography.AesCryptoServiceProvider.DontCorrectlyResetDecryptor", false); // 4.6.2
+				f("Switch.System.Security.Cryptography.UseLegacyFipsThrow", false); // 4.8
+				f("Switch.System.Windows.Forms.DoNotLoadLatestRichEditControl", false); // 4.7
+				f("Switch.System.Windows.Forms.DoNotSupportSelectAllShortcutInMultilineTextBox", false); // 4.6.1
+				f("Switch.System.Windows.Forms.DontSupportReentrantFilterMessage", false); // 4.6.1
+				f("Switch.System.Windows.Forms.EnableVisualStyleValidation", false); // 4.8
+				// f("Switch.System.Windows.Forms.UseLegacyToolTipDisplay", false); // 4.8, optional
+				f("Switch.UseLegacyAccessibilityFeatures", false); // 4.7.1
+				f("Switch.UseLegacyAccessibilityFeatures.2", false); // 4.7.2
+				f("Switch.UseLegacyAccessibilityFeatures.3", false); // 4.8
+				f("Switch.UseLegacyAccessibilityFeatures.4", false); // 4.8 upd.
+
+#if DEBUG
+				// Check that the internal classes do not cache other values already
+
+				const BindingFlags bf = BindingFlags.Public | BindingFlags.NonPublic |
+					BindingFlags.Static;
+
+				GAction<Type, string, bool> fCheckB = delegate(Type tClass,
+					string strProperty, bool bValue)
+				{
+					PropertyInfo pi = tClass.GetProperty(strProperty, bf);
+					string strFullName = tClass.FullName + "." + strProperty;
+					if(pi == null) { Debug.Assert(false, strFullName + " not found!"); return; }
+					Debug.Assert(((bool)pi.GetValue(null, null) == bValue),
+						strFullName + " returned an unexpected value!");
+				};
+
+				Type tM = typeof(string).Assembly.GetType( // mscorlib
+					"System.AppContextSwitches", false);
+				if(tM == null) { Debug.Assert(false); return; }
+
+				Type tS = typeof(GZipStream).Assembly.GetType( // System
+					"System.LocalAppContextSwitches", false);
+				if(tS == null) { Debug.Assert(false); return; }
+
+				Type tD = typeof(Image).Assembly.GetType(
+					"System.Drawing.LocalAppContextSwitches", false);
+				if(tD == null) { Debug.Assert(false); return; }
+
+				Type tW = typeof(ListViewItem).Assembly.GetType(
+					"System.Windows.Forms.LocalAppContextSwitches", false);
+				if(tW == null) { Debug.Assert(false); return; }
+
+				Type tA = typeof(ListViewItem).Assembly.GetType(
+					"System.AccessibilityImprovements", false);
+				if(tA == null) { Debug.Assert(false); return; }
+
+				fCheckB(tD, "DontSupportPngFramesInIcons", false);
+				fCheckB(tD, "OptimizePrintPreview", true);
+				fCheckB(tS, "DoNotUseNativeZipLibraryForDecompression", false);
+				fCheckB(tM, "UseLegacyFipsThrow", false);
+				fCheckB(tW, "DoNotLoadLatestRichEditControl", false);
+				fCheckB(tW, "DoNotSupportSelectAllShortcutInMultilineTextBox", false);
+				fCheckB(tW, "DontSupportReentrantFilterMessage", false);
+				fCheckB(tW, "EnableVisualStyleValidation", false);
+				fCheckB(tA, "Level4", true);
+#endif
+			}
+			catch(Exception) { Debug.Assert(false); }
 		}
 
 		// internal static Mutex TrySingleInstanceLock(string strName, bool bInitiallyOwned)
@@ -955,5 +1071,101 @@ namespace KeePass
 			return null;
 		}
 #endif
+
+#if DEBUG
+		private static Stack<TraceListener[]> g_sTraceListeners = null;
+#endif
+		[Conditional("DEBUG")]
+		internal static void EnableAssertions(bool bEnable)
+		{
+#if DEBUG
+			Stack<TraceListener[]> s = g_sTraceListeners;
+			if(s == null)
+			{
+				s = new Stack<TraceListener[]>();
+				g_sTraceListeners = s;
+			}
+
+			if(bEnable)
+			{
+				Debug.Listeners.Clear();
+				Debug.Listeners.AddRange(s.Pop());
+			}
+			else
+			{
+				TraceListener[] v = new TraceListener[Debug.Listeners.Count];
+				Debug.Listeners.CopyTo(v, 0);
+				s.Push(v);
+				Debug.Listeners.Clear();
+			}
+#endif
+		}
+
+		internal static void CheckExeConfig()
+		{
+			string strPath = WinUtil.GetExecutable() + ".config";
+
+			try
+			{
+				GAction<bool, bool> fAssert = delegate(bool bCondition, bool bInvalidData)
+				{
+					if(!bCondition)
+					{
+						if(bInvalidData) throw new InvalidDataException();
+						throw new Exception(KLRes.FileCorrupted);
+					}
+				};
+				GAction<object> fAssertEx = delegate(object o)
+				{
+					fAssert((o != null), false);
+				};
+
+				bool bDev = IsDevelopmentSnapshot();
+				if(bDev && !File.Exists(strPath)) return;
+
+				string strXml = File.ReadAllText(strPath, StrUtil.Utf8);
+				if(string.IsNullOrEmpty(strXml))
+					throw new Exception(KLRes.FileIncompleteExpc);
+
+				XmlDocument d = XmlUtilEx.CreateXmlDocument();
+				d.LoadXml(strXml);
+
+				XmlNamespaceManager nm = new XmlNamespaceManager(d.NameTable);
+				const string strAsm1P = "asm1";
+				const string strAsm1U = "urn:schemas-microsoft-com:asm.v1";
+				string strU = nm.LookupNamespace(strAsm1P);
+				if(strU == null) nm.AddNamespace(strAsm1P, strAsm1U);
+				else fAssert((strU == strAsm1U), true);
+
+				fAssertEx(d.SelectSingleNode(
+					"/configuration/startup/supportedRuntime[@version = \"v4.0\"]"));
+
+				if(!bDev)
+				{
+					ulong u = StrUtil.ParseVersion(typeof(
+						Program).Assembly.GetName().Version.ToString());
+					string strOld = "2.0.9.0-" + StrUtil.VersionToString(
+						u & 0xFFFFFFFFFFFF0000UL, 4);
+					string strNew = StrUtil.VersionToString(u, 4);
+
+					XmlNode n = d.SelectSingleNode("/configuration/runtime/" +
+						strAsm1P + ":assemblyBinding/" +
+						strAsm1P + ":dependentAssembly[" +
+						strAsm1P + ":assemblyIdentity/@name = \"KeePass\"]/" +
+						strAsm1P + ":bindingRedirect", nm);
+					fAssertEx(n);
+
+					XmlAttribute a = n.Attributes["oldVersion"];
+					fAssert(((a != null) && (a.Value == strOld)), true);
+
+					a = n.Attributes["newVersion"];
+					fAssert(((a != null) && (a.Value == strNew)), true);
+				}
+			}
+			catch(Exception ex)
+			{
+				MessageService.ShowWarning(strPath, ex.Message, KPRes.FixByReinstall);
+			}
+		}
 	}
 }

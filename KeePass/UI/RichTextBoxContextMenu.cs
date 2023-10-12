@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ namespace KeePass.UI
 		private RichTextBox m_rtb = null;
 		private Form m_form = null;
 		private CustomContextMenuStripEx m_ctx = null;
-		private ToolStripItem[] m_vMenuItems =
+		private readonly ToolStripItem[] m_vMenuItems =
 			new ToolStripItem[(int)RtbCtxCommands.Count];
 		private string m_strCurLink = string.Empty;
 
@@ -53,11 +53,12 @@ namespace KeePass.UI
 		{
 		}
 
+#if DEBUG
 		~RichTextBoxContextMenu()
 		{
-			try { Detach(); }
-			catch(Exception) { Debug.Assert(false); }
+			Debug.Assert((m_rtb == null) && (m_form == null));
 		}
+#endif
 
 		[Obsolete]
 		public void Attach(RichTextBox rtb)
@@ -74,8 +75,6 @@ namespace KeePass.UI
 
 			m_ctx = CreateContextMenu();
 			m_ctx.Opening += this.OnMenuOpening;
-
-			GlobalWindowManager.CustomizeControl(m_ctx);
 
 			m_rtb.ContextMenuStrip = m_ctx;
 		}

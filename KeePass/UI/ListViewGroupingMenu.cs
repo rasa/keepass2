@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,9 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows.Forms;
-using System.Diagnostics;
 
 using KeePass.App.Configuration;
 using KeePass.Forms;
@@ -38,7 +38,7 @@ namespace KeePass.UI
 		private ToolStripMenuItem m_tsmiMenu;
 		private MainForm m_mf;
 
-		private Dictionary<AceListGrouping, ToolStripMenuItem> m_dItems =
+		private readonly Dictionary<AceListGrouping, ToolStripMenuItem> m_dItems =
 			new Dictionary<AceListGrouping, ToolStripMenuItem>();
 
 		public ListViewGroupingMenu(ToolStripMenuItem tsmiContainer, MainForm mf)
@@ -54,7 +54,7 @@ namespace KeePass.UI
 			m_dItems[AceListGrouping.On] = tsmi;
 			m_tsmiMenu.DropDownItems.Add(tsmi);
 
-			tsmi = new ToolStripMenuItem(KPRes.Auto + " (" + KPRes.RecommendedCmd + ")");
+			tsmi = new ToolStripMenuItem(KPRes.Automatic + " (" + KPRes.RecommendedCmd + ")");
 			tsmi.Click += this.OnGroupAuto;
 			m_dItems[AceListGrouping.Auto] = tsmi;
 			m_tsmiMenu.DropDownItems.Add(tsmi);

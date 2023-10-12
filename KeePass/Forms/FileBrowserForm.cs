@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -47,9 +47,9 @@ namespace KeePass.Forms
 		private string m_strContext = null;
 
 		private ImageList m_ilFolders = null;
-		private List<Image> m_vFolderImages = new List<Image>();
+		private readonly List<Image> m_lFolderImages = new List<Image>();
 		private ImageList m_ilFiles = null;
-		private List<Image> m_vFileImages = new List<Image>();
+		private readonly List<Image> m_lFileImages = new List<Image>();
 
 		private int m_nIconDim = DpiUtil.ScaleIntY(16);
 
@@ -83,19 +83,21 @@ namespace KeePass.Forms
 			string strContext)
 		{
 			m_bSaveMode = bSaveMode;
-			if(strTitle != null) m_strTitle = strTitle;
-			if(strHint != null) m_strHint = strHint;
+			m_strTitle = (strTitle ?? string.Empty);
+			m_strHint = (strHint ?? string.Empty);
 			m_strContext = strContext;
 		}
 
 		public FileBrowserForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
 		{
+			Debug.Assert(!m_bSaveMode); // Saving is not fully supported
+
 			GlobalWindowManager.AddWindow(this);
 
 			this.Icon = AppIcons.Default;
@@ -140,10 +142,10 @@ namespace KeePass.Forms
 			if(m_ilFolders != null) { m_ilFolders.Dispose(); m_ilFolders = null; }
 			if(m_ilFiles != null) { m_ilFiles.Dispose(); m_ilFiles = null; }
 
-			foreach(Image imgFld in m_vFolderImages) imgFld.Dispose();
-			m_vFolderImages.Clear();
-			foreach(Image imgFile in m_vFileImages) imgFile.Dispose();
-			m_vFileImages.Clear();
+			foreach(Image imgFld in m_lFolderImages) imgFld.Dispose();
+			m_lFolderImages.Clear();
+			foreach(Image imgFile in m_lFileImages) imgFile.Dispose();
+			m_lFileImages.Clear();
 
 			GlobalWindowManager.RemoveWindow(this);
 		}
@@ -207,8 +209,6 @@ namespace KeePass.Forms
 		private void GetObjectPropsUnscaled(string strPath, DriveInfo drvHint,
 			out Image img, ref string strDisplayName)
 		{
-			img = null;
-
 			try
 			{
 				string strName;
@@ -256,18 +256,14 @@ namespace KeePass.Forms
 			if(img != null) return;
 
 			if(Directory.Exists(strPath))
-			{
 				img = new Bitmap(icons[(int)PwIcon.Folder]);
-				return;
-			}
-			if(File.Exists(strPath))
-			{
+			else if(File.Exists(strPath))
 				img = new Bitmap(icons[(int)PwIcon.PaperNew]);
-				return;
+			else
+			{
+				Debug.Assert(false);
+				img = new Bitmap(icons[(int)PwIcon.Star]);
 			}
-
-			Debug.Assert(false);
-			img = new Bitmap(icons[(int)PwIcon.Star]);
 		}
 
 		private TreeNode CreateFolderNode(string strDir, bool bForcePlusMinus,
@@ -281,10 +277,10 @@ namespace KeePass.Forms
 				string strText = di.Name;
 				GetObjectProps(di.FullName, drvHint, out img, ref strText);
 
-				m_vFolderImages.Add(img);
+				m_lFolderImages.Add(img);
 
-				TreeNode tn = new TreeNode(strText, m_vFolderImages.Count - 1,
-					m_vFolderImages.Count - 1);
+				TreeNode tn = new TreeNode(strText, m_lFolderImages.Count - 1,
+					m_lFolderImages.Count - 1);
 				tn.Tag = di.FullName;
 
 				InitNodePlusMinus(tn, di, bForcePlusMinus);
@@ -329,7 +325,7 @@ namespace KeePass.Forms
 		private void RebuildFolderImageList()
 		{
 			ImageList imgNew = UIUtil.BuildImageListUnscaled(
-				m_vFolderImages, m_nIconDim, m_nIconDim);
+				m_lFolderImages, m_nIconDim, m_nIconDim);
 			m_tvFolders.ImageList = imgNew;
 
 			if(m_ilFolders != null) m_ilFolders.Dispose();
@@ -350,24 +346,24 @@ namespace KeePass.Forms
 			}
 			catch(Exception) { m_lvFiles.EndUpdate(); return; } // Unauthorized
 
-			foreach(Image imgFile in m_vFileImages) imgFile.Dispose();
-			m_vFileImages.Clear();
+			foreach(Image imgFile in m_lFileImages) imgFile.Dispose();
+			m_lFileImages.Clear();
 
 			List<ListViewItem> lDirItems = new List<ListViewItem>();
 			List<ListViewItem> lFileItems = new List<ListViewItem>();
 
 			foreach(DirectoryInfo diSub in vDirs)
 			{
-				AddFileItem(diSub, m_vFileImages, lDirItems, -1);
+				AddFileItem(diSub, m_lFileImages, lDirItems, -1);
 			}
 			foreach(FileInfo fi in vFiles)
 			{
-				AddFileItem(fi, m_vFileImages, lFileItems, fi.Length);
+				AddFileItem(fi, m_lFileImages, lFileItems, fi.Length);
 			}
 
 			m_lvFiles.SmallImageList = null;
 			if(m_ilFiles != null) m_ilFiles.Dispose();
-			m_ilFiles = UIUtil.BuildImageListUnscaled(m_vFileImages, m_nIconDim, m_nIconDim);
+			m_ilFiles = UIUtil.BuildImageListUnscaled(m_lFileImages, m_nIconDim, m_nIconDim);
 			m_lvFiles.SmallImageList = m_ilFiles;
 
 			lDirItems.Sort(new FbfPrivLviComparer());

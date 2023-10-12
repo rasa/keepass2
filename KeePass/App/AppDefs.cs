@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Windows.Forms;
 
 using KeePass.Resources;
 using KeePass.UI;
@@ -35,7 +34,8 @@ namespace KeePass.App
 	{
 		public static readonly Color ColorControlNormal = SystemColors.Window;
 		public static readonly Color ColorControlDisabled = SystemColors.Control;
-		public static readonly Color ColorEditError = Color.FromArgb(255, 192, 192);
+		public static readonly Color ColorEditError = (UIUtil.IsDarkTheme ?
+			Color.FromArgb(128, 0, 0) : Color.FromArgb(255, 192, 192));
 
 		public static readonly Color ColorQualityLow = Color.FromArgb(255, 128, 0);
 		public static readonly Color ColorQualityHigh = Color.FromArgb(0, 255, 0);
@@ -80,6 +80,8 @@ namespace KeePass.App
 
 		public static class HelpTopics
 		{
+			internal const string Default = "index";
+
 			public static readonly string Acknowledgements = "base/credits";
 			public static readonly string License = "v2/license";
 
@@ -94,10 +96,12 @@ namespace KeePass.App
 			public static readonly string AutoTypeWindowFilters = "autowindows";
 
 			public static readonly string Entry = "v2/entry";
-			public static readonly string EntryGeneral = "general";
-			public static readonly string EntryStrings = "advanced";
-			public static readonly string EntryAutoType = "autotype";
-			public static readonly string EntryHistory = "history";
+			public static readonly string EntryGeneral = "gen";
+			public static readonly string EntryStrings = "str";
+			public static readonly string EntryAutoType = "at";
+			public static readonly string EntryHistory = "hst";
+			internal const string EntryAdvanced = "adv";
+			internal const string EntryProperties = "prp";
 
 			public static readonly string KeySources = "base/keys";
 			public static readonly string KeySourcesKeyFile = "keyfiles";
@@ -110,15 +114,22 @@ namespace KeePass.App
 			public static readonly string CommandLine = "base/cmdline";
 			public static readonly string FieldRefs = "base/fieldrefs";
 
+			public static readonly string Configuration = "base/configuration";
+			internal const string ConfigurationEnableEnf = "enableenf";
+
+			internal const string Placeholders = "base/placeholders";
+			internal const string PlaceholdersOtp = "otp";
+
 			public static readonly string ImportExport = "base/importexport";
 			public static readonly string ImportExportGenericCsv = "genericcsv";
 			public static readonly string ImportExportSteganos = "imp_steganos";
 			public static readonly string ImportExportPassKeeper = "imp_passkeeper";
-			internal static readonly string ImportExportParents = "exp_parents";
+			internal const string ImportExportParents = "exp_parents";
 
 			public static readonly string Security = "base/security";
-			internal static readonly string SecurityOptEx = "secoptex";
-			internal static readonly string SecurityOptAdm = "secoptadm";
+			internal const string SecurityDictProt = "secdictprotect";
+			internal const string SecurityOptEx = "secoptex";
+			internal const string SecurityOptAdm = "secoptadm";
 
 			public static readonly string AppPolicy = "v2/policy";
 
@@ -132,13 +143,16 @@ namespace KeePass.App
 			public static readonly string Setup = "v2/setup";
 			public static readonly string SetupMono = "mono";
 
-			// public static readonly string FaqTech = "base/faq_tech";
-			// public static readonly string FaqTechMemProt = "memprot";
+			internal const string FaqTech = "base/faq_tech";
+			internal const string FaqTechGuiDark = "guidark";
+			internal const string FaqTechGuiFont = "guifont";
 
 			public static readonly string XmlReplace = "v2/xml_replace";
 
 			public static readonly string KbFaq = "kb/faq";
 			public static readonly string KbFaqURtf = "urtf";
+
+			internal const string KbConfigEnf = "kb/config_enf";
 		}
 
 		public static class CommandLineOptions
@@ -197,6 +211,11 @@ namespace KeePass.App
 			public static readonly string ConfigRemoveUrlOverride = "remove-urloverride";
 
 			public static readonly string ConfigSetLanguageFile = "set-languagefile";
+
+			internal const string ConfigEnfSetupFile = "cfg-enf-setup-f";
+			internal const string ConfigEnfSetupHash = "cfg-enf-setup-h";
+
+			internal const string KdfTest = "kdf-test";
 
 			public static readonly string PlgxCreate = "plgx-create";
 			public static readonly string PlgxCreateInfo = "plgx-create-info";

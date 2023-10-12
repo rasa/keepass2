@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ namespace KeePass.UI.ToolStripRendering
 {
 	internal sealed class Win10TsrFactory : TsrFactory
 	{
-		private PwUuid m_uuid = new PwUuid(new byte[] {
+		private readonly PwUuid m_uuid = new PwUuid(new byte[] {
 			0x39, 0xE5, 0x05, 0x04, 0xB6, 0x56, 0x14, 0xE7,
 			0x4F, 0x13, 0x68, 0x51, 0x85, 0xB3, 0x87, 0xC6
 		});
@@ -61,17 +61,17 @@ namespace KeePass.UI.ToolStripRendering
 	{
 		private sealed class Win10TsrColorTable : ProfessionalColorTable
 		{
-			private Color m_clrItemActiveBack = Color.FromArgb(204, 232, 255);
-			private Color m_clrItemActiveBorder = Color.FromArgb(153, 209, 255);
-			private Color m_clrItemSelBack = Color.FromArgb(229, 243, 255);
-			private Color m_clrItemSelBorder = Color.FromArgb(204, 232, 255);
+			private readonly Color m_clrItemActiveBack = Color.FromArgb(204, 232, 255);
+			private readonly Color m_clrItemActiveBorder = Color.FromArgb(153, 209, 255);
+			private readonly Color m_clrItemSelBack = Color.FromArgb(229, 243, 255);
+			private readonly Color m_clrItemSelBorder = Color.FromArgb(204, 232, 255);
 
-			private Color m_clrBarBack = Color.FromArgb(255, 255, 255);
-			private Color m_clrMenuBack = Color.FromArgb(242, 242, 242);
-			private Color m_clrImageBack = Color.FromArgb(240, 240, 240);
+			private readonly Color m_clrBarBack = Color.FromArgb(255, 255, 255);
+			private readonly Color m_clrMenuBack = Color.FromArgb(242, 242, 242);
+			private readonly Color m_clrImageBack = Color.FromArgb(240, 240, 240);
 
-			private Color m_clrSubItemSelBack = Color.FromArgb(145, 201, 247);
-			private Color m_clrSubItemSelBorder = Color.FromArgb(145, 201, 247);
+			private readonly Color m_clrSubItemSelBack = Color.FromArgb(145, 201, 247);
+			private readonly Color m_clrSubItemSelBorder = Color.FromArgb(145, 201, 247);
 
 			public override Color ButtonCheckedGradientBegin
 			{

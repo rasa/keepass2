@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -116,6 +116,11 @@ namespace KeePass.Native
 			SetLastError = true)]
 		private static extern int GetWindowText(IntPtr hWnd, IntPtr lpString,
 			int nMaxCount);
+
+		[DllImport("User32.dll", CharSet = CharSet.Auto, ExactSpelling = false,
+			SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		internal static extern bool SetWindowText(IntPtr hWnd, string lpString);
 
 		[DllImport("User32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
@@ -300,9 +305,10 @@ namespace KeePass.Native
 			[MarshalAs(UnmanagedType.Bool)] bool fInherit,
 			[MarshalAs(UnmanagedType.U4)] DesktopFlags dwDesiredAccess);
 
-		[DllImport("User32.dll", SetLastError = true)]
+		[DllImport("User32.dll", CharSet = CharSet.Auto, ExactSpelling = false,
+			SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
-		internal static extern bool GetUserObjectInformation(IntPtr hObj,
+		private static extern bool GetUserObjectInformation(IntPtr hObj,
 			int nIndex, IntPtr pvInfo, uint nLength, ref uint lpnLengthNeeded);
 
 		[DllImport("User32.dll", SetLastError = true)]
@@ -420,6 +426,10 @@ namespace KeePass.Native
 			uint dwFileAttributes, ref SHFILEINFO psfi, uint cbFileInfo,
 			uint uFlags);
 
+		[DllImport("ComCtl32.dll")]
+		internal static extern int LoadIconWithScaleDown(IntPtr hInst,
+			IntPtr pszName, int cx, int cy, ref IntPtr phIco);
+
 		[DllImport("User32.dll")]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal static extern bool DestroyIcon(IntPtr hIcon);
@@ -515,5 +525,11 @@ namespace KeePass.Native
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal static extern bool SetWindowDisplayAffinity(IntPtr hWnd,
 			uint dwAffinity);
+
+		[DllImport("User32.dll", EntryPoint = "SystemParametersInfo",
+			CharSet = CharSet.Auto, ExactSpelling = false, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		internal static extern bool SystemParametersInfoI32(uint uiAction,
+			uint uiParam, ref int pvParam, uint fWinIni);
 	}
 }

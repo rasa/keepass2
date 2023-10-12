@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ namespace KeePass.UI.ToolStripRendering
 {
 	internal sealed class KeePassTsrFactory : TsrFactory
 	{
-		private PwUuid m_uuid = new PwUuid(new byte[] {
+		private readonly PwUuid m_uuid = new PwUuid(new byte[] {
 			0x05, 0x0A, 0x57, 0xF0, 0x7B, 0xBC, 0x34, 0xAF,
 			0x5B, 0x8F, 0xA1, 0x31, 0xDB, 0xBF, 0x2B, 0xEC
 		});

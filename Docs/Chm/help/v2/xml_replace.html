@@ -18,10 +18,9 @@
 	<meta name="DC.type" content="Text" />
 	<meta name="DC.format" content="text/html" />
 	<meta name="DC.language" content="en" />
-	<meta name="DC.rights" content="Copyright (C) 2003-2021 Dominik Reichl" />
+	<meta name="DC.rights" content="Copyright (C) 2003-2023 Dominik Reichl" />
 
 	<meta name="robots" content="index, follow" />
-	<meta name="flattr:id" content="42rykv" />
 
 	<title>XML Replace - KeePass</title>
 	<base target="_self" />
@@ -36,7 +35,7 @@
 <!-- Org Pub: 2013-12-06 -->
 
 <table class="sectionheader"><tr>
-<td><img src="../images/b64x64_binary.png" alt="Binary" /></td>
+<td><img src="../images/b64x64_binary.png" alt="" /></td>
 <td><h1>XML Replace</h1>
 <p>About the XML replacement functionality.</p></td>
 </tr></table>
@@ -70,7 +69,7 @@
 <br />
 
 <a name="info"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_help.png" alt="Help" />
+<h2 class="sectiontitle"><img src="../images/b16x16_help.png" alt="" />
 General Information</h2>
 
 <p>XML Replace is a powerful feature that modifies a database by manipulating
@@ -81,7 +80,7 @@ in memory, performs the operation specified by the user
 (e.g. remove nodes or replace text), loads the modified XML tree,
 and merges the current database with the modified database.</p>
 
-<p><img src="../images/b16x16_warning.png" alt="Warning" class="textimg" />
+<p><img src="../images/b16x16_warning.png" class="textimg" alt="Warning" />
 This is a feature for experts. Use with caution!</p>
 
 <p>XML Replace can be invoked via 'Tools' &rarr; 'Database Tools' &rarr;
@@ -97,7 +96,7 @@ these. Furthermore, any changes to database properties
 <br />
 
 <a name="ex"></a>
-<h2 class="sectiontitle"><img src="../images/b16x16_help.png" alt="Help" />
+<h2 class="sectiontitle"><img src="../images/b16x16_help.png" alt="" />
 Examples</h2>
 
 <br />
@@ -337,7 +336,11 @@ i.e. the option 'Inherit default auto-type sequence from group' is activated.</t
 <tr><td>Options:</td><td>&#9745; Case-sensitive<br />
 &#9745; Regular expressions</td></tr>
 <tr><td colspan="2">Copies the entry URL into the title field of the
-entry (overwriting any existing data in the title field).</td></tr>
+entry (overwriting any existing data in the title field).<br />
+<br />
+If you want the entry URL to be copied only if the title field is empty,
+use the following for 'Select nodes':<br />
+<code>//Entry/String[(Key = 'Title') and (Value = '')]/..</code></td></tr>
 </table>
 
 <br />
@@ -350,7 +353,7 @@ entry (overwriting any existing data in the title field).</td></tr>
 <td><code>//Entry/String[(Key = 'UserName') and (Value = '')]/..</code></td></tr>
 <tr><td>Action:</td><td>Replace data</td></tr>
 <tr><td>Data:</td><td>Inner XML</td></tr>
-<tr><td>Find what:</td><td><code>(?s)(&lt;Key&gt;Title&lt;/Key&gt;\s*?&lt;Value&gt;)(.*?)(&lt;/Value&gt;.+?&lt;Key&gt;UserName&lt;/Key&gt;\s*?)&lt;Value /&gt;</code></td></tr>
+<tr><td>Find what:</td><td><code>(?s)(&lt;Key&gt;Title&lt;/Key&gt;\s*&lt;Value&gt;)(.*?)(&lt;/Value&gt;.*?&lt;Key&gt;UserName&lt;/Key&gt;\s*)(&lt;Value&gt;&lt;/Value&gt;|&lt;Value\s*/&gt;)</code></td></tr>
 <tr><td>Replace with:</td><td><code>$1$2$3&lt;Value&gt;$2&lt;/Value&gt;</code></td></tr>
 <tr><td>Options:</td><td>&#9745; Case-sensitive<br />
 &#9745; Regular expressions</td></tr>

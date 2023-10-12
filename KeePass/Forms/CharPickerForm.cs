@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -44,8 +44,8 @@ namespace KeePass.Forms
 		private ProtectedString m_psWord = null;
 		private ProtectedString m_psSelected = ProtectedString.Empty;
 
-		private List<Button> m_lButtons = new List<Button>();
-		private List<Label> m_lLabels = new List<Label>();
+		private readonly List<Button> m_lButtons = new List<Button>();
+		private readonly List<Label> m_lLabels = new List<Label>();
 		private bool m_bFormLoaded = false;
 		private int m_nFormHeight = 0;
 		private string m_strInitialFormRect = string.Empty;
@@ -94,7 +94,7 @@ namespace KeePass.Forms
 			InitializeComponent();
 
 			SecureTextBoxEx.InitEx(ref m_tbSelected);
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		/// <summary>
@@ -148,7 +148,7 @@ namespace KeePass.Forms
 			PwInputControlGroup.ConfigureHideButton(m_cbHideChars, null);
 
 			AceColumn colPw = Program.Config.MainWindow.FindColumn(AceColumnType.Password);
-			bool bHide = ((colPw != null) ? colPw.HideWithAsterisks : true);
+			bool bHide = ((colPw == null) || colPw.HideWithAsterisks);
 			if(m_obInitHide.HasValue) bHide = m_obInitHide.Value;
 			bHide |= !AppPolicy.Current.UnhidePasswords;
 			m_cbHideChars.Checked = bHide;
@@ -177,7 +177,15 @@ namespace KeePass.Forms
 
 		private void OnFormClosed(object sender, FormClosedEventArgs e)
 		{
-			CleanUpEx();
+			string strRect = UIUtil.GetWindowScreenRect(this);
+			if(strRect != m_strInitialFormRect) // Don't overwrite ""
+				Program.Config.UI.CharPickerRect = strRect;
+
+			m_tbSelected.TextChanged -= this.OnSelectedTextChangedEx;
+
+			RemoveAllCharButtons();
+			m_fontChars.Dispose();
+
 			GlobalWindowManager.RemoveWindow(this);
 		}
 
@@ -190,42 +198,24 @@ namespace KeePass.Forms
 		{
 		}
 
-		private void CleanUpEx()
-		{
-			string strRect = UIUtil.GetWindowScreenRect(this);
-			if(strRect != m_strInitialFormRect) // Don't overwrite ""
-				Program.Config.UI.CharPickerRect = strRect;
-
-			m_tbSelected.TextChanged -= this.OnSelectedTextChangedEx;
-
-			RemoveAllCharButtons();
-			m_fontChars.Dispose();
-		}
-
 		private void RemoveAllCharButtons()
 		{
-			if((m_lButtons != null) && (m_pnlSelect != null))
+			if(m_pnlSelect == null) { Debug.Assert(false); return; }
+
+			foreach(Button btn in m_lButtons)
 			{
-				foreach(Button btn in m_lButtons)
-				{
-					btn.Click -= this.OnSelectCharacter;
-					m_pnlSelect.Controls.Remove(btn);
-					btn.Dispose();
-				}
-
-				m_lButtons.Clear();
+				btn.Click -= this.OnSelectCharacter;
+				m_pnlSelect.Controls.Remove(btn);
+				btn.Dispose();
 			}
+			m_lButtons.Clear();
 
-			if((m_lLabels != null) && (m_pnlSelect != null))
+			foreach(Label lbl in m_lLabels)
 			{
-				foreach(Label lbl in m_lLabels)
-				{
-					m_pnlSelect.Controls.Remove(lbl);
-					lbl.Dispose();
-				}
-
-				m_lLabels.Clear();
+				m_pnlSelect.Controls.Remove(lbl);
+				lbl.Dispose();
 			}
+			m_lLabels.Clear();
 		}
 
 		private void RecreateResizableWindowControls()
@@ -241,7 +231,7 @@ namespace KeePass.Forms
 
 			bool bRtl = (this.RightToLeft == RightToLeft.Yes);
 
-			char[] vWord = ((m_psWord != null) ? m_psWord.ReadChars() : new char[0]);
+			char[] vWord = ((m_psWord != null) ? m_psWord.ReadChars() : MemUtil.EmptyArray<char>());
 			if(vWord.Length >= 1)
 			{
 				int x = 0;
@@ -290,7 +280,7 @@ namespace KeePass.Forms
 
 			m_tbSelected.EnableProtection(bHide);
 
-			string strHiddenChar = new string(SecureTextBoxEx.PasswordCharEx, 1);
+			string strHiddenChar = SecureTextBoxEx.GetPasswordCharString(1);
 
 			bool bHideBtns = bHide;
 			bHideBtns |= !Program.Config.UI.Hiding.UnhideButtonAlsoUnhidesSource;

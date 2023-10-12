@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ using KeePass.App;
 using KeePass.Forms;
 using KeePass.Native;
 using KeePass.Resources;
+using KeePass.UI;
 using KeePass.Util.Spr;
 
 using KeePassLib;
@@ -86,65 +87,65 @@ namespace KeePass.Util
 
 	public static class WinUtil
 	{
-		private static bool m_bIsWindows9x = false;
-		private static bool m_bIsWindows2000 = false;
-		private static bool m_bIsWindowsXP = false;
-		private static bool m_bIsAtLeastWindows2000 = false;
-		private static bool m_bIsAtLeastWindowsVista = false;
-		private static bool m_bIsAtLeastWindows7 = false;
-		private static bool m_bIsAtLeastWindows8 = false;
-		private static bool m_bIsAtLeastWindows10 = false;
-		private static bool m_bIsAppX = false;
+		private static readonly bool g_bIsWindows9x = false;
+		private static readonly bool g_bIsWindows2000 = false;
+		private static readonly bool g_bIsWindowsXP = false;
+		private static readonly bool g_bIsAtLeastWindows2000 = false;
+		private static readonly bool g_bIsAtLeastWindowsVista = false;
+		private static readonly bool g_bIsAtLeastWindows7 = false;
+		private static readonly bool g_bIsAtLeastWindows8 = false;
+		private static readonly bool g_bIsAtLeastWindows10 = false;
+		private static readonly bool g_bIsAppX = false;
 
-		private static string m_strExePath = null;
+		private static string g_strExePath = null;
 
-		private static ulong m_uFrameworkVersion = 0;
+		private static ulong g_uFrameworkVersion = 0;
 
 		public static event EventHandler<OpenUrlEventArgs> OpenUrlPre;
 
 		public static bool IsWindows9x
 		{
-			get { return m_bIsWindows9x; }
+			get { return g_bIsWindows9x; }
 		}
 
 		public static bool IsWindows2000
 		{
-			get { return m_bIsWindows2000; }
+			get { return g_bIsWindows2000; }
 		}
 
 		public static bool IsWindowsXP
 		{
-			get { return m_bIsWindowsXP; }
+			get { return g_bIsWindowsXP; }
 		}
 
 		public static bool IsAtLeastWindows2000
 		{
-			get { return m_bIsAtLeastWindows2000; }
+			get { return g_bIsAtLeastWindows2000; }
 		}
 
 		public static bool IsAtLeastWindowsVista
 		{
-			get { return m_bIsAtLeastWindowsVista; }
+			get { return g_bIsAtLeastWindowsVista; }
 		}
 
 		public static bool IsAtLeastWindows7
 		{
-			get { return m_bIsAtLeastWindows7; }
+			get { return g_bIsAtLeastWindows7; }
 		}
 
 		public static bool IsAtLeastWindows8
 		{
-			get { return m_bIsAtLeastWindows8; }
+			get { return g_bIsAtLeastWindows8; }
 		}
 
 		public static bool IsAtLeastWindows10
 		{
-			get { return m_bIsAtLeastWindows10; }
+			get { return g_bIsAtLeastWindows10; }
 		}
 
 		public static bool IsAppX
 		{
-			get { return m_bIsAppX; }
+			get { return g_bIsAppX; }
 		}
 
 		static WinUtil()
@@ -154,14 +155,14 @@ namespace KeePass.Util
 			OperatingSystem os = Environment.OSVersion;
 			Version v = os.Version;
 
-			m_bIsWindows9x = (os.Platform == PlatformID.Win32Windows);
-			m_bIsWindows2000 = ((v.Major == 5) && (v.Minor == 0));
-			m_bIsWindowsXP = ((v.Major == 5) && (v.Minor == 1));
+			g_bIsWindows9x = (os.Platform == PlatformID.Win32Windows);
+			g_bIsWindows2000 = ((v.Major == 5) && (v.Minor == 0));
+			g_bIsWindowsXP = ((v.Major == 5) && (v.Minor == 1));
 
-			m_bIsAtLeastWindows2000 = (v.Major >= 5);
-			m_bIsAtLeastWindowsVista = (v.Major >= 6);
-			m_bIsAtLeastWindows7 = ((v.Major >= 7) || ((v.Major == 6) && (v.Minor >= 1)));
-			m_bIsAtLeastWindows8 = ((v.Major >= 7) || ((v.Major == 6) && (v.Minor >= 2)));
+			g_bIsAtLeastWindows2000 = (v.Major >= 5);
+			g_bIsAtLeastWindowsVista = (v.Major >= 6);
+			g_bIsAtLeastWindows7 = ((v.Major >= 7) || ((v.Major == 6) && (v.Minor >= 1)));
+			g_bIsAtLeastWindows8 = ((v.Major >= 7) || ((v.Major == 6) && (v.Minor >= 2)));
 
 			// Environment.OSVersion is reliable only up to version 6.2;
 			// https://msdn.microsoft.com/library/windows/desktop/ms724832.aspx
@@ -176,7 +177,7 @@ namespace KeePass.Util
 						string.Empty).ToString();
 					uint u;
 					if(uint.TryParse(str, out u))
-						m_bIsAtLeastWindows10 = (u >= 10);
+						g_bIsAtLeastWindows10 = (u >= 10);
 					else { Debug.Assert(string.IsNullOrEmpty(str)); }
 				}
 				else { Debug.Assert(false); }
@@ -191,9 +192,9 @@ namespace KeePass.Util
 				{
 					Regex rx = new Regex("\\\\WindowsApps\\\\.*?_\\d+(\\.\\d+)*_",
 						RegexOptions.IgnoreCase);
-					m_bIsAppX = rx.IsMatch(strDir);
+					g_bIsAppX = rx.IsMatch(strDir);
 				}
-				else { Debug.Assert(!m_bIsAppX); } // No AppX by default
+				else { Debug.Assert(!g_bIsAppX); } // No AppX by default
 			}
 			catch(Exception) { Debug.Assert(false); }
 		}
@@ -212,8 +213,10 @@ namespace KeePass.Util
 				OpenUrl(pe.OverrideUrl, pe, true, strUrl);
 			else
 			{
-				string strOverride = Program.Config.Integration.UrlOverride;
-				if(strOverride.Length > 0)
+				string strOverride = (Program.Config.Integration.UrlOverrideEnabled ?
+					Program.Config.Integration.UrlOverride : null);
+
+				if(!string.IsNullOrEmpty(strOverride))
 					OpenUrl(strOverride, pe, true, strUrl);
 				else
 					OpenUrl(strUrl, pe, true);
@@ -311,6 +314,8 @@ namespace KeePass.Util
 			// Restore previous working directory
 			WinUtil.SetWorkingDirectory(strPrevWorkDir);
 
+			if(peDataSource != null) peDataSource.Touch(false);
+
 			// SprEngine.Compile might have modified the database
 			MainForm mf = Program.MainForm;
 			if(mf != null)
@@ -331,8 +336,7 @@ namespace KeePass.Util
 			string strUrlFlt = strUrlToOpen;
 			strUrlFlt = strUrlFlt.TrimStart(new char[] { ' ', '\t', '\r', '\n' });
 
-			bool bEncCmd = (obForceEncCmd.HasValue ? obForceEncCmd.Value :
-				WinUtil.IsCommandLineUrl(strUrlFlt));
+			bool bEncCmd = (obForceEncCmd ?? WinUtil.IsCommandLineUrl(strUrlFlt));
 
 			SprContext ctx = new SprContext(pe, pd, SprCompileFlags.All, false, bEncCmd);
 			ctx.Base = strBaseRaw;
@@ -386,13 +390,36 @@ namespace KeePass.Util
 
 		public static void Restart()
 		{
-			try { NativeLib.StartProcess(WinUtil.GetExecutable()); }
+			try { using(Process p = StartSelfEx(null)) { Debug.Assert(p != null); } }
 			catch(Exception ex) { MessageService.ShowWarning(ex); }
+		}
+
+		internal static Process StartSelfEx(string strArgs)
+		{
+			string strExe = WinUtil.GetExecutable();
+
+			ProcessStartInfo psi = new ProcessStartInfo();
+
+			// Mono detects CLR binaries and runs them with the same Mono
+			// binary (see mono/metadata/w32process-unix.c)
+			// if(NativeLib.IsUnix())
+			// {
+			//	psi.FileName = "mono";
+			//	string strArgsEx = "\"" + NativeLib.EncodeDataToArgs(strExe) + "\"";
+			//	if(!string.IsNullOrEmpty(strArgs)) strArgsEx += " " + strArgs;
+			//	psi.Arguments = strArgsEx;
+			// }
+			// else
+
+			psi.FileName = strExe;
+			if(!string.IsNullOrEmpty(strArgs)) psi.Arguments = strArgs;
+
+			return NativeLib.StartProcessEx(psi);
 		}
 
 		public static string GetExecutable()
 		{
-			string str = m_strExePath;
+			string str = g_strExePath;
 			if(str != null) return str;
 
 			try { str = Assembly.GetExecutingAssembly().Location; }
@@ -404,7 +431,7 @@ namespace KeePass.Util
 				str = UrlUtil.FileUrlToPath(str);
 			}
 
-			m_strExePath = str;
+			g_strExePath = str;
 			return str;
 		}
 
@@ -492,10 +519,10 @@ namespace KeePass.Util
 
 				uint dwDummy;
 				if(NativeMethods.DeviceIoControl(hDevice, NativeMethods.FSCTL_LOCK_VOLUME,
-					IntPtr.Zero, 0, IntPtr.Zero, 0, out dwDummy, IntPtr.Zero) != false)
+					IntPtr.Zero, 0, IntPtr.Zero, 0, out dwDummy, IntPtr.Zero))
 				{
-					if(NativeMethods.DeviceIoControl(hDevice, NativeMethods.FSCTL_UNLOCK_VOLUME,
-						IntPtr.Zero, 0, IntPtr.Zero, 0, out dwDummy, IntPtr.Zero) == false)
+					if(!NativeMethods.DeviceIoControl(hDevice, NativeMethods.FSCTL_UNLOCK_VOLUME,
+						IntPtr.Zero, 0, IntPtr.Zero, 0, out dwDummy, IntPtr.Zero))
 					{
 						Debug.Assert(false);
 					}
@@ -548,7 +575,7 @@ namespace KeePass.Util
 			return string.Empty;
 		}
 
-		private static readonly string[] m_vIE7Windows = new string[] {
+		private static readonly string[] g_vIE7Windows = new string[] {
 			"Windows Internet Explorer", "Maxthon"
 		};
 
@@ -557,7 +584,7 @@ namespace KeePass.Util
 			if(strWindowTitle == null) return false; // No assert or throw
 			if(strWindowTitle.Length == 0) return false; // No assert or throw
 
-			foreach(string str in m_vIE7Windows)
+			foreach(string str in g_vIE7Windows)
 			{
 				if(strWindowTitle.IndexOf(str) >= 0) return true;
 			}
@@ -567,28 +594,23 @@ namespace KeePass.Util
 
 		public static byte[] HashFile(IOConnectionInfo iocFile)
 		{
-			if(iocFile == null) { Debug.Assert(false); return null; } // Assert only
+			if(iocFile == null) { Debug.Assert(false); return null; }
 
-			Stream sIn;
 			try
 			{
-				sIn = IOConnection.OpenRead(iocFile);
-				if(sIn == null) throw new FileNotFoundException();
-			}
-			catch(Exception) { return null; }
-
-			byte[] pbHash;
-			try
-			{
-				using(SHA256Managed sha256 = new SHA256Managed())
+				using(Stream s = IOConnection.OpenRead(iocFile))
 				{
-					pbHash = sha256.ComputeHash(sIn);
+					if(s == null) { Debug.Assert(false); return null; }
+
+					using(SHA256Managed h = new SHA256Managed())
+					{
+						return h.ComputeHash(s);
+					}
 				}
 			}
-			catch(Exception) { Debug.Assert(false); sIn.Close(); return null; }
+			catch(Exception) { Debug.Assert(false); }
 
-			sIn.Close();
-			return pbHash;
+			return null;
 		}
 
 		// See GetCommandLineFromUrl when editing this method
@@ -620,19 +642,57 @@ namespace KeePass.Util
 		public static bool RunElevated(string strExe, string strArgs,
 			bool bShowMessageIfFailed)
 		{
-			if(strExe == null) throw new ArgumentNullException("strExe");
+			return RunElevated(strExe, strArgs, bShowMessageIfFailed, 0);
+		}
 
+		internal static bool RunElevated(string strExe, string strArgs,
+			bool bShowMessageIfFailed, int iWaitForExitMS)
+		{
 			try
 			{
+				if(strExe == null) throw new ArgumentNullException("strExe");
+
 				ProcessStartInfo psi = new ProcessStartInfo();
 				psi.FileName = strExe;
 				if(!string.IsNullOrEmpty(strArgs)) psi.Arguments = strArgs;
 				psi.UseShellExecute = true;
 
-				// Elevate on Windows Vista and higher
-				if(WinUtil.IsAtLeastWindowsVista) psi.Verb = "runas";
+				string strStdIn = null;
 
-				NativeLib.StartProcess(psi);
+				// Elevate on Windows Vista and higher
+				if(WinUtil.IsAtLeastWindowsVista) psi.Verb = "RunAs";
+				else if(NativeLib.IsUnix())
+				{
+					string strArgsEx = "\"" + NativeLib.EncodeDataToArgs(strExe) + "\"";
+					if(strExe == GetExecutable()) strArgsEx = "mono " + strArgsEx;
+					if(!string.IsNullOrEmpty(strArgs)) strArgsEx += " " + strArgs;
+
+					psi.FileName = "sudo";
+					psi.Arguments = "-k -S " + strArgsEx;
+					psi.UseShellExecute = false;
+					psi.RedirectStandardInput = true;
+
+					SingleLineEditForm dlg = new SingleLineEditForm();
+					dlg.InitEx(KPRes.AdminPassword, psi.FileName + " " + psi.Arguments,
+						KPRes.AdminPassword + " (" + psi.FileName + "):",
+						Properties.Resources.B48x48_KGPG_Key2, string.Empty, null);
+					dlg.FlagsEx |= SlfFlags.Sensitive;
+					if(UIUtil.ShowDialogAndDestroy(dlg) != DialogResult.OK)
+						return false;
+
+					strStdIn = dlg.ResultString + Environment.NewLine;
+				}
+
+				using(Process p = NativeLib.StartProcessEx(psi))
+				{
+					if(!string.IsNullOrEmpty(strStdIn))
+						p.StandardInput.Write(strStdIn);
+
+					if(iWaitForExitMS == 0) { }
+					else if(iWaitForExitMS < 0) p.WaitForExit();
+					else if(!p.WaitForExit(iWaitForExitMS))
+						throw new TimeoutException();
+				}
 			}
 			catch(Exception ex)
 			{
@@ -645,24 +705,40 @@ namespace KeePass.Util
 
 		public static ulong GetMaxNetFrameworkVersion()
 		{
-			if(m_uFrameworkVersion != 0) return m_uFrameworkVersion;
+			ulong u = g_uFrameworkVersion;
+			if(u != 0) return u;
 
-			try { m_uFrameworkVersion = GetMaxNetVersionPriv(); }
-			catch(Exception) { Debug.Assert(false); }
+			// https://www.mono-project.com/docs/about-mono/releases/
+			ulong m = NativeLib.MonoVersion;
+			if(m >= 0x0006000600000000UL) u = 0x0004000800000000UL;
+			else if(m >= 0x0005001200000000UL) u = 0x0004000700020000UL;
+			else if(m >= 0x0005000A00000000UL) u = 0x0004000700010000UL;
+			else if(m >= 0x0005000400000000UL) u = 0x0004000700000000UL;
+			else if(m >= 0x0004000600000000UL) u = 0x0004000600020000UL;
+			else if(m >= 0x0004000400000000UL) u = 0x0004000600010000UL;
+			else if(m >= 0x0003000800000000UL) u = 0x0004000500010000UL;
+			else if(m >= 0x0003000000000000UL) u = 0x0004000500000000UL;
 
-			if(m_uFrameworkVersion == 0)
+			if(u == 0)
 			{
-				Version v = Environment.Version;
-				if(v.Major > 0) m_uFrameworkVersion |= (uint)v.Major;
-				m_uFrameworkVersion <<= 16;
-				if(v.Minor > 0) m_uFrameworkVersion |= (uint)v.Minor;
-				m_uFrameworkVersion <<= 16;
-				if(v.Build > 0) m_uFrameworkVersion |= (uint)v.Build;
-				m_uFrameworkVersion <<= 16;
-				if(v.Revision > 0) m_uFrameworkVersion |= (uint)v.Revision;
+				try { u = GetMaxNetVersionPriv(); }
+				catch(Exception) { Debug.Assert(false); }
 			}
 
-			return m_uFrameworkVersion;
+			if(u == 0)
+			{
+				Version v = Environment.Version;
+				if(v.Major > 0) u |= (uint)v.Major;
+				u <<= 16;
+				if(v.Minor > 0) u |= (uint)v.Minor;
+				u <<= 16;
+				if(v.Build > 0) u |= (uint)v.Build;
+				u <<= 16;
+				if(v.Revision > 0) u |= (uint)v.Revision;
+			}
+
+			g_uFrameworkVersion = u;
+			return u;
 		}
 
 		private static ulong GetMaxNetVersionPriv()

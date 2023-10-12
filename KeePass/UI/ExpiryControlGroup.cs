@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -87,6 +87,8 @@ namespace KeePass.UI
 
 			m_cb = cb;
 			m_dtp = dtp;
+
+			AccessibilityEx.SetContext(dtp, cb);
 
 			// m_dtp.ShowUpDown = true;
 			m_dtp.CustomFormat = DateTimeFormatInfo.CurrentInfo.ShortDatePattern +

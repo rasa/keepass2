@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -142,7 +142,7 @@ namespace KeePass.Util
 
 			// Try to use the 'Print' verb; if it's not available, the
 			// default verb is used (to just display the file)
-			string[] v = (psi.Verbs ?? new string[0]);
+			string[] v = (psi.Verbs ?? MemUtil.EmptyArray<string>());
 			foreach(string strVerb in v)
 			{
 				if(strVerb == null) { Debug.Assert(false); continue; }

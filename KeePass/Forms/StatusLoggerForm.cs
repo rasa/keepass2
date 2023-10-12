@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2023 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -121,7 +121,7 @@ namespace KeePass.Forms
 		public StatusLoggerForm()
 		{
 			InitializeComponent();
-			Program.Translation.ApplyTo(this);
+			GlobalWindowManager.InitializeForm(this);
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
@@ -134,12 +134,13 @@ namespace KeePass.Forms
 			m_pbProgress.Minimum = 0;
 			m_pbProgress.Maximum = 100;
 
-			List<Image> lImages = new List<Image>();
-			lImages.Add(Properties.Resources.B16x16_MessageBox_Info);
-			lImages.Add(Properties.Resources.B16x16_MessageBox_Warning);
-			lImages.Add(Properties.Resources.B16x16_MessageBox_Critical);
-			lImages.Add(Properties.Resources.B16x16_Transparent);
-
+			List<Image> lImages = new List<Image>
+			{
+				Properties.Resources.B16x16_MessageBox_Info,
+				Properties.Resources.B16x16_MessageBox_Warning,
+				Properties.Resources.B16x16_MessageBox_Critical,
+				Properties.Resources.B16x16_Transparent
+			};
 			m_ilIcons = UIUtil.BuildImageListUnscaled(lImages,
 				DpiUtil.ScaleIntX(16), DpiUtil.ScaleIntY(16));
 			m_lvMessages.SmallImageList = m_ilIcons;
